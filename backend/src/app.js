@@ -10,4 +10,7 @@ app.get('/', (req, res)=> {
     res.json({mensaje: 'Backend funcionando'});
 });
 
+
+
+
 module.exports = app;
