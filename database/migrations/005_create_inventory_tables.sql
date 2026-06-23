@@ -1,5 +1,5 @@
 -- =========================================================
--- 12. MATERIALES
+-- MATERIALES
 -- =========================================================
 
 CREATE TABLE materiales (
@@ -27,7 +27,7 @@ CREATE TABLE materiales (
 );
 
 -- =========================================================
--- 13. REFRIGERANTES
+-- REFRIGERANTES
 -- =========================================================
 
 CREATE TABLE refrigerantes (
@@ -55,7 +55,7 @@ CREATE TABLE refrigerantes (
 );
 
 -- =========================================================
--- 14. INVENTARIO_MOVIMIENTOS
+-- INVENTARIO_MOVIMIENTOS
 -- =========================================================
 
 CREATE TABLE inventario_movimientos (
@@ -86,7 +86,7 @@ CREATE TABLE inventario_movimientos (
 );
 
 -- =========================================================
--- 15. ORDEN_TRABAJO_MATERIALES
+-- ORDEN_TRABAJO_MATERIALES
 -- =========================================================
 
 CREATE TABLE orden_trabajo_materiales (
