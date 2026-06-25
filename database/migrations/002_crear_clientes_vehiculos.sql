@@ -1,8 +1,6 @@
 -- =============================================================================
 -- Migración: 002_crear_clientes_vehiculos.sql
--- Descripción: Crea las tablas del núcleo operativo: clientes y vehiculos
--- Autor: Sebastián Ventura - Módulo de Base de Datos
--- Fecha: 2026-06-23
+-- Descripción: Crea las tablas del núcleo operativo: clientes y vehiculos.
 -- Motor: PostgreSQL
 -- Normalización: 3FN
 -- =============================================================================
@@ -98,9 +96,9 @@ CREATE TABLE vehiculos (
     CONSTRAINT uq_vehiculos_placa
         UNIQUE (placa),
 
-    -- Validación de año del vehículo: desde 1980 hasta el año actual + 1
+    -- Validación de año del vehículo: rango estático para asegurar inmutabilidad en PostgreSQL
     CONSTRAINT ck_vehiculos_anio
-        CHECK (anio BETWEEN 1980 AND EXTRACT(YEAR FROM NOW())::SMALLINT + 1)
+        CHECK (anio BETWEEN 1980 AND 2100)
 );
 
 -- Comentario de tabla
@@ -115,7 +113,7 @@ COMMENT ON COLUMN vehiculos.marca             IS 'Marca del vehículo (ej: Toyot
 COMMENT ON COLUMN vehiculos.modelo            IS 'Modelo del vehículo (ej: Corolla, F-150, Silverado).';
 COMMENT ON COLUMN vehiculos.placa             IS 'Matrícula o placa del vehículo. Única en el sistema.';
 COMMENT ON COLUMN vehiculos.color             IS 'Color del vehículo.';
-COMMENT ON COLUMN vehiculos.anio              IS 'Año de fabricación del vehículo. Rango válido: 1980 hasta año actual + 1.';
+COMMENT ON COLUMN vehiculos.anio              IS 'Año de fabricación del vehículo. Rango permitido: 1980 a 2100.';
 COMMENT ON COLUMN vehiculos.tipo_refrigerante IS 'Tipo de refrigerante del sistema de A/C (ej: R-134a, R-1234yf).';
 COMMENT ON COLUMN vehiculos.activo            IS 'Indica si el vehículo está activo en el sistema. Por defecto TRUE.';
 COMMENT ON COLUMN vehiculos.creado_en         IS 'Fecha y hora de registro del vehículo (con zona horaria).';
