@@ -2,8 +2,6 @@
 -- Migración: 004_crear_servicios_orden_trabajo_servicios.sql
 -- Descripción: Crea las tablas del catálogo de servicios y su relación N:M
 --              con las órdenes de trabajo (servicios aplicados por OT).
--- Autor: Sebastián Ventura - Módulo de Base de Datos
--- Fecha: 2026-06-23
 -- Motor: PostgreSQL
 -- Normalización: 3FN
 -- Dependencias: 003_crear_citas_ordenes_diagnosticos.sql
