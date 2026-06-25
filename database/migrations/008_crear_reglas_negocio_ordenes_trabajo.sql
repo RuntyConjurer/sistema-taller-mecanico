@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migración: 008_agregar_reglas_negocio_ordenes_trabajo.sql
+-- Migración: 008_crear_reglas_negocio_ordenes_trabajo.sql
 -- Descripción: Implementa las reglas de negocio para el cierre de órdenes
 --              de trabajo mediante una función PL/pgSQL y un trigger BEFORE
 --              UPDATE sobre la tabla ordenes_trabajo.
@@ -10,11 +10,9 @@
 --   RN-03: (Implícita en RN-02) No se puede entregar un vehículo con
 --           pagos pendientes.
 --
--- Autor: Sebastián Ventura - Módulo de Base de Datos
--- Fecha: 2026-06-23
 -- Motor: PostgreSQL
 -- Dependencias: 003_crear_citas_ordenes_diagnosticos.sql
---               Migración de facturas (Persona 2 del equipo)
+--               006_crear_tablas_facturacion.sql
 -- =============================================================================
 
 
