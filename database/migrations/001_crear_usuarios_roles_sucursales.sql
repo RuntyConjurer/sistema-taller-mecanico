@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migración: 001_create_users_roles_branches.sql
+-- Migración: 001_crear_usuarios_roles_sucursales.sql
 -- Descripción: Crea las tablas de configuración base del sistema:
 --              sucursales, roles, usuarios y su relación.
 -- Motor: PostgreSQL
