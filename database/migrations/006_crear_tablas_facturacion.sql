@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Migración: 006_crear_tablas_facturacion.sql
--- Descripción: Crea las tablas de facturación, detalles y pagos del sistema.
+-- Descripción: Crea las tablas de facturación, detalles, pagos y su distribución.
 -- Motor: PostgreSQL
 -- Normalización: 3FN
 -- Dependencias: 003_crear_citas_ordenes_diagnosticos.sql
@@ -70,24 +70,45 @@ COMMENT ON TABLE factura_detalles IS 'Ítems individuales desglosados dentro de 
 
 -- =============================================================================
 -- TABLA: pagos
--- Descripción: Registro de pagos recibidos para una factura.
+-- Descripción: Registro de transacciones financieras recibidas (ingresos brutos).
 -- =============================================================================
 
 CREATE TABLE pagos (
     id_pago      BIGSERIAL      NOT NULL,
-    id_factura   BIGINT         NOT NULL,
-    monto        NUMERIC(14,2)  NOT NULL,
+    monto_total  NUMERIC(14,2)  NOT NULL,
     forma_pago   VARCHAR(30)    NOT NULL,
     referencia   VARCHAR(100),
     fecha_pago   TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     recibido_por BIGINT,
 
     CONSTRAINT pk_pagos PRIMARY KEY (id_pago),
-    CONSTRAINT fk_pagos_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE CASCADE,
     CONSTRAINT fk_pagos_usuario FOREIGN KEY (recibido_por) REFERENCES usuarios(id_usuario) ON DELETE RESTRICT,
     
-    CONSTRAINT ck_pagos_monto CHECK (monto > 0),
+    CONSTRAINT ck_pagos_monto CHECK (monto_total > 0),
     CONSTRAINT ck_pagos_forma CHECK (forma_pago IN ('EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'CREDITO'))
 );
 
-COMMENT ON TABLE pagos IS 'Histórico de pagos registrados contra facturas.';
+COMMENT ON TABLE pagos IS 'Transacciones de pago recibidas en el sistema. Un pago puede cubrir múltiples facturas.';
+
+
+-- =============================================================================
+-- TABLA: pago_facturas
+-- Descripción: Tabla puente (N:M) que distribuye un pago entre varias facturas.
+-- =============================================================================
+
+CREATE TABLE pago_facturas (
+    id_pago_factura BIGSERIAL      NOT NULL,
+    id_pago         BIGINT         NOT NULL,
+    id_factura      BIGINT         NOT NULL,
+    monto_aplicado  NUMERIC(14,2)  NOT NULL,
+    creado_en       TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT pk_pago_facturas PRIMARY KEY (id_pago_factura),
+    
+    CONSTRAINT fk_pf_pago FOREIGN KEY (id_pago) REFERENCES pagos(id_pago) ON DELETE CASCADE,
+    CONSTRAINT fk_pf_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE RESTRICT,
+    
+    CONSTRAINT ck_pf_monto_aplicado CHECK (monto_aplicado > 0)
+);
+
+COMMENT ON TABLE pago_facturas IS 'Distribución del dinero de un pago hacia facturas específicas. Relación N:M.';
