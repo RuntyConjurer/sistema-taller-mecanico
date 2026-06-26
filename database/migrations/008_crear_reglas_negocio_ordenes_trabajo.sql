@@ -55,7 +55,7 @@ $$;
 COMMENT ON FUNCTION validar_cierre_orden_trabajo() IS
     'Trigger de validación para el cierre de órdenes de trabajo. Verifica diagnósticos y facturas agrupadas.';
 
-CREATE OR REPLACE TRIGGER trg_validar_cierre_orden_trabajo
+CREATE TRIGGER trg_validar_cierre_orden_trabajo
     BEFORE UPDATE OF estado
     ON ordenes_trabajo
     FOR EACH ROW
