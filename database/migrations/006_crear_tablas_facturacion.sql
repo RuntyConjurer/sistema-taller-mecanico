@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Migración: 006_crear_tablas_facturacion.sql
--- Descripción: Crea las tablas de facturación, detalles, pagos y su distribución.
+-- Descripción: Crea las tablas de facturación, detalles, pagos y sus relaciones.
 -- Motor: PostgreSQL
 -- Normalización: 3FN
 -- Dependencias: 003_crear_citas_ordenes_diagnosticos.sql
@@ -12,7 +12,6 @@
 
 CREATE TABLE facturas (
     id_factura      BIGSERIAL       NOT NULL,
-    id_ot           BIGINT          NOT NULL,
     numero_factura  VARCHAR(30)     NOT NULL,
     fecha           TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     subtotal        NUMERIC(14,2)   NOT NULL DEFAULT 0,
@@ -25,9 +24,7 @@ CREATE TABLE facturas (
     creado_en       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
     CONSTRAINT pk_facturas PRIMARY KEY (id_factura),
-    CONSTRAINT uq_facturas_ot UNIQUE (id_ot),
     CONSTRAINT uq_facturas_numero UNIQUE (numero_factura),
-    CONSTRAINT fk_facturas_ot FOREIGN KEY (id_ot) REFERENCES ordenes_trabajo(id_ot) ON DELETE RESTRICT,
     CONSTRAINT fk_facturas_usuario FOREIGN KEY (creado_por) REFERENCES usuarios(id_usuario) ON DELETE RESTRICT,
     CONSTRAINT ck_facturas_subtotal CHECK (subtotal >= 0),
     CONSTRAINT ck_facturas_impuesto CHECK (impuesto >= 0),
@@ -36,7 +33,26 @@ CREATE TABLE facturas (
     CONSTRAINT ck_facturas_estado CHECK (estado IN ('PENDIENTE', 'PAGADA', 'ANULADA'))
 );
 
-COMMENT ON TABLE facturas IS 'Encabezado de facturas vinculadas a órdenes de trabajo.';
+COMMENT ON TABLE facturas IS 'Encabezado de facturas. Puede agrupar múltiples órdenes de trabajo.';
+
+-- =============================================================================
+-- TABLA: factura_ordenes_trabajo
+-- =============================================================================
+
+CREATE TABLE factura_ordenes_trabajo (
+    id_factura BIGINT NOT NULL,
+    id_ot      BIGINT NOT NULL,
+    creado_en  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT pk_factura_ot PRIMARY KEY (id_factura, id_ot),
+    CONSTRAINT fk_fot_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE CASCADE,
+    CONSTRAINT fk_fot_ot FOREIGN KEY (id_ot) REFERENCES ordenes_trabajo(id_ot) ON DELETE RESTRICT,
+    
+    -- Una OT solo puede ser facturada una única vez
+    CONSTRAINT uq_fot_ot UNIQUE (id_ot)
+);
+
+COMMENT ON TABLE factura_ordenes_trabajo IS 'Tabla puente para agrupar múltiples OTs en un solo comprobante fiscal.';
 
 -- =============================================================================
 -- TABLA: factura_detalles
@@ -45,6 +61,7 @@ COMMENT ON TABLE facturas IS 'Encabezado de facturas vinculadas a órdenes de tr
 CREATE TABLE factura_detalles (
     id_factura_detalle  BIGSERIAL      NOT NULL,
     id_factura          BIGINT         NOT NULL,
+    id_ot               BIGINT,        -- Para saber a qué vehículo pertenece esta línea
     tipo_item           VARCHAR(20)    NOT NULL,
     descripcion         VARCHAR(150)   NOT NULL,
     cantidad            NUMERIC(12,2)  NOT NULL,
@@ -56,6 +73,7 @@ CREATE TABLE factura_detalles (
 
     CONSTRAINT pk_factura_detalles PRIMARY KEY (id_factura_detalle),
     CONSTRAINT fk_fd_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE CASCADE,
+    CONSTRAINT fk_fd_ot FOREIGN KEY (id_ot) REFERENCES ordenes_trabajo(id_ot) ON DELETE SET NULL,
     CONSTRAINT ck_fd_tipo_item CHECK (tipo_item IN ('SERVICIO', 'MATERIAL', 'REFRIGERANTE')),
     CONSTRAINT ck_fd_cantidad CHECK (cantidad > 0),
     CONSTRAINT ck_fd_precio CHECK (precio_unitario >= 0),
@@ -63,10 +81,10 @@ CREATE TABLE factura_detalles (
     CONSTRAINT ck_fd_monto_impuesto CHECK (monto_impuesto >= 0)
 );
 
-COMMENT ON TABLE factura_detalles IS 'Ítems individuales desglosados dentro de una factura, con su registro histórico de impuestos.';
+COMMENT ON TABLE factura_detalles IS 'Ítems individuales. Puede referenciar el id_ot específico dentro de una factura agrupada.';
 
 -- =============================================================================
--- TABLA: pagos
+-- TABLA: pagos & pago_facturas (Manteniendo las mejoras anteriores)
 -- =============================================================================
 
 CREATE TABLE pagos (
@@ -83,12 +101,6 @@ CREATE TABLE pagos (
     CONSTRAINT ck_pagos_forma CHECK (forma_pago IN ('EFECTIVO', 'TARJETA', 'TRANSFERENCIA', 'CREDITO'))
 );
 
-COMMENT ON TABLE pagos IS 'Transacciones de pago recibidas en el sistema. Un pago puede cubrir múltiples facturas.';
-
--- =============================================================================
--- TABLA: pago_facturas
--- =============================================================================
-
 CREATE TABLE pago_facturas (
     id_pago_factura BIGSERIAL      NOT NULL,
     id_pago         BIGINT         NOT NULL,
@@ -101,5 +113,3 @@ CREATE TABLE pago_facturas (
     CONSTRAINT fk_pf_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE RESTRICT,
     CONSTRAINT ck_pf_monto_aplicado CHECK (monto_aplicado > 0)
 );
-
-COMMENT ON TABLE pago_facturas IS 'Distribución del dinero de un pago hacia facturas específicas. Relación N:M.';
