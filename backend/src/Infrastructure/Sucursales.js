@@ -28,14 +28,14 @@ const Sucursales = sequelize.define('Sucursales', {
         allowNull: false,
         defaultValue: true,
     },
-    creado_en:{
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
+   
         
 },
 {
     tableName: 'sucursales',
-    timestamps: false,
-})
+    timestamps: true,
+    createdAt: 'creado_en',
+    updatedAt: false,
+});
+
+module.exports = Sucursales;
