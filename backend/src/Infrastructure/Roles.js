@@ -3,21 +3,21 @@ const sequelize = require('./Database/db');
 
 const Roles = sequelize.define('Roles',{
     id_rol: {
-        type: DataType.BIGINT,
+        type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
     },
     nombre: {
-        type: DataType.BIGINT,
+        type: DataTypes.BIGINT,
         allowNull: false,
     },
     descripcion: {
-        type: DataType.TEXT,
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     activo:{
-        type: DataType.BOOLEAN,
+        type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
     }, 
@@ -28,3 +28,5 @@ const Roles = sequelize.define('Roles',{
     createdAt: 'creado_en',
     updatedAt: 'false',
 })
+
+module.exports = Roles;
