@@ -1,6 +1,7 @@
+requiere ('dotenv').config();
 const {sequelize}= requiere('sequelize');
 
-const sequelize = new Sequelize('postgresql://postgres.twkvqecbzqjhhlggadua:[j5NF4XzXWUeLbwQR]@aws-1-us-east-2.pooler.supabase.com:6543/postgres'{
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     dialectOptions: {
         ssl: {
