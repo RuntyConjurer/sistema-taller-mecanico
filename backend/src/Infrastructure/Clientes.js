@@ -6,47 +6,47 @@ const Clientes = sequelize.define('Clientes',{
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
-        allowNulls: false,
+        allowNull: false,
     },
     tipo_cliente: {
         type: DataTypes.STRING(10),
-        allowNulls: false,
+        allowNull: false,
     },
     tipo_identificacion: {
         type: DataTypes.STRING(15),
-        allowNulls: false,
+        allowNull: false,
 
     },
     identificacion: {
         type: DataTypes.STRING(20),
-        allowNulls: false,
+        allowNull: false,
     },
     nombre: {
         type: DataTypes.STRING(150),
-        allowNulls: false,
+        allowNull: false,
     },
     telefono: {
         type: DataTypes.STRING(20),
-        allowNulls: true,
+        allowNull: true,
     },
     direccion: {
         type: DataTypes.STRING(250),
-        allowNulles: true,
+        allowNull: true,
     },
     email: {
         type: DataTypes.STRING(100),
-        allowNulls: true,
+        allowNull: true,
     },
     activo: {
         type: DataTypes.BOOLEAN,
-        allowNulls: false,
-        DefaultValue: true,
+        allowNull: false,
+        defaultValue: true,
     },
 
 },
 {
     tableName: 'clientes',
-    timestamp: 'true',
+    timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,
 })

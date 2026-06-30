@@ -1,9 +1,10 @@
-const{DataTypes} = requiere('sequelize');
+const{DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
+
 
 const Diagnosticos = sequelize.define('Diagnosticos', {
     id_diagnostico: {
-        type: DataTypes.BIGSERIAL,
+        type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
@@ -11,12 +12,6 @@ const Diagnosticos = sequelize.define('Diagnosticos', {
     id_ot: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: OrdenesTrabajo,
-            key: 'id_ot',
-        },
-        onUpdate:'CASCADE',
-        onDelete: 'CASCADE',
     },
     presion_baja: {
         type: DataTypes.NUMERIC(6,2),
@@ -51,7 +46,7 @@ const Diagnosticos = sequelize.define('Diagnosticos', {
 },
 {
     tableName: 'diagnosticos',
-    timestamp: false,
+    timestamps: false,
 })
 
 module.exports = Diagnosticos;

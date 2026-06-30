@@ -1,6 +1,7 @@
 const {DataTypes} = require ('sequelize');
 const sequelize = require('./Database/db');
 
+
 const Usuarios = sequelize.define ('Usuarios',{
      id_usuario:{
         type: DataTypes.BIGINT,
@@ -11,10 +12,6 @@ const Usuarios = sequelize.define ('Usuarios',{
     id_sucursal:{
         type: DataTypes.BIGINT,
         allowNull: false,
-        references:{
-            model: Sucursales,
-            key: 'id_sucursal',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
     },
@@ -22,7 +19,7 @@ const Usuarios = sequelize.define ('Usuarios',{
 },
 {
    tableName: 'usuarios',
-   timestamp: false, 
+   timestamps: false, 
 });
 
 module.exports = Usuarios;

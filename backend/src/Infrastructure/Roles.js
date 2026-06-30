@@ -9,8 +9,9 @@ const Roles = sequelize.define('Roles',{
         allowNull: false,
     },
     nombre: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING(50),
         allowNull: false,
+        unique: true,
     },
     descripcion: {
         type: DataTypes.TEXT,
@@ -24,9 +25,9 @@ const Roles = sequelize.define('Roles',{
 },
 {
     tableName: 'roles',
-    timestamp: true,
+    timestamps: true,
     createdAt: 'creado_en',
-    updatedAt: 'false',
+    updatedAt: false,
 })
 
 module.exports = Roles;

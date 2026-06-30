@@ -2,47 +2,47 @@ const {DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
 
 
-const OrdenTrabajoMateriales = sequelize.define('OrdenTrabajoMateriales', {
-    id_ot_material: {
+const FacturaDetalles = sequelize.define('FacturaDetalles', {
+    id_factura_detalle: {
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
     },
-    id_ot: {
+    id_factura: {
         type: DataTypes.BIGINT,
         allowNull: false,
-
-     onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
+       
     },
-    id_material:{
-        type: DataTypes.BIGINT,
-        allowNull: true,
+    tipo_item: {
+        type: DataTypes.STRING(20),
+        allowNull: false, 
+        validate: {
+            isIn: [['SERVICIO', 'MATERIAL', 'REFRIGERANTE']]
+        }
     },
-    id_refrigerante: {
-        type: DataTypes.BIGINT,
-        allowNull: true,
+    descripcion: {
+        type: DataTypes.STRING(150),
+        allowNull: false,
     },
     cantidad: {
         type: DataTypes.DECIMAL(12,2),
         allowNull: false,
     },
-    precio_unitario: {
+    precio_unitario:{
         type: DataTypes.DECIMAL(12,2),
         allowNull: false,
     },
-     subtotal: {
+    subtotal: {
         type: DataTypes.DECIMAL(12,2),
         allowNull: true,
     },
-    
 },
 {
-    tableName: 'orden_trabajo_materiales',
+    tableName: 'factura_detalles',
     timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,
 });
 
-module.exports = OrdenTrabajoMateriales;
+module.exports = FacturaDetalles;

@@ -1,20 +1,18 @@
 const {DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
 
+
 const Vehiculos = sequelize.define('Vehiculos',{
     id_vehiculo: {
         type: DataTypes.BIGINT,
         primaryKey: true,
         autoIncrement: true,
-        allowNulls: false,
+        allowNull: false,
     },
     id_cliente:{
         type: DataTypes.BIGINT,
         allowNull: false,
-        references:{
-            model: Clientes,
-            key: 'id_cliente',
-        },
+      
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT'
     },
@@ -31,7 +29,7 @@ const Vehiculos = sequelize.define('Vehiculos',{
         allowNull: false,
     },
     placa: {
-        type: DataTypes.STIRNG(20),
+        type: DataTypes.STRING(20),
         allowNull: true,
     },
     color: {
@@ -39,7 +37,7 @@ const Vehiculos = sequelize.define('Vehiculos',{
         allowNull: true,
     },
     anio: {
-        type: DataTypes.SMAILLINT,
+        type: DataTypes.SMALLINT,
         allowNull: true,
     },
     tipo_refrigerante: {
@@ -56,7 +54,7 @@ const Vehiculos = sequelize.define('Vehiculos',{
 },
 {
     tableName: 'vehiculos',
-    timestamp: true,
+    timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,
 })

@@ -1,5 +1,5 @@
-const {DataTypes} = require(sequelize);
-const sequelize = requiere('./Database/db');
+const {DataTypes} = require('sequelize');
+const sequelize = require('./Database/db');
 
 const Servicios = sequelize.define('Servicios', {
     id_servicio: {
@@ -13,7 +13,7 @@ const Servicios = sequelize.define('Servicios', {
         allowNull: false,
     },
     descripcion: {
-        type: DataTypes.Text,
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     precio_base:{
@@ -31,7 +31,7 @@ const Servicios = sequelize.define('Servicios', {
 },
 {
     tableName: 'servicios',
-    timestamp: true,
+    timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,
 },

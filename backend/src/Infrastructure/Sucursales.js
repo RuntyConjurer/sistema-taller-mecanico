@@ -5,6 +5,7 @@ const Sucursales = sequelize.define('Sucursales', {
     id_sucursal:{
         type: DataTypes.BIGINT,
         primaryKey: true,
+        allowNull: false,
         autoIncrement: true, 
     },
     nombre:{

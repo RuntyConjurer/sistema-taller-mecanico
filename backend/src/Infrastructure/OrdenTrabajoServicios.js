@@ -1,5 +1,6 @@
-const {DataTypes} = requier('sequelize');
+const {DataTypes} = requiere('sequelize');
 const sequelize = require('./Database/db');
+
 
 const OrdenTrabajoServicios = sequelize.define('OrdenTrabajoServicios', {
     id_ot_servicio: {
@@ -11,25 +12,17 @@ const OrdenTrabajoServicios = sequelize.define('OrdenTrabajoServicios', {
     id_ot: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: OrdenesTrabajo,
-            key: 'id_ot',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
     },
     id_servicio: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: Servicios,
-            key: 'id_servicio',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
     },
-    contidad: {
-        type: DataType.DECIMAL(8,2),
+    cantidad: {
+        type: DataTypes.DECIMAL(8,2),
         allowNull: false,
         defaultValue: 1,
     },
@@ -46,7 +39,7 @@ const OrdenTrabajoServicios = sequelize.define('OrdenTrabajoServicios', {
 },
 {
     tableName: 'orden_trabajo_servicios',
-    timestamp: true,
+    timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,
 });

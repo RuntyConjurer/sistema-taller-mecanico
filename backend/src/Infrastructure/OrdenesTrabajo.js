@@ -1,7 +1,8 @@
 const {DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
 
-const OrdenesTrabajo = serielize.define('OrdenesTrabajo', {
+
+const OrdenesTrabajo = seqelize.define('OrdenesTrabajo', {
     id_ot:{
         type: DataTypes.BIGINT,
         primaryKey: true,
@@ -11,10 +12,6 @@ const OrdenesTrabajo = serielize.define('OrdenesTrabajo', {
     id_vehiculo: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: Vehiculos,
-            key: 'id_vehiculo',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
     },
@@ -22,30 +19,18 @@ const OrdenesTrabajo = serielize.define('OrdenesTrabajo', {
     id_usuario: {
         type: DataTypes.BIGINT,
         allowNull: true,
-        references: {
-            model: Usuarios,
-            key: 'id_usuario',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL'
     },
     id_sucursal: {
         type: DataTypes.BIGINT,
         allowNull: true,
-        references: {
-            model: Sucursales,
-            key: 'id_sucursal',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'RESTRICT',
     },
     id_cita: {
         type: DataTypes.BIGINT,
         allowNull: true,
-        references: {
-            model: Citas,
-            key: 'id_cita',
-        },
         onUpdate: 'CASCADE',
         onDelete: 'SET NULL',
     },
@@ -77,7 +62,7 @@ const OrdenesTrabajo = serielize.define('OrdenesTrabajo', {
 },
 {
     tableName: 'ordenes_trabajo',
-    timestamp: false,
+    timestamps: false,
 })
 
 module.exports = OrdenesTrabajo;    

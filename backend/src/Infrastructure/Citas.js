@@ -1,6 +1,7 @@
 const {DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
 
+
 const Citas = sequelize.define('Citas', {
     id_cita: {
         type: DataTypes.BIGINT,
@@ -11,32 +12,14 @@ const Citas = sequelize.define('Citas', {
     id_cliente: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: Cientes,
-            key: 'id_cliente',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
     },
     id_vehiculo: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references:{
-            model: Vehiculos,
-            key: 'id_vehiculo',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
     },
     id_sucursal: {
         type: DataTypes.BIGINT,
         allowNull: false,
-        references: {
-            model: Sucursales,
-            key: 'id_sucursal',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
     },
     fecha_cita:{
         type: DataTypes.Date,
@@ -45,7 +28,7 @@ const Citas = sequelize.define('Citas', {
     estado:{
         type: DataTypes.STRING(20),
         allowNull: false,
-        deafaultValue: 'PROGRAMADA',
+        defaultValue: 'PROGRAMADA',
     },
     motivo: {
         type: DataTypes.STRING(250),
@@ -59,7 +42,7 @@ const Citas = sequelize.define('Citas', {
 },
 {
     tableName: 'citas',
-    timestamp: true,
+    timestamps: true,
     createdAt: 'creado_en',
     updatedAt: false,    
 })
