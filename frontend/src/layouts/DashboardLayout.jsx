@@ -6,10 +6,9 @@ function DashboardLayout() {
     <div className="app-shell">
       <aside className="sidebar" aria-label="Navegacion principal">
         <div className="brand">
-          <span className="brand-mark">TR</span>
           <div>
-            <strong>Taller Refrigeracion</strong>
-            <small>Gestion automotriz</small>
+            <strong>Sistema Taller</strong>
+            <small>Wireframe administrativo</small>
           </div>
         </div>
 
@@ -32,14 +31,23 @@ function DashboardLayout() {
       <div className="content-shell">
         <header className="topbar">
           <div>
-            <strong>Panel administrativo</strong>
-            <span>Base inicial para operaciones del taller</span>
+            <strong>Taller de Refrigeracion Automotriz</strong>
+            <span>Prototipo visual de baja fidelidad</span>
+          </div>
+
+          <div className="topbar-actions" aria-label="Acciones conceptuales">
+            <span className="wire-input">Buscar modulo o registro</span>
+            <span className="wire-button">Accion</span>
           </div>
         </header>
 
         <main className="main-content">
           <Outlet />
         </main>
+
+        <footer className="app-footer">
+          Sistema de Taller de Refrigeracion Automotriz · Prototipo academico
+        </footer>
       </div>
     </div>
   )
