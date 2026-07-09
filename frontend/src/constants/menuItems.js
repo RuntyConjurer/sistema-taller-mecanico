@@ -1,0 +1,15 @@
+export const menuItems = [
+  { label: 'Dashboard', path: '/', description: 'Resumen operativo' },
+  { label: 'Clientes', path: '/clientes', description: 'Registro y consulta de clientes' },
+  { label: 'Vehiculos', path: '/vehiculos', description: 'Vehiculos asociados a clientes' },
+  { label: 'Ordenes de Trabajo', path: '/ordenes-trabajo', description: 'Seguimiento de reparaciones' },
+  { label: 'Diagnosticos', path: '/diagnosticos', description: 'Evaluaciones de refrigeracion' },
+  { label: 'Servicios', path: '/servicios', description: 'Catalogo base de servicios' },
+  { label: 'Inventario', path: '/inventario', description: 'Piezas, insumos y existencias' },
+  { label: 'Refrigerantes', path: '/refrigerantes', description: 'Control de recargas y consumo' },
+  { label: 'Facturacion', path: '/facturacion', description: 'Facturas y pagos' },
+  { label: 'Citas', path: '/citas', description: 'Agenda del taller' },
+  { label: 'Usuarios', path: '/usuarios', description: 'Equipo y permisos' },
+  { label: 'Historial Tecnico', path: '/historial-tecnico', description: 'Servicios por vehiculo' },
+  { label: 'Reportes', path: '/reportes', description: 'Indicadores y reportes' },
+]
