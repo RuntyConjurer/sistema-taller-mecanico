@@ -1,15 +1,10 @@
 -- =============================================================================
 -- Migración: 003_crear_citas_ordenes_diagnosticos.sql
 -- Descripción: Crea las tablas del flujo técnico inicial del taller:
---              citas, ordenes_trabajo y diagnosticos
--- Autor: Sebastián Ventura - Módulo de Base de Datos
--- Fecha: 2026-06-23
+--              citas, ordenes_trabajo y diagnosticos.
 -- Motor: PostgreSQL
 -- Normalización: 3FN
--- Dependencias: 002_crear_clientes_vehiculos.sql
--- Nota: La tabla sucursales y la tabla usuarios serán creadas en migraciones
---       posteriores. Las llaves foráneas hacia ellas se agregan en este script
---       como referencias adelantadas (diferidas por migración separada).
+-- Dependencias: 001_crear_usuarios_roles_sucursales.sql, 002_crear_clientes_vehiculos.sql
 -- =============================================================================
 
 
@@ -18,8 +13,7 @@
 -- Descripción: Registra las citas programadas por los clientes para traer
 --              sus vehículos al taller. Puede o no derivar en una orden
 --              de trabajo.
--- Dependencias: clientes, vehiculos
---              (sucursales referenciada — tabla creada en migración posterior)
+-- Dependencias: clientes, vehiculos, sucursales
 -- =============================================================================
 
 CREATE TABLE citas (
@@ -51,13 +45,17 @@ CREATE TABLE citas (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
 
+    -- Llave foránea hacia sucursales
+    CONSTRAINT fk_citas_sucursal
+        FOREIGN KEY (id_sucursal)
+        REFERENCES sucursales (id_sucursal)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
     -- Validación de estados permitidos
     CONSTRAINT ck_citas_estado
         CHECK (estado IN ('PROGRAMADA', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA', 'NO_ASISTIO'))
 );
-
--- Nota: La FK hacia sucursales(id_sucursal) se agregará en la migración
---       que cree dicha tabla, mediante ALTER TABLE citas ADD CONSTRAINT ...
 
 -- Comentario de tabla
 COMMENT ON TABLE citas IS
@@ -67,7 +65,7 @@ COMMENT ON TABLE citas IS
 COMMENT ON COLUMN citas.id_cita       IS 'Identificador único autoincremental de la cita.';
 COMMENT ON COLUMN citas.id_cliente    IS 'Cliente que agenda la cita. Referencia a clientes(id_cliente). Obligatorio.';
 COMMENT ON COLUMN citas.id_vehiculo   IS 'Vehículo para el que se agenda la cita. Referencia a vehiculos(id_vehiculo). Obligatorio.';
-COMMENT ON COLUMN citas.id_sucursal   IS 'Sucursal donde se atenderá la cita. Opcional (referencia diferida a sucursales).';
+COMMENT ON COLUMN citas.id_sucursal   IS 'Sucursal donde se atenderá la cita. Referencia a sucursales(id_sucursal). Opcional.';
 COMMENT ON COLUMN citas.fecha_cita    IS 'Fecha y hora programada para la cita (con zona horaria).';
 COMMENT ON COLUMN citas.estado        IS 'Estado actual de la cita: PROGRAMADA, CONFIRMADA, CANCELADA, COMPLETADA, NO_ASISTIO.';
 COMMENT ON COLUMN citas.motivo        IS 'Motivo o descripción breve del servicio solicitado en la cita.';
@@ -79,11 +77,8 @@ COMMENT ON COLUMN citas.creado_en     IS 'Fecha y hora de registro de la cita (c
 -- TABLA: ordenes_trabajo
 -- Descripción: Representa el ciclo de vida de un trabajo técnico realizado
 --              sobre un vehículo. Puede originarse desde una cita o abrirse
---              directamente. No puede cerrarse sin diagnóstico (regla a
---              implementar en migración posterior con constraint o trigger).
--- Dependencias: vehiculos, citas
---              (usuarios y sucursales referenciadas — tablas en migraciones
---               posteriores)
+--              directamente.
+-- Dependencias: vehiculos, usuarios, sucursales, citas
 -- =============================================================================
 
 CREATE TABLE ordenes_trabajo (
@@ -109,6 +104,20 @@ CREATE TABLE ordenes_trabajo (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
 
+    -- Llave foránea hacia usuarios (técnico asignado)
+    CONSTRAINT fk_ot_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios (id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    -- Llave foránea hacia sucursales
+    CONSTRAINT fk_ot_sucursal
+        FOREIGN KEY (id_sucursal)
+        REFERENCES sucursales (id_sucursal)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
     -- Llave foránea hacia citas (opcional)
     CONSTRAINT fk_ot_cita
         FOREIGN KEY (id_cita)
@@ -120,13 +129,10 @@ CREATE TABLE ordenes_trabajo (
     CONSTRAINT ck_ot_estado
         CHECK (estado IN ('ABIERTA', 'EN_DIAGNOSTICO', 'EN_REPARACION', 'FACTURADA', 'CERRADA', 'CANCELADA')),
 
-    -- La fecha de cierre no puede ser anterior a la fecha de apertura
+    -- La fecha de cierre no puede ser anterior a la fecha de apertura (Restricción inmutable válida)
     CONSTRAINT ck_ot_fechas
         CHECK (fecha_cierre IS NULL OR fecha_cierre >= fecha_apertura)
 );
-
--- Nota: Las FK hacia usuarios(id_usuario) y sucursales(id_sucursal) se
---       agregarán mediante ALTER TABLE en las migraciones correspondientes.
 
 -- Comentario de tabla
 COMMENT ON TABLE ordenes_trabajo IS
@@ -135,8 +141,8 @@ COMMENT ON TABLE ordenes_trabajo IS
 -- Comentarios de columnas
 COMMENT ON COLUMN ordenes_trabajo.id_ot               IS 'Identificador único autoincremental de la orden de trabajo.';
 COMMENT ON COLUMN ordenes_trabajo.id_vehiculo         IS 'Vehículo al que se le realiza el trabajo. Obligatorio.';
-COMMENT ON COLUMN ordenes_trabajo.id_usuario          IS 'Técnico o usuario responsable de la OT. Opcional (referencia diferida a usuarios).';
-COMMENT ON COLUMN ordenes_trabajo.id_sucursal         IS 'Sucursal donde se ejecuta el trabajo. Opcional (referencia diferida a sucursales).';
+COMMENT ON COLUMN ordenes_trabajo.id_usuario          IS 'Técnico o usuario responsable de la OT. Referencia a usuarios(id_usuario). Opcional.';
+COMMENT ON COLUMN ordenes_trabajo.id_sucursal         IS 'Sucursal donde se ejecuta el trabajo. Referencia a sucursales(id_sucursal). Opcional.';
 COMMENT ON COLUMN ordenes_trabajo.id_cita             IS 'Cita de origen de la OT. Opcional; puede abrirse sin cita previa.';
 COMMENT ON COLUMN ordenes_trabajo.estado              IS 'Estado de la OT: ABIERTA, EN_DIAGNOSTICO, EN_REPARACION, FACTURADA, CERRADA, CANCELADA.';
 COMMENT ON COLUMN ordenes_trabajo.descripcion_problema IS 'Descripción del problema reportado al momento de abrir la OT.';
@@ -149,10 +155,8 @@ COMMENT ON COLUMN ordenes_trabajo.fecha_cierre        IS 'Fecha y hora de cierre
 -- TABLA: diagnosticos
 -- Descripción: Almacena el diagnóstico técnico de refrigeración asociado a
 --              una orden de trabajo. Relación 1:1 con ordenes_trabajo mediante
---              UNIQUE en id_ot (una OT tiene como máximo un diagnóstico
---              principal).
--- Dependencias: ordenes_trabajo
---              (usuarios referenciada — tabla en migración posterior)
+--              UNIQUE en id_ot.
+-- Dependencias: ordenes_trabajo, usuarios
 -- =============================================================================
 
 CREATE TABLE diagnosticos (
@@ -170,7 +174,7 @@ CREATE TABLE diagnosticos (
     CONSTRAINT pk_diagnosticos
         PRIMARY KEY (id_diagnostico),
 
-    -- Unicidad sobre id_ot: una OT tiene un único diagnóstico principal
+    -- Unicidad sobre id_ot: una OT tiene un único diagnóstico principal (Relación 1:1)
     CONSTRAINT uq_diagnosticos_id_ot
         UNIQUE (id_ot),
 
@@ -181,15 +185,19 @@ CREATE TABLE diagnosticos (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
 
+    -- Llave foránea hacia usuarios (creador del diagnóstico)
+    CONSTRAINT fk_diagnosticos_creado_por
+        FOREIGN KEY (creado_por)
+        REFERENCES usuarios (id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
     -- Validación: presiones deben ser valores positivos si se registran
     CONSTRAINT ck_diagnosticos_presion_baja
         CHECK (presion_baja IS NULL OR presion_baja >= 0),
     CONSTRAINT ck_diagnosticos_presion_alta
         CHECK (presion_alta IS NULL OR presion_alta >= 0)
 );
-
--- Nota: La FK hacia usuarios(id_usuario) en creado_por se agregará mediante
---       ALTER TABLE en la migración correspondiente a usuarios.
 
 -- Comentario de tabla
 COMMENT ON TABLE diagnosticos IS
@@ -203,5 +211,5 @@ COMMENT ON COLUMN diagnosticos.presion_alta      IS 'Lectura de presión alta de
 COMMENT ON COLUMN diagnosticos.temperatura       IS 'Temperatura registrada durante el diagnóstico (en °C o °F).';
 COMMENT ON COLUMN diagnosticos.falla_detectada   IS 'Descripción de la falla o condición técnica identificada. Obligatorio.';
 COMMENT ON COLUMN diagnosticos.observaciones     IS 'Observaciones adicionales del técnico sobre el diagnóstico.';
-COMMENT ON COLUMN diagnosticos.creado_por        IS 'Técnico o usuario que registró el diagnóstico. Opcional (referencia diferida a usuarios).';
+COMMENT ON COLUMN diagnosticos.creado_por        IS 'Técnico o usuario que registró el diagnóstico. Referencia a usuarios(id_usuario).';
 COMMENT ON COLUMN diagnosticos.fecha_diagnostico IS 'Fecha y hora en que se realizó el diagnóstico (con zona horaria).';
