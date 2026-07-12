@@ -1,7 +1,8 @@
+import { apiEndpoints } from '@/constants/apiEndpoints'
+import { clientes } from '@/data/mocks/clientes.mock'
 import { apiRequest } from './api'
+import { dataSource } from './dataSource'
 
-const CLIENTES_ENDPOINT = ''
-
-export function listarClientes() {
-  return apiRequest(CLIENTES_ENDPOINT)
+export async function listarClientes() {
+  return dataSource === 'mock' ? clientes : apiRequest(apiEndpoints.clients)
 }

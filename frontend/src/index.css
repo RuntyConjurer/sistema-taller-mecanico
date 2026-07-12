@@ -1,2 +1,167 @@
-@import './styles/variables.css';
-@import './styles/globals.css';
+@import '@fontsource/hanken-grotesk/latin-600.css';
+@import '@fontsource/hanken-grotesk/latin-700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
+@import '@fontsource/jetbrains-mono/latin-500.css';
+@import '@fontsource/jetbrains-mono/latin-600.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Hanken Grotesk', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-background: #f4fafe;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-primary: #00677f;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #b7eaff;
+  --color-secondary-foreground: #004e60;
+  --color-muted: #eef5f8;
+  --color-muted-foreground: #52636b;
+  /* El cian es la señal de acción: solo se usa sobre fondo oscuro, donde contrasta
+     9.3:1. Sobre blanco solo llega a 1.8:1, así que no sirve como color de texto
+     ni como anillo de foco. */
+  --color-accent: #00d1ff;
+  --color-accent-foreground: #0f172a;
+  --color-border: #e2e8f0;
+  --color-input: #bbc9cf;
+  /* El anillo de foco debe alcanzar 3:1 contra el fondo (WCAG 1.4.11). El azul
+     petróleo llega a 6.5:1 sobre blanco; el cian se quedaba en 1.8:1. */
+  --color-ring: #00677f;
+  --color-destructive: #ba1a1a;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #166534;
+  --color-success-foreground: #ffffff;
+  --color-warning: #92400e;
+  --color-warning-foreground: #ffffff;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer utilities {
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .technical-value {
+    @apply font-mono text-[0.8125rem] font-medium tabular-nums;
+  }
+
+  button,
+  a,
+  select,
+  input,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .public-section {
+    @apply py-16 md:py-24;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.1em] text-primary;
+  }
+
+  .detail-panel {
+    @apply fixed inset-y-0 right-0 z-[60] w-full max-w-md border-l-2 border-primary bg-card transition-transform duration-200 ease-out;
+  }
+
+  .chart-surface {
+    @apply border border-border bg-card p-5;
+  }
+
+  .chart-surface h2 {
+    @apply font-display text-lg font-semibold;
+  }
+
+  .chart-surface header p {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background: rgb(238 245 248 / 0.6);
+  }
+
+  .data-table tbody tr[data-selected='true'] {
+    background: rgb(183 234 255 / 0.55);
+  }
+
+  @media (max-width: 639px) {
+    .data-table thead {
+      @apply sr-only;
+    }
+    .data-table,
+    .data-table tbody,
+    .data-table tr,
+    .data-table td {
+      display: block;
+      width: 100%;
+    }
+    .data-table tbody tr {
+      @apply border-b border-border p-3 last:border-0;
+    }
+    .data-table tbody tr:nth-child(even) {
+      background: rgb(238 245 248 / 0.6);
+    }
+    .data-table td {
+      @apply grid grid-cols-[minmax(110px,.8fr)_1.2fr] gap-3 px-0 py-2 text-right;
+    }
+    .data-table td::before {
+      content: attr(data-label);
+      @apply text-left text-xs font-bold uppercase tracking-wide text-muted-foreground;
+    }
+  }
+
+  .photo-grid {
+    background-color: rgb(238 245 248);
+  }
+}
