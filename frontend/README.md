@@ -1,16 +1,58 @@
-# React + Vite
+# Frontend SGTRA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz React/Vite para el Sistema de Gestión de Taller de Refrigeración Automotriz. Es una demostración académica: la interfaz representa los flujos del SRS, pero el backend local aún no publica sus endpoints funcionales.
 
-Currently, two official plugins are available:
+## Ejecutar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+Comandos de calidad:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run lint
+npm run test
+npm run build
+```
 
-## Expanding the ESLint configuration
+## Modo de datos
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+El archivo `.env` puede contener:
+
+```env
+VITE_DATA_SOURCE=mock
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+`mock` es el valor predeterminado y no guarda datos fuera de la sesión actual. `api` hace que los servicios consulten `VITE_API_BASE_URL`; solo debe activarse cuando backend implemente el contrato documentado en `docs/presentacion-frontend.md`.
+
+## Estructura
+
+```text
+src/
+├─ pages/public/       sitio del cliente
+├─ pages/admin/        módulos internos
+├─ components/ui/      controles reutilizables
+├─ components/common/  tabla, panel, encabezados y estados
+├─ components/domain/  componentes de negocio
+├─ data/mocks/         datos demostrativos aislados
+├─ services/           puente mock/API por dominio
+├─ constants/          rutas, estados y permisos demo
+└─ utils/              validación y formato
+```
+
+## Recorrido de datos
+
+```text
+Pantalla React → service del dominio → mock local o API → controlador backend → PostgreSQL
+```
+
+Las pantallas no consultan SQL ni conocen tablas. Los servicios traducen respuestas de API a datos de interfaz y los estados se mantienen como códigos técnicos (`CONFIRMADA`, `PAGADA`, `EN_DIAGNOSTICO`) con etiquetas legibles para el usuario.
+
+## Límites explícitos de la demo
+
+- El login, permisos, agenda, consumo y pagos se simulan en memoria o `sessionStorage`.
+- WhatsApp, sucursales, técnicos, importes e indicadores son datos demostrativos.
+- El backend debe validar identidad, permisos, stock, diagnóstico, factura pagada y cierre de OT; el frontend solo previene errores fáciles de entender.

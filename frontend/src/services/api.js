@@ -18,10 +18,15 @@ export async function apiRequest(path, options = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`Error de API: ${response.status}`)
+    const payload = await response.json().catch(() => null)
+    const error = new Error(payload?.error?.message || `Error de API: ${response.status}`)
+    error.code = payload?.error?.code || response.status
+    error.fieldErrors = payload?.error?.fieldErrors || {}
+    throw error
   }
 
-  return response.json()
+  const payload = await response.json()
+  return payload.data ?? payload
 }
 
 export { API_BASE_URL }

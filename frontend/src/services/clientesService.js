@@ -1,7 +1,8 @@
+import { apiEndpoints } from '@/constants/apiEndpoints'
+import { clientes } from '@/data/mocks/clientes.mock'
 import { apiRequest } from './api'
-
-const CLIENTES_ENDPOINT = ''
+import { dataSource } from './dataSource'
 
 export function listarClientes() {
-  return apiRequest(CLIENTES_ENDPOINT)
+  return Promise.resolve(dataSource === 'mock' ? clientes : apiRequest(apiEndpoints.clients))
 }

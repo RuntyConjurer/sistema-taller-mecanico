@@ -4,3 +4,10 @@ export function formatCurrency(value, currency = 'DOP') {
     currency,
   }).format(value)
 }
+
+export function formatDate(value) {
+  return new Intl.DateTimeFormat('es-DO', {
+    dateStyle: 'medium',
+    timeZone: 'America/Santo_Domingo',
+  }).format(new Date(value))
+}
