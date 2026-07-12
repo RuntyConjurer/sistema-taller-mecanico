@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
@@ -7,6 +7,7 @@ import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getStockState } from '@/constants/domainStates'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarMateriales, listarMovimientos } from '@/services/inventarioService'
 import { formatCurrency, formatDate, formatQuantity } from '@/utils/formatters'
 
@@ -17,26 +18,14 @@ const categoriaLabels = {
 }
 
 function Inventario() {
-  const [materiales, setMateriales] = useState([])
-  const [movimientos, setMovimientos] = useState([])
   const [selected, setSelected] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [items, moves] = await Promise.all([listarMateriales(), listarMovimientos()])
-        setMateriales(items)
-        setMovimientos(moves)
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar el inventario.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadData()
+  const { data, isLoading, error } = useAsyncData(async () => {
+    const [materiales, movimientos] = await Promise.all([listarMateriales(), listarMovimientos()])
+    return { materiales, movimientos }
   }, [])
+
+  const materiales = data?.materiales ?? []
+  const movimientos = data?.movimientos ?? []
 
   // Mismo cálculo que la vista vw_estado_inventario de PostgreSQL.
   const stockColumn = {

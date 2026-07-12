@@ -41,10 +41,21 @@ src/
 ├─ components/ui/      controles reutilizables
 ├─ components/common/  tabla, panel lateral, encabezados, estados de carga y error
 ├─ components/domain/  componentes de negocio (StatusBadge)
+├─ hooks/              useAsyncData: el único patrón de carga de datos
 ├─ data/mocks/         datos de muestra con la forma de las tablas de PostgreSQL
 ├─ services/           puente mock/API por dominio + sesión
 ├─ constants/          estados de dominio, roles, rutas de la API, marca
 └─ utils/              validación y formato
+```
+
+## Cómo se cargan los datos en una pantalla
+
+Siempre igual, en todas: `useAsyncData` pide los datos a un service y devuelve el resultado
+con su estado de carga y error. `reload()` los vuelve a pedir después de una acción que los
+modifica (registrar un pago, cerrar una orden, consumir refrigerante).
+
+```jsx
+const { data: clientes, isLoading, error } = useAsyncData(() => listarClientes(), [])
 ```
 
 ## Recorrido de datos

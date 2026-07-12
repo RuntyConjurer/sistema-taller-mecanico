@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarCotizaciones } from '@/services/cotizacionesService'
 import { formatCurrency, formatDate } from '@/utils/formatters'
 
@@ -16,23 +17,9 @@ const tipoItemLabels = {
 }
 
 function Cotizaciones() {
-  const [cotizaciones, setCotizaciones] = useState([])
   const [selected, setSelected] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setCotizaciones(await listarCotizaciones())
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar las cotizaciones.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadData()
-  }, [])
+  const { data, isLoading, error } = useAsyncData(() => listarCotizaciones(), [])
+  const cotizaciones = data ?? []
 
   const cotizacion = selected || cotizaciones[0]
 

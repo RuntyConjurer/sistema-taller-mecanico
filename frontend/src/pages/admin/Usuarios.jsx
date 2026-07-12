@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
@@ -6,29 +6,18 @@ import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import { Badge } from '@/components/ui/badge'
 import { demoRoles } from '@/constants/demoRoles'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarSucursales, listarUsuarios } from '@/services/usuariosService'
 
 function Usuarios() {
-  const [usuarios, setUsuarios] = useState([])
-  const [sucursales, setSucursales] = useState([])
   const [selected, setSelected] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [users, branches] = await Promise.all([listarUsuarios(), listarSucursales()])
-        setUsuarios(users)
-        setSucursales(branches)
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar los usuarios.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadData()
+  const { data, isLoading, error } = useAsyncData(async () => {
+    const [usuarios, sucursales] = await Promise.all([listarUsuarios(), listarSucursales()])
+    return { usuarios, sucursales }
   }, [])
+
+  const usuarios = data?.usuarios ?? []
+  const sucursales = data?.sucursales ?? []
 
   const nombreSucursal = (id) => sucursales.find((item) => item.id === id)?.nombre || '—'
   const nombreRol = (code) => demoRoles[code]?.label || code

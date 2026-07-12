@@ -1,30 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
 import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import { Badge } from '@/components/ui/badge'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarVehiculos } from '@/services/vehiculosService'
 
 function Vehiculos() {
   const [selected, setSelected] = useState(null)
-  const [vehiculos, setVehiculos] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadVehiculos() {
-      try {
-        setVehiculos(await listarVehiculos())
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar los vehículos.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadVehiculos()
-  }, [])
+  const { data, isLoading, error } = useAsyncData(() => listarVehiculos(), [])
+  const vehiculos = data ?? []
 
   if (error) return <ErrorState description={error} />
 

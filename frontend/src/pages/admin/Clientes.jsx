@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarClientes } from '@/services/clientesService'
 
 // Etiquetas de los CHECK constraints de la tabla `clientes`.
@@ -17,27 +18,13 @@ const tipoIdentificacionLabels = { CEDULA: 'Cédula', RNC: 'RNC', PASAPORTE: 'Pa
 function Clientes() {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
-  const [clientes, setClientes] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadClientes() {
-      try {
-        setClientes(await listarClientes())
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar los clientes.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadClientes()
-  }, [])
+  const { data: clientes, isLoading, error } = useAsyncData(() => listarClientes(), [])
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
-    if (!term) return clientes
-    return clientes.filter(
+    const lista = clientes ?? []
+    if (!term) return lista
+    return lista.filter(
       (item) =>
         item.nombre.toLowerCase().includes(term) ||
         item.identificacion.toLowerCase().includes(term) ||

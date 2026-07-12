@@ -6,6 +6,7 @@ import { menuItems } from '@/constants/menuItems'
 import { cn } from '@/lib/utils'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import AppLogo from '@/components/brand/AppLogo'
 import { demoRoles } from '@/constants/demoRoles'
 import { endSession, getBranchId, getRole, setBranchId } from '@/services/sessionStore'
@@ -202,8 +203,7 @@ function DashboardLayout() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                 {/* El SRS pide soporte multi-sucursal. La sucursal elegida filtra los
                     módulos operativos y se conserva al navegar entre pantallas. */}
-                <select
-                  className="h-10 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <Select
                   value={sucursalId}
                   onChange={(event) => cambiarSucursal(Number(event.target.value))}
                   aria-label="Sucursal activa"
@@ -213,7 +213,7 @@ function DashboardLayout() {
                       {item.nombre}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <div className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
                   <UserRound className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span>{activeRole.name}</span>

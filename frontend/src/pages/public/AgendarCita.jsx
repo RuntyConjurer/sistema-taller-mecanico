@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarServicios, listarSucursales } from '@/services/catalogoService'
 import { crearSolicitudCita } from '@/services/bookingService'
@@ -243,14 +244,14 @@ function VehicleStep({ errors, inputProps }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <BookingField id="marca" label="Marca" error={errors.marca}>
-        <select {...inputProps('marca')} className="h-11 w-full border border-input bg-card px-3">
+        <Select {...inputProps('marca')}>
           <option value="">Selecciona marca</option>
           <option>Toyota</option>
           <option>Honda</option>
           <option>Hyundai</option>
           <option>Kia</option>
           <option>Otra</option>
-        </select>
+        </Select>
       </BookingField>
       <BookingField id="modelo" label="Modelo" error={errors.modelo}>
         <Input {...inputProps('modelo')} placeholder="Ej. Corolla" />
@@ -278,17 +279,14 @@ function ServiceStep({ errors, inputProps, servicios }) {
   return (
     <div className="space-y-5">
       <BookingField id="servicio" label="Servicio o síntoma" error={errors.servicio}>
-        <select
-          {...inputProps('servicio')}
-          className="h-11 w-full border border-input bg-card px-3"
-        >
+        <Select {...inputProps('servicio')}>
           <option value="">Selecciona una opción</option>
           {servicios.map((item) => (
             <option key={item.id} value={item.slug}>
               {item.nombre}
             </option>
           ))}
-        </select>
+        </Select>
       </BookingField>
       <BookingField id="detalle" label="Describe lo que notas (opcional)" error={errors.detalle}>
         <textarea
@@ -306,29 +304,26 @@ function ScheduleStep({ errors, inputProps, sucursales }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <BookingField id="sucursal" label="Sucursal" error={errors.sucursal}>
-        <select
-          {...inputProps('sucursal')}
-          className="h-11 w-full border border-input bg-card px-3"
-        >
+        <Select {...inputProps('sucursal')}>
           <option value="">Elige una sucursal</option>
           {sucursales.map((item) => (
             <option key={item.id} value={item.slug}>
               {item.nombre} · {item.ciudad}
             </option>
           ))}
-        </select>
+        </Select>
       </BookingField>
       <BookingField id="fecha" label="Fecha preferida" error={errors.fecha}>
         <Input {...inputProps('fecha')} type="date" min={new Date().toISOString().slice(0, 10)} />
       </BookingField>
       <BookingField id="hora" label="Franja horaria" error={errors.hora}>
-        <select {...inputProps('hora')} className="h-11 w-full border border-input bg-card px-3">
+        <Select {...inputProps('hora')}>
           <option value="">Elige un horario</option>
           <option>8:00 - 10:00</option>
           <option>10:00 - 12:00</option>
           <option>13:00 - 15:00</option>
           <option>15:00 - 17:00</option>
-        </select>
+        </Select>
       </BookingField>
     </div>
   )

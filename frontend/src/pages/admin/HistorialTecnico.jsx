@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
@@ -6,49 +6,33 @@ import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarVehiculos } from '@/services/vehiculosService'
 import { listarHistorialPorVehiculo } from '@/services/historialService'
 import { formatDate } from '@/utils/formatters'
 
 function HistorialTecnico() {
-  const [vehiculos, setVehiculos] = useState([])
   const [vehiculoId, setVehiculoId] = useState('')
-  const [historial, setHistorial] = useState([])
   const [selected, setSelected] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
 
-  // El historial se consulta por vehículo, que es como lo pide el RF-11.
-  useEffect(() => {
-    async function loadVehiculos() {
-      try {
-        const items = await listarVehiculos()
-        setVehiculos(items)
-        setVehiculoId(items[0] ? String(items[0].id) : '')
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar los vehículos.')
-        setIsLoading(false)
-      }
-    }
-    void loadVehiculos()
-  }, [])
+  const { data: vehiculos, error: errorVehiculos } = useAsyncData(() => listarVehiculos(), [])
 
-  useEffect(() => {
-    if (!vehiculoId) return
-    async function loadHistorial() {
-      try {
-        setHistorial(await listarHistorialPorVehiculo(vehiculoId))
-        setSelected(null)
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar el historial.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadHistorial()
-  }, [vehiculoId])
+  // El historial se consulta por vehículo, que es como lo pide el RF-11. Si todavía no
+  // se ha elegido ninguno, se muestra el primero de la lista.
+  const vehiculoActivo = vehiculoId || (vehiculos?.[0] ? String(vehiculos[0].id) : '')
 
-  const vehiculo = vehiculos.find((item) => String(item.id) === vehiculoId)
+  const {
+    data: historial,
+    isLoading,
+    error: errorHistorial,
+  } = useAsyncData(
+    () => (vehiculoActivo ? listarHistorialPorVehiculo(vehiculoActivo) : Promise.resolve([])),
+    [vehiculoActivo],
+  )
+
+  const vehiculo = (vehiculos ?? []).find((item) => String(item.id) === vehiculoActivo)
+  const error = errorVehiculos || errorHistorial
 
   if (error) return <ErrorState description={error} />
 
@@ -62,18 +46,20 @@ function HistorialTecnico() {
 
       <div className="w-full space-y-2 sm:max-w-sm">
         <Label htmlFor="vehiculo-historial">Vehículo</Label>
-        <select
+        <Select
           id="vehiculo-historial"
-          className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          value={vehiculoId}
-          onChange={(event) => setVehiculoId(event.target.value)}
+          value={vehiculoActivo}
+          onChange={(event) => {
+            setVehiculoId(event.target.value)
+            setSelected(null)
+          }}
         >
-          {vehiculos.map((item) => (
+          {(vehiculos ?? []).map((item) => (
             <option key={item.id} value={item.id}>
               {item.placa} · {item.marca} {item.modelo} · {item.propietario}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -91,7 +77,7 @@ function HistorialTecnico() {
               render: (row) => <StatusBadge status={row.estado} />,
             },
           ]}
-          rows={historial}
+          rows={historial ?? []}
           selectedId={selected?.id}
           onRowSelect={setSelected}
           emptyMessage={

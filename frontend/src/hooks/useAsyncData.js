@@ -1,24 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 /**
- * Ejecuta una función que devuelve una promesa y expone el resultado junto con el
- * estado de carga y el error. Evita repetir el mismo useEffect en cada pantalla.
+ * Carga datos de un service y expone el resultado con su estado de carga y error.
+ * Es el único patrón de carga de datos del proyecto: antes cada pantalla repetía
+ * este mismo useEffect con su try/catch y sus tres useState.
  *
- * `deps` funciona como en useEffect: si cambia (por ejemplo, la sucursal activa),
- * se vuelven a pedir los datos.
+ *   const { data, isLoading, error, reload } = useAsyncData(() => listarClientes(), [])
  *
- *   const { data, isLoading, error } = useAsyncData(() => listarServicios(), [])
+ * `deps` funciona como en useEffect: si cambia (por ejemplo, la sucursal activa), se
+ * vuelven a pedir los datos.
+ *
+ * `reload` sirve para volver a pedirlos después de una acción que los modifica
+ * (registrar un pago, cerrar una orden, consumir refrigerante).
  */
 export function useAsyncData(fetcher, deps = []) {
   const [state, setState] = useState({ data: null, isLoading: true, error: '' })
+  const [intento, setIntento] = useState(0)
+
+  const reload = useCallback(() => setIntento((n) => n + 1), [])
 
   useEffect(() => {
-    // `cancelado` evita escribir en el estado si el componente se desmonta o si las
-    // dependencias cambian antes de que llegue la respuesta anterior.
+    // Si el componente se desmonta, o las dependencias cambian antes de que llegue la
+    // respuesta anterior, esa respuesta se descarta en lugar de pisar la nueva.
     let cancelado = false
 
-    // Todo el trabajo se difiere a un microtask: llamar a setState de forma síncrona
-    // dentro de un efecto provoca renders en cascada (react-hooks/set-state-in-effect).
+    // El trabajo se difiere a un microtask: llamar a setState de forma síncrona dentro
+    // de un efecto provoca renders en cascada (regla react-hooks/set-state-in-effect).
     Promise.resolve()
       .then(() => {
         if (!cancelado) setState((current) => ({ ...current, isLoading: true }))
@@ -37,7 +44,7 @@ export function useAsyncData(fetcher, deps = []) {
       cancelado = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [...deps, intento])
 
-  return state
+  return { ...state, reload }
 }

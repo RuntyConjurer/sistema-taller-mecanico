@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Calendar, ClipboardList, DollarSign, Package, Truck } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
@@ -10,6 +9,7 @@ import { BarChart, LineChart } from '@/components/common/OperationalCharts'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getStockState } from '@/constants/domainStates'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { obtenerResumen } from '@/services/dashboardService'
 import { formatQuantity } from '@/utils/formatters'
 
@@ -24,22 +24,14 @@ const statIcons = {
 
 function Dashboard() {
   const { sucursalId } = useOutletContext()
-  const [resumen, setResumen] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadResumen() {
-      try {
-        setResumen(await obtenerResumen(sucursalId))
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar el resumen.')
-      }
-    }
-    void loadResumen()
-  }, [sucursalId])
+  const {
+    data: resumen,
+    isLoading,
+    error,
+  } = useAsyncData(() => obtenerResumen(sucursalId), [sucursalId])
 
   if (error) return <ErrorState description={error} />
-  if (!resumen) return <LoadingSkeleton rows={6} />
+  if (isLoading || !resumen) return <LoadingSkeleton rows={6} />
 
   return (
     <div className="space-y-6">

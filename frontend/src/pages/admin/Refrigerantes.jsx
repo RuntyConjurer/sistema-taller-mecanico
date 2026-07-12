@@ -1,12 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { Snowflake, Droplets } from 'lucide-react'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { getStockState } from '@/constants/domainStates'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import {
   listarOrdenesParaConsumo,
   listarRefrigerantes,
@@ -23,25 +27,26 @@ function levelPercent(stockActual, stockMinimo) {
 }
 
 function Refrigerantes() {
-  const [refrigerantes, setRefrigerantes] = useState([])
-  const [ordenes, setOrdenes] = useState([])
   const [consumo, setConsumo] = useState({ ordenId: '', refrigeranteId: '', cantidad: '' })
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
 
-  async function loadData() {
-    try {
-      const [items, orders] = await Promise.all([listarRefrigerantes(), listarOrdenesParaConsumo()])
-      setRefrigerantes(items)
-      setOrdenes(orders)
-    } catch (loadError) {
-      setError(loadError.message || 'No fue posible cargar los refrigerantes.')
-    }
-  }
-
-  useEffect(() => {
-    void Promise.resolve().then(loadData)
+  // reload() vuelve a pedir las existencias tras registrar una recarga.
+  const {
+    data,
+    isLoading,
+    error: loadError,
+    reload,
+  } = useAsyncData(async () => {
+    const [refrigerantes, ordenes] = await Promise.all([
+      listarRefrigerantes(),
+      listarOrdenesParaConsumo(),
+    ])
+    return { refrigerantes, ordenes }
   }, [])
+
+  const refrigerantes = data?.refrigerantes ?? []
+  const ordenes = data?.ordenes ?? []
 
   async function submit(event) {
     event.preventDefault()
@@ -53,7 +58,7 @@ function Refrigerantes() {
     }
     try {
       const result = await registrarConsumoRefrigerante(consumo)
-      await loadData()
+      reload()
       setFeedback(
         usingMocks
           ? `Consumo demo registrado. Stock restante: ${formatQuantity(result.remaining, result.unidadMedida)}.`
@@ -64,6 +69,9 @@ function Refrigerantes() {
       setError(submitError.message || 'No fue posible registrar el consumo.')
     }
   }
+
+  if (loadError) return <ErrorState description={loadError} />
+  if (isLoading) return <LoadingSkeleton rows={5} />
 
   return (
     <div className="space-y-6">
@@ -158,13 +166,12 @@ function Refrigerantes() {
           <form className="grid gap-4 md:grid-cols-4" onSubmit={submit} noValidate>
             <div className="space-y-2">
               <Label htmlFor="ordenId">Orden de trabajo</Label>
-              <select
+              <Select
                 id="ordenId"
                 value={consumo.ordenId}
                 onChange={(event) =>
                   setConsumo((current) => ({ ...current, ordenId: event.target.value }))
                 }
-                className="h-10 w-full border border-input bg-card px-3"
               >
                 <option value="">Selecciona OT</option>
                 {ordenes.map((order) => (
@@ -172,17 +179,16 @@ function Refrigerantes() {
                     {order.numero} · {order.vehiculo}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="refrigeranteId">Refrigerante</Label>
-              <select
+              <Select
                 id="refrigeranteId"
                 value={consumo.refrigeranteId}
                 onChange={(event) =>
                   setConsumo((current) => ({ ...current, refrigeranteId: event.target.value }))
                 }
-                className="h-10 w-full border border-input bg-card px-3"
               >
                 <option value="">Selecciona refrigerante</option>
                 {refrigerantes.map((item) => (
@@ -190,7 +196,7 @@ function Refrigerantes() {
                     {item.nombre} · {formatQuantity(item.stockActual, item.unidadMedida)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="cantidad">Cantidad (kg)</Label>

@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
+import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { AlertTriangle, CheckCircle2, LockKeyhole } from 'lucide-react'
 import { otStatuses } from '@/constants/otStatuses'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import {
   cerrarOrdenTrabajo,
   listarOrdenesTrabajo,
@@ -29,47 +32,33 @@ const relatedModules = [
 function OrdenesTrabajo() {
   const { sucursalId } = useOutletContext()
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS')
-  const [ordenes, setOrdenes] = useState([])
-  const [facturas, setFacturas] = useState([])
-  const [historial, setHistorial] = useState([])
   const [selected, setSelected] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
 
-  async function loadData() {
-    try {
-      const [orders, invoices, timeline] = await Promise.all([
-        listarOrdenesTrabajo(sucursalId),
-        listarFacturas(),
-        obtenerHistorialOrden(),
-      ])
-      setOrdenes(orders)
-      setFacturas(invoices)
-      setHistorial(timeline)
-    } catch (loadError) {
-      setError(loadError.message || 'No fue posible cargar las órdenes.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // loadData vive fuera del efecto porque closeOrder también la usa para recargar.
-  // Se difiere a un microtask para no llamar a setState de forma síncrona dentro
-  // del efecto, que es lo que exige la regla react-hooks/set-state-in-effect.
-  // Al cambiar de sucursal se descarta la orden seleccionada y se recarga la lista.
-  useEffect(() => {
-    void Promise.resolve().then(() => {
-      setSelected(null)
-      return loadData()
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Se recarga sola al cambiar de sucursal, y con reload() después de cerrar una OT.
+  const {
+    data,
+    isLoading,
+    error: loadError,
+    reload,
+  } = useAsyncData(async () => {
+    const [ordenes, facturas, historial] = await Promise.all([
+      listarOrdenesTrabajo(sucursalId),
+      listarFacturas(),
+      obtenerHistorialOrden(),
+    ])
+    return { ordenes, facturas, historial }
   }, [sucursalId])
 
+  const facturas = data?.facturas ?? []
+  const historial = data?.historial ?? []
+
   const filtered = useMemo(() => {
+    const ordenes = data?.ordenes ?? []
     if (estadoFiltro === 'TODOS') return ordenes
     return ordenes.filter((item) => item.estado === estadoFiltro)
-  }, [estadoFiltro, ordenes])
+  }, [estadoFiltro, data])
   const orden = selected || filtered[0]
   const factura = facturas.find((item) => item.ordenId === orden?.id)
   const canClose = Boolean(orden?.diagnosticoRegistrado && factura?.estado === 'PAGADA')
@@ -81,7 +70,7 @@ function OrdenesTrabajo() {
     try {
       const updated = await cerrarOrdenTrabajo(orden.id)
       setSelected(updated)
-      await loadData()
+      reload()
       setFeedback(
         usingMocks ? 'OT cerrada solo en la demostración actual.' : 'Cierre enviado para validar.',
       )
@@ -89,6 +78,8 @@ function OrdenesTrabajo() {
       setError(closeError.message || 'No fue posible cerrar la OT.')
     }
   }
+
+  if (loadError) return <ErrorState description={loadError} />
 
   return (
     <div className="space-y-6">
@@ -101,9 +92,9 @@ function OrdenesTrabajo() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="space-y-2">
           <Label htmlFor="filtro-estado">Filtrar por estado</Label>
-          <select
+          <Select
             id="filtro-estado"
-            className="h-10 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="sm:w-56"
             value={estadoFiltro}
             onChange={(event) => setEstadoFiltro(event.target.value)}
           >
@@ -113,7 +104,7 @@ function OrdenesTrabajo() {
                 {value.label}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { demoRoles } from '@/constants/demoRoles'
 import { startSession } from '@/services/sessionStore'
+import { Select } from '@/components/ui/select'
 
 function Login() {
   const navigate = useNavigate()
@@ -40,18 +41,13 @@ function Login() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="rol-demo">Rol de demostración</Label>
-        <select
-          id="rol-demo"
-          value={role}
-          onChange={(event) => setRole(event.target.value)}
-          className="h-10 w-full rounded border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
+        <Select id="rol-demo" value={role} onChange={(event) => setRole(event.target.value)}>
           {Object.entries(demoRoles).map(([code, item]) => (
             <option key={code} value={code}>
               {item.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Contraseña</Label>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import { formatCurrency } from '@/utils/formatters'
@@ -8,47 +8,49 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import DetailPanel from '@/components/common/DetailPanel'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
+import { Select } from '@/components/ui/select'
 import { getStateMeta } from '@/constants/domainStates'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarFacturas, registrarPago } from '@/services/facturacionService'
 import { listarOrdenesTrabajo } from '@/services/ordenesService'
 import { listarServicios } from '@/services/catalogoService'
 import { usingMocks } from '@/services/dataSource'
 
 function Facturacion() {
-  const [facturas, setFacturas] = useState([])
-  const [ordenes, setOrdenes] = useState([])
-  // El detalle facturable sale del catálogo de servicios, no de una lista escrita a mano.
-  const [servicios, setServicios] = useState([])
   const [selected, setSelected] = useState(null)
   const [draft, setDraft] = useState({ ordenId: '', items: [] })
   const [payment, setPayment] = useState({ facturaId: '', monto: '' })
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
 
-  async function loadData() {
-    try {
-      const [invoiceData, workOrders, catalogo] = await Promise.all([
-        listarFacturas(),
-        listarOrdenesTrabajo(),
-        listarServicios(),
-      ])
-      setFacturas(invoiceData)
-      setOrdenes(workOrders)
-      setServicios(catalogo)
-    } catch (loadError) {
-      setError(loadError.message || 'No fue posible cargar facturación.')
-    }
-  }
-
-  useEffect(() => {
-    void Promise.resolve().then(loadData)
+  // reload() vuelve a leer las facturas tras aplicar un pago, para reflejar el balance.
+  const {
+    data,
+    isLoading,
+    error: loadError,
+    reload,
+  } = useAsyncData(async () => {
+    // El detalle facturable sale del catálogo de servicios, no de una lista fija.
+    const [facturas, ordenes, servicios] = await Promise.all([
+      listarFacturas(),
+      listarOrdenesTrabajo(),
+      listarServicios(),
+    ])
+    return { facturas, ordenes, servicios }
   }, [])
+
+  const facturas = data?.facturas ?? []
+  const ordenes = data?.ordenes ?? []
+  const servicios = data?.servicios ?? []
+
   const draftTotal = useMemo(
     () =>
-      servicios
+      (data?.servicios ?? [])
         .filter((item) => draft.items.includes(item.id))
         .reduce((sum, item) => sum + item.precioBase, 0),
-    [draft.items, servicios],
+    [draft.items, data],
   )
 
   function toggleItem(id) {
@@ -83,7 +85,7 @@ function Facturacion() {
     }
     try {
       const updated = await registrarPago(Number(payment.facturaId), Number(payment.monto))
-      await loadData()
+      reload()
       setPayment({ facturaId: updated.id, monto: '' })
       setFeedback(
         usingMocks
@@ -94,6 +96,9 @@ function Facturacion() {
       setError(paymentError.message || 'No fue posible aplicar el pago.')
     }
   }
+
+  if (loadError) return <ErrorState description={loadError} />
+  if (isLoading) return <LoadingSkeleton rows={5} />
 
   return (
     <div className="space-y-6">
@@ -134,13 +139,12 @@ function Facturacion() {
             <form className="space-y-4" onSubmit={prepareInvoice}>
               <div className="space-y-2">
                 <Label htmlFor="orden-factura">Orden de trabajo</Label>
-                <select
+                <Select
                   id="orden-factura"
                   value={draft.ordenId}
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, ordenId: event.target.value }))
                   }
-                  className="h-10 w-full border border-input bg-card px-3"
                 >
                   <option value="">Selecciona una OT</option>
                   {ordenes.map((order) => (
@@ -148,7 +152,7 @@ function Facturacion() {
                       {order.numero} · {order.cliente}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <fieldset>
                 <legend className="mb-2 text-sm font-semibold">Detalle facturable</legend>
@@ -191,13 +195,12 @@ function Facturacion() {
             <form className="grid gap-4" onSubmit={applyPayment}>
               <div className="space-y-2">
                 <Label htmlFor="factura-pago">Factura</Label>
-                <select
+                <Select
                   id="factura-pago"
                   value={payment.facturaId}
                   onChange={(event) =>
                     setPayment((current) => ({ ...current, facturaId: event.target.value }))
                   }
-                  className="h-10 w-full border border-input bg-card px-3"
                 >
                   <option value="">Selecciona una factura</option>
                   {facturas
@@ -207,7 +210,7 @@ function Facturacion() {
                         {item.numero} · Balance {formatCurrency(item.balance)}
                       </option>
                     ))}
-                </select>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="monto-pago">Monto recibido (DOP)</Label>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import EmptyState from '@/components/common/EmptyState'
@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select } from '@/components/ui/select'
+import ErrorState from '@/components/common/ErrorState'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarOrdenesTrabajo } from '@/services/ordenesService'
 import { guardarDiagnostico } from '@/services/diagnosticosService'
 import { usingMocks } from '@/services/dataSource'
@@ -63,30 +66,23 @@ function DiagnosticField({ id, label, value, error, onChange }) {
 
 function Diagnosticos() {
   const { sucursalId } = useOutletContext()
-  const [ordenes, setOrdenes] = useState([])
   const [ordenId, setOrdenId] = useState('')
   const [form, setForm] = useState(formVacio)
   const [errors, setErrors] = useState({})
   const [feedback, setFeedback] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    async function loadOrdenes() {
-      try {
-        const items = await listarOrdenesTrabajo(sucursalId)
-        setOrdenes(items)
-        setOrdenId(items[0] ? String(items[0].id) : '')
-      } catch (loadError) {
-        setFeedback(loadError.message || 'No fue posible cargar las órdenes.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadOrdenes()
-  }, [sucursalId])
+  const {
+    data: ordenes,
+    isLoading,
+    error,
+    reload,
+  } = useAsyncData(() => listarOrdenesTrabajo(sucursalId), [sucursalId])
 
-  const orden = ordenes.find((item) => String(item.id) === ordenId)
+  const lista = ordenes ?? []
+  // Si el técnico no ha elegido ninguna, se toma la primera de la sucursal activa.
+  const ordenActiva = ordenId || (lista[0] ? String(lista[0].id) : '')
+  const orden = lista.find((item) => String(item.id) === ordenActiva)
   const avisos = Object.keys(rangos)
     .map((campo) => fueraDeRango(campo, form[campo]))
     .filter(Boolean)
@@ -125,6 +121,8 @@ function Diagnosticos() {
           : 'Diagnóstico enviado para guardar.',
       )
       setForm(formVacio)
+      // El diagnóstico marca la orden como diagnosticada, así que hay que releerla.
+      reload()
     } catch (error) {
       setFeedback(error.message || 'No fue posible guardar el diagnóstico.')
     } finally {
@@ -132,6 +130,7 @@ function Diagnosticos() {
     }
   }
 
+  if (error) return <ErrorState description={error} />
   if (isLoading) return <LoadingSkeleton />
 
   return (
@@ -142,7 +141,7 @@ function Diagnosticos() {
         description="Registro de presiones, temperatura y falla detectada de una orden de trabajo."
       />
 
-      {ordenes.length === 0 ? (
+      {lista.length === 0 ? (
         <EmptyState
           title="No hay órdenes en esta sucursal"
           description="Cambia de sucursal o abre una orden de trabajo antes de registrar un diagnóstico."
@@ -152,18 +151,17 @@ function Diagnosticos() {
           <Card>
             <CardHeader className="space-y-2">
               <CardTitle className="text-base">Orden a diagnosticar</CardTitle>
-              <select
+              <Select
                 aria-label="Orden de trabajo"
-                className="h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={ordenId}
+                value={ordenActiva}
                 onChange={(event) => setOrdenId(event.target.value)}
               >
-                {ordenes.map((item) => (
+                {lista.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.numero} · {item.vehiculo}
                   </option>
                 ))}
-              </select>
+              </Select>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <DiagnosticField

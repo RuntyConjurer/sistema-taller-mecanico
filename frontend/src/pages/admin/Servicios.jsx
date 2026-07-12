@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import ErrorState from '@/components/common/ErrorState'
@@ -8,22 +8,8 @@ import { listarServicios } from '@/services/catalogoService'
 import { formatCurrency } from '@/utils/formatters'
 
 function Servicios() {
-  const [servicios, setServicios] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    async function loadServicios() {
-      try {
-        setServicios(await listarServicios())
-      } catch (loadError) {
-        setError(loadError.message || 'No fue posible cargar el catálogo.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    void loadServicios()
-  }, [])
+  const { data, isLoading, error } = useAsyncData(() => listarServicios(), [])
+  const servicios = data ?? []
 
   if (error) return <ErrorState description={error} />
 
