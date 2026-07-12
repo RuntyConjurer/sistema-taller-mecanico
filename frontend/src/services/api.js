@@ -32,8 +32,8 @@ export async function apiRequest(path, options = {}) {
     throw error
   }
 
-  const payload = await response.json()
-  return payload.data ?? payload
+  const payload = await response.json().catch(() => null)
+  return payload?.data ?? payload
 }
 
 export { API_BASE_URL }
