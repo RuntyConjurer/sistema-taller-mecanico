@@ -1,12 +1,42 @@
 import { Link, useParams } from 'react-router-dom'
 import { ArrowRight, Check, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import EmptyState from '@/components/common/EmptyState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
-import { services } from '@/data/mocks/landing.mock'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { obtenerServicio } from '@/services/catalogoService'
 
 function ServicioDetalle() {
   const { serviceId } = useParams()
-  const service = services.find((item) => item.id === serviceId) || services[0]
+  const { data: service, isLoading } = useAsyncData(() => obtenerServicio(serviceId), [serviceId])
+
+  if (isLoading) {
+    return (
+      <section className="public-section">
+        <div className="page-container">
+          <LoadingSkeleton />
+        </div>
+      </section>
+    )
+  }
+
+  // Antes, un servicio inexistente mostraba el primero de la lista sin avisar.
+  if (!service) {
+    return (
+      <section className="public-section">
+        <div className="page-container">
+          <EmptyState
+            title="Ese servicio no existe"
+            description="Puede que el enlace esté mal escrito o que ya no ofrezcamos ese servicio."
+            actionLabel="Ver todos los servicios"
+            onAction={() => window.location.assign('/servicios')}
+          />
+        </div>
+      </section>
+    )
+  }
+
   return (
     <>
       <section className="border-b border-border bg-muted">

@@ -1,20 +1,16 @@
+import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Calendar, ClipboardList, DollarSign, Package, Truck } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatCard from '@/components/common/StatCard'
 import DataTable from '@/components/common/DataTable'
 import { BarChart, LineChart } from '@/components/common/OperationalCharts'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
 import { getStockState } from '@/constants/domainStates'
-import {
-  dashboardStats,
-  recentOrdenes,
-  stockAlerts,
-  upcomingCitas,
-} from '@/data/mocks/dashboard.mock'
+import { obtenerResumen } from '@/services/dashboardService'
 import { formatQuantity } from '@/utils/formatters'
 
 const statIcons = {
@@ -27,6 +23,24 @@ const statIcons = {
 }
 
 function Dashboard() {
+  const { sucursalId } = useOutletContext()
+  const [resumen, setResumen] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadResumen() {
+      try {
+        setResumen(await obtenerResumen(sucursalId))
+      } catch (loadError) {
+        setError(loadError.message || 'No fue posible cargar el resumen.')
+      }
+    }
+    void loadResumen()
+  }, [sucursalId])
+
+  if (error) return <ErrorState description={error} />
+  if (!resumen) return <LoadingSkeleton rows={6} />
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -36,7 +50,7 @@ function Dashboard() {
       />
 
       <div className="grid gap-px border-y border-border sm:grid-cols-2 xl:grid-cols-3">
-        {dashboardStats.map((stat) => (
+        {resumen.stats.map((stat) => (
           <StatCard
             key={stat.key}
             title={stat.title}
@@ -80,7 +94,7 @@ function Dashboard() {
                 render: (row) => <StatusBadge status={row.estado} />,
               },
             ]}
-            rows={recentOrdenes}
+            rows={resumen.ordenesRecientes}
           />
         </section>
 
@@ -93,7 +107,7 @@ function Dashboard() {
               { key: 'vehiculo', label: 'Vehículo' },
               { key: 'motivo', label: 'Motivo' },
             ]}
-            rows={upcomingCitas}
+            rows={resumen.citasProximas}
           />
         </section>
       </div>
@@ -127,7 +141,7 @@ function Dashboard() {
                 ),
               },
             ]}
-            rows={stockAlerts}
+            rows={resumen.alertasStock}
           />
         </CardContent>
       </Card>

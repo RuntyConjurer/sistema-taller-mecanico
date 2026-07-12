@@ -1,3 +1,5 @@
+// Texto de la web, no un dato del taller: no vendrá nunca de la base de datos, así
+// que se importa directamente en lugar de pasar por un servicio.
 import { processSteps } from '@/data/mocks/landing.mock'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 

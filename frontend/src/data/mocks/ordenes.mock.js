@@ -41,15 +41,3 @@ export const ordenTimeline = [
   { estado: 'ABIERTA', fecha: '2026-07-11 08:30', usuario: 'Recepción' },
   { estado: 'EN_DIAGNOSTICO', fecha: '2026-07-11 09:15', usuario: 'Juan Méndez' },
 ]
-
-export const diagnosticoMock = {
-  presionBaja: 32,
-  presionAlta: 185,
-  temperaturaAmbiente: 32,
-  temperaturaSalida: 8.5,
-  refrigerante: 'R-134a',
-  compresor: 'Operativo con ruido leve',
-  fugas: 'Positiva en unión de línea de baja',
-  falla: 'Fuga menor + baja carga',
-  recomendacion: 'Reparar unión, vacío y recarga',
-}

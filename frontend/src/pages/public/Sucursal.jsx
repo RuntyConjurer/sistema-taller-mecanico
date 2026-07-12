@@ -1,12 +1,39 @@
 import { Link, useParams } from 'react-router-dom'
 import { MapPin, MessageCircle, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import EmptyState from '@/components/common/EmptyState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
-import { branches } from '@/data/mocks/landing.mock'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { obtenerSucursal } from '@/services/catalogoService'
 
 function Sucursal() {
   const { branchId } = useParams()
-  const branch = branches.find((item) => item.id === branchId) || branches[0]
+  const { data: branch, isLoading } = useAsyncData(() => obtenerSucursal(branchId), [branchId])
+
+  if (isLoading) {
+    return (
+      <section className="public-section">
+        <div className="page-container">
+          <LoadingSkeleton />
+        </div>
+      </section>
+    )
+  }
+
+  // Antes, una sucursal inexistente mostraba la primera de la lista sin avisar.
+  if (!branch) {
+    return (
+      <section className="public-section">
+        <div className="page-container">
+          <EmptyState
+            title="Esa sucursal no existe"
+            description="Revisa el enlace o consulta las sucursales disponibles desde el inicio."
+          />
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>

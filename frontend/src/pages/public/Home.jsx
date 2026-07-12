@@ -2,11 +2,17 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Gauge, MapPin, ThermometerSnowflake, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
-import { services, symptoms } from '@/data/mocks/landing.mock'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { listarServicios } from '@/services/catalogoService'
+// `symptoms` es texto de la web, no un dato del taller: no vendrá nunca de la base
+// de datos, así que se importa directamente en lugar de pasar por un servicio.
+import { symptoms } from '@/data/mocks/landing.mock'
 
 const symptomIcons = [ThermometerSnowflake, Gauge, Wrench, ThermometerSnowflake]
 
 function Home() {
+  const { data: services } = useAsyncData(() => listarServicios(), [])
+
   return (
     <>
       <section className="border-b border-border bg-muted">
@@ -98,7 +104,7 @@ function Home() {
             </Link>
           </div>
           <div className="mt-10 divide-y divide-border border-y border-border">
-            {services.map((service, index) => (
+            {(services || []).map((service, index) => (
               <Link
                 key={service.id}
                 to={`/servicios/${service.id}`}

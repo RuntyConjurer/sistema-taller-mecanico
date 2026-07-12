@@ -8,9 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { AlertTriangle, CheckCircle2, LockKeyhole } from 'lucide-react'
-import { ordenTimeline } from '@/data/mocks/ordenes.mock'
 import { otStatuses } from '@/constants/otStatuses'
-import { cerrarOrdenTrabajo, listarOrdenesTrabajo } from '@/services/ordenesService'
+import {
+  cerrarOrdenTrabajo,
+  listarOrdenesTrabajo,
+  obtenerHistorialOrden,
+} from '@/services/ordenesService'
 import { listarFacturas } from '@/services/facturacionService'
 import { usingMocks } from '@/services/dataSource'
 
@@ -28,6 +31,7 @@ function OrdenesTrabajo() {
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS')
   const [ordenes, setOrdenes] = useState([])
   const [facturas, setFacturas] = useState([])
+  const [historial, setHistorial] = useState([])
   const [selected, setSelected] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState('')
@@ -35,12 +39,14 @@ function OrdenesTrabajo() {
 
   async function loadData() {
     try {
-      const [orders, invoices] = await Promise.all([
+      const [orders, invoices, timeline] = await Promise.all([
         listarOrdenesTrabajo(sucursalId),
         listarFacturas(),
+        obtenerHistorialOrden(),
       ])
       setOrdenes(orders)
       setFacturas(invoices)
+      setHistorial(timeline)
     } catch (loadError) {
       setError(loadError.message || 'No fue posible cargar las órdenes.')
     } finally {
@@ -218,7 +224,7 @@ function OrdenesTrabajo() {
                 Línea de tiempo
               </h2>
               <ol className="mt-3 flex flex-wrap gap-3">
-                {ordenTimeline.map((item) => (
+                {historial.map((item) => (
                   <li
                     key={item.estado}
                     className="rounded-md border border-border px-3 py-2 text-xs"

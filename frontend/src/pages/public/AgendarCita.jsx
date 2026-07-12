@@ -11,7 +11,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { branches, services } from '@/data/mocks/landing.mock'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { listarServicios, listarSucursalesPublicas } from '@/services/catalogoService'
 import { crearSolicitudCita } from '@/services/bookingService'
 import { usingMocks } from '@/services/dataSource'
 import {
@@ -55,6 +56,10 @@ function AgendarCita() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const headingRef = useRef(null)
 
+  // El catálogo de servicios y sucursales vendrá de las tablas `servicios` y `sucursales`.
+  const { data: services } = useAsyncData(() => listarServicios(), [])
+  const { data: branches } = useAsyncData(() => listarSucursalesPublicas(), [])
+
   useEffect(() => {
     window.sessionStorage.setItem('sgtra-booking-draft', JSON.stringify(form))
   }, [form])
@@ -65,11 +70,11 @@ function AgendarCita() {
   const summary = useMemo(
     () => [
       form.marca ? `${form.marca} ${form.modelo}` : 'Pendiente',
-      services.find((item) => item.id === form.servicio)?.title || 'Pendiente',
+      (services || []).find((item) => item.id === form.servicio)?.title || 'Pendiente',
       form.fecha ? `${form.fecha} · ${form.hora || 'hora pendiente'}` : 'Pendiente',
       form.nombre || 'Pendiente',
     ],
-    [form],
+    [form, services],
   )
 
   function validate(name, value = form[name]) {
@@ -194,8 +199,12 @@ function AgendarCita() {
           </header>
           <div className="p-6">
             {step === 0 && <VehicleStep errors={errors} inputProps={inputProps} />}
-            {step === 1 && <ServiceStep errors={errors} inputProps={inputProps} />}
-            {step === 2 && <ScheduleStep errors={errors} inputProps={inputProps} />}
+            {step === 1 && (
+              <ServiceStep errors={errors} inputProps={inputProps} services={services || []} />
+            )}
+            {step === 2 && (
+              <ScheduleStep errors={errors} inputProps={inputProps} branches={branches || []} />
+            )}
             {step === 3 && <ContactStep errors={errors} inputProps={inputProps} />}
             {errors.form ? (
               <p className="mt-5 text-sm font-medium text-destructive" role="alert">
@@ -265,7 +274,7 @@ function VehicleStep({ errors, inputProps }) {
   )
 }
 
-function ServiceStep({ errors, inputProps }) {
+function ServiceStep({ errors, inputProps, services }) {
   return (
     <div className="space-y-5">
       <BookingField id="servicio" label="Servicio o síntoma" error={errors.servicio}>
@@ -293,7 +302,7 @@ function ServiceStep({ errors, inputProps }) {
   )
 }
 
-function ScheduleStep({ errors, inputProps }) {
+function ScheduleStep({ errors, inputProps, branches }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <BookingField id="sucursal" label="Sucursal" error={errors.sucursal}>

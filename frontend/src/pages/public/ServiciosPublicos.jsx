@@ -3,18 +3,20 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
-import { services } from '@/data/mocks/landing.mock'
+import { useAsyncData } from '@/hooks/useAsyncData'
+import { listarServicios } from '@/services/catalogoService'
 
 function ServiciosPublicos() {
   const [query, setQuery] = useState('')
+  const { data: services } = useAsyncData(() => listarServicios(), [])
   const filtered = useMemo(
     () =>
-      services.filter((service) =>
+      (services || []).filter((service) =>
         `${service.title} ${service.short} ${service.symptoms.join(' ')}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [query],
+    [query, services],
   )
   return (
     <>

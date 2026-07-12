@@ -1,4 +1,5 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
+import { ordenTimeline } from '@/data/mocks/ordenes.mock'
 import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
@@ -14,6 +15,13 @@ export function listarOrdenesTrabajo(sucursalId) {
   }
   const query = sucursalId ? `?sucursalId=${sucursalId}` : ''
   return apiRequest(`${apiEndpoints.workOrders}${query}`)
+}
+
+// La línea de tiempo de la OT saldrá de los cambios de estado que registre el backend.
+// Con mocks se devuelve siempre la misma secuencia de ejemplo.
+export function obtenerHistorialOrden(id) {
+  if (dataSource === 'mock') return Promise.resolve(ordenTimeline)
+  return apiRequest(`${endpointWithId(apiEndpoints.workOrders, id)}/historial`)
 }
 
 export function cerrarOrdenTrabajo(id) {
