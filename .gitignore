@@ -4,3 +4,6 @@ dist
 
 # Documentacion interna del equipo: no se publica en el repositorio.
 docs/
+
+.vs/
+**/.vs/
