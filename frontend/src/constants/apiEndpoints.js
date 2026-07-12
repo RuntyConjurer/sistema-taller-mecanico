@@ -28,5 +28,6 @@ export const apiEndpoints = {
 }
 
 export function endpointWithId(template, id) {
-  return template.replace(':id', String(id))
+  const value = String(id)
+  return template.includes(':id') ? template.replace(':id', value) : `${template}/${value}`
 }
