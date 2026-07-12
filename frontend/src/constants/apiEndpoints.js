@@ -2,8 +2,11 @@
  * Rutas que el backend debe exponer. Las pantallas nunca las usan directamente:
  * pasan por services/, y cada service decide si pide los datos aquí o a los mocks.
  *
- * El contrato completo, con ejemplos de petición y respuesta, está en
- * docs/integracion-backend.md.
+ * Convenciones acordadas con el backend:
+ *   - Respuesta correcta: { "data": ... }
+ *   - Respuesta de error:  { "error": { "code", "message", "fieldErrors" } }
+ *   - Los errores de los triggers de PostgreSQL (P0001 a P0004) llegan traducidos
+ *     a ese formato, con el mensaje ya listo para mostrar al usuario.
  */
 export const apiEndpoints = {
   appointmentRequests: '/api/v1/solicitudes-cita',
@@ -19,8 +22,8 @@ export const apiEndpoints = {
   users: '/api/v1/usuarios',
   branches: '/api/v1/sucursales',
   dashboard: '/api/v1/dashboard',
-  // Pendiente: requiere las tablas cotizaciones y cotizacion_detalles.
-  // Ver docs/solicitud-bd-cotizaciones.md
+  // Pendiente: requiere las tablas cotizaciones y cotizacion_detalles, solicitadas
+  // al equipo de base de datos.
   quotes: '/api/v1/cotizaciones',
 }
 

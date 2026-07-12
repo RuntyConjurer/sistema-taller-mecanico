@@ -47,9 +47,9 @@ function Cotizaciones() {
       />
 
       <p className="border-l-2 border-warning bg-muted p-4 text-sm text-muted-foreground">
-        Módulo propuesto por el equipo: el SRS lo menciona como función, pero no le asigna un
-        requisito ni una tabla. El esquema solicitado a base de datos está en{' '}
-        <span className="font-medium text-foreground">docs/solicitud-bd-cotizaciones.md</span>.
+        Módulo propuesto por el equipo. El SRS lo menciona como función, pero no le asigna un
+        requisito ni una tabla, así que todavía no hay dónde guardar una cotización: los datos que
+        se ven son de muestra. Ya se solicitaron las tablas al equipo de base de datos.
       </p>
 
       {isLoading ? (

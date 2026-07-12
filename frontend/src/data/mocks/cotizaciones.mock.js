@@ -1,7 +1,9 @@
-// Cotizaciones es una extensión propuesta: el SRS la menciona como función, pero no
-// le dedica un requisito ni una tabla. El esquema que se solicita al equipo de base de
-// datos está en docs/solicitud-bd-cotizaciones.md, y estos mocks siguen esa forma
-// (maestro con totales + detalle por línea), igual que el par facturas/factura_detalles.
+// Cotizaciones es una extensión propuesta: el SRS la menciona como función, pero no le
+// dedica un requisito ni una tabla, así que todavía no hay dónde guardarla.
+//
+// Estos mocks siguen la forma del esquema solicitado al equipo de base de datos: un
+// maestro con los totales y un detalle por línea, igual que el par facturas /
+// factura_detalles que ya existe.
 export const cotizaciones = [
   {
     id: 1,

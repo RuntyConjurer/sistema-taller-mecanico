@@ -4,8 +4,8 @@ import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 
 // El endpoint de la API todavía no existe: depende de las tablas cotizaciones y
-// cotizacion_detalles, solicitadas en docs/solicitud-bd-cotizaciones.md. El servicio
-// ya está escrito para que, cuando existan, solo haya que cambiar VITE_DATA_SOURCE.
+// cotizacion_detalles, solicitadas al equipo de base de datos. El servicio ya está
+// escrito para que, cuando existan, solo haya que cambiar VITE_DATA_SOURCE.
 export function listarCotizaciones() {
   return Promise.resolve(dataSource === 'mock' ? cotizaciones : apiRequest(apiEndpoints.quotes))
 }

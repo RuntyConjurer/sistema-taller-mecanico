@@ -20,9 +20,9 @@ const stockStates = {
   STOCK_OPTIMO: { label: 'Stock óptimo', tone: 'success' },
 }
 
-// Cotizaciones es una extensión propuesta (ver docs/solicitud-bd-cotizaciones.md).
-// Los códigos se definen aquí con el mismo estilo que el resto para que, cuando la
-// tabla exista, el CHECK constraint pueda copiarlos tal cual.
+// Cotizaciones es una extensión propuesta: el SRS la menciona como función pero no le
+// asigna un requisito ni una tabla. Los códigos se definen aquí con el mismo estilo que
+// el resto para que, cuando la tabla exista, su CHECK constraint pueda copiarlos tal cual.
 const quoteStates = {
   BORRADOR: { label: 'Borrador', tone: 'muted' },
   ENVIADA: { label: 'Enviada', tone: 'info' },

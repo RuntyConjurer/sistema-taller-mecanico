@@ -27,7 +27,7 @@ VITE_DATA_SOURCE=mock
 VITE_API_BASE_URL=http://localhost:3000
 ```
 
-`mock` es el valor predeterminado y no guarda datos fuera de la sesión actual. `api` hace que los servicios consulten `VITE_API_BASE_URL`; solo debe activarse cuando backend implemente el contrato documentado en `docs/presentacion-frontend.md`.
+`mock` es el valor predeterminado y no guarda datos fuera de la sesión actual. `api` hace que los servicios consulten `VITE_API_BASE_URL`; solo debe activarse cuando el backend implemente el contrato declarado en `src/constants/apiEndpoints.js`.
 
 ## Estructura
 
@@ -69,5 +69,5 @@ El frontend solo los traduce a español; nunca inventa uno.
 - Citas, pagos, diagnósticos y consumos viven en memoria: se pierden al recargar.
 - El backend y la base de datos son los que imponen las reglas (stock, cierre de OT, permisos);
   el frontend solo orienta y previene los errores más comunes.
-- **Cotizaciones** todavía no tiene tabla en la base de datos. La pantalla lo avisa y la petición
-  al equipo está en `docs/solicitud-bd-cotizaciones.md`.
+- **Cotizaciones** todavía no tiene tabla en la base de datos: la pantalla lo avisa y sus datos
+  son de muestra. Las tablas ya se solicitaron al equipo de base de datos.
