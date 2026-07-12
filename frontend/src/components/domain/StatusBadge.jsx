@@ -1,9 +1,15 @@
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, CheckCircle2, CircleDot, XCircle } from 'lucide-react'
+import { getStateMeta } from '@/constants/domainStates'
 import { otStatuses } from '@/constants/otStatuses'
 
-function StatusBadge({ status }) {
-  const config = otStatuses[status] || { label: status, tone: 'muted' }
+// `group` elige el diccionario de estados: 'ot' por defecto, o cualquiera de los
+// declarados en domainStates ('cita', 'factura', 'stock').
+function StatusBadge({ status, group = 'ot' }) {
+  const config =
+    group === 'ot'
+      ? otStatuses[status] || { label: status, tone: 'muted' }
+      : getStateMeta(group, status)
   const Icon =
     config.tone === 'success'
       ? CheckCircle2

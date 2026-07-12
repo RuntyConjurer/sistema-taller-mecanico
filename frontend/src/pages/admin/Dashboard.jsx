@@ -8,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { getStockState } from '@/constants/domainStates'
 import {
   dashboardStats,
   recentOrdenes,
   stockAlerts,
   upcomingCitas,
 } from '@/data/mocks/dashboard.mock'
+import { formatQuantity } from '@/utils/formatters'
 
 const statIcons = {
   citas: Calendar,
@@ -125,9 +127,27 @@ function Dashboard() {
         <CardContent>
           <DataTable
             columns={[
-              { key: 'producto', label: 'Producto' },
-              { key: 'existencia', label: 'Existencia' },
-              { key: 'minimo', label: 'Mínimo' },
+              { key: 'nombre', label: 'Material' },
+              {
+                key: 'stockActual',
+                label: 'Existencia',
+                render: (row) => formatQuantity(row.stockActual, row.unidadMedida),
+              },
+              {
+                key: 'stockMinimo',
+                label: 'Mínimo',
+                render: (row) => formatQuantity(row.stockMinimo, row.unidadMedida),
+              },
+              {
+                key: 'estado',
+                label: 'Estado',
+                render: (row) => (
+                  <StatusBadge
+                    group="stock"
+                    status={getStockState(row.stockActual, row.stockMinimo)}
+                  />
+                ),
+              },
             ]}
             rows={stockAlerts}
           />

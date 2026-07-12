@@ -5,16 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Snowflake, Droplets } from 'lucide-react'
+import StatusBadge from '@/components/domain/StatusBadge'
+import { getStockState } from '@/constants/domainStates'
 import {
   listarOrdenesParaConsumo,
   listarRefrigerantes,
   registrarConsumoRefrigerante,
 } from '@/services/inventarioService'
 import { usingMocks } from '@/services/dataSource'
+import { formatQuantity } from '@/utils/formatters'
 
-function levelPercent(existencia) {
-  const value = Number.parseFloat(existencia)
-  return Number.isNaN(value) ? 0 : Math.min(100, Math.round((value / 15) * 100))
+// El nivel se mide contra el stock mínimo del propio material, que es el dato con
+// el que la base de datos decide si hay que reordenar. 100% significa "en el mínimo".
+function levelPercent(stockActual, stockMinimo) {
+  if (!stockMinimo) return 100
+  return Math.min(100, Math.round((stockActual / stockMinimo) * 100))
 }
 
 function Refrigerantes() {
@@ -51,7 +56,7 @@ function Refrigerantes() {
       await loadData()
       setFeedback(
         usingMocks
-          ? `Consumo demo registrado. Stock restante: ${result.remaining} kg.`
+          ? `Consumo demo registrado. Stock restante: ${formatQuantity(result.remaining, result.unidadMedida)}.`
           : 'Consumo enviado para registrar.',
       )
       setConsumo((current) => ({ ...current, cantidad: '' }))
@@ -69,24 +74,28 @@ function Refrigerantes() {
       />
       <div className="grid gap-4 md:grid-cols-2">
         {refrigerantes.map((item) => {
-          const percent = levelPercent(item.existencia)
+          const percent = levelPercent(item.stockActual, item.stockMinimo)
+          const estado = getStockState(item.stockActual, item.stockMinimo)
           return (
             <Card key={item.id}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base">{item.tipo}</CardTitle>
+                <CardTitle className="text-base">{item.nombre}</CardTitle>
                 <div className="bg-secondary p-2 text-primary">
                   <Snowflake className="h-4 w-4" aria-hidden="true" />
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-2xl font-bold">{item.existencia}</p>
+                <p className="text-2xl font-bold">
+                  {formatQuantity(item.stockActual, item.unidadMedida)}
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {item.consumoMes} consumidos este mes · {item.ordenes} órdenes
+                  {formatQuantity(item.consumoMes, item.unidadMedida)} consumidos este mes ·{' '}
+                  {item.ordenes} órdenes
                 </p>
                 <div>
                   <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-                    <span>Nivel estimado</span>
-                    <span>{percent}%</span>
+                    <span>Nivel sobre el mínimo</span>
+                    <span>{formatQuantity(item.stockMinimo, item.unidadMedida)} mín.</span>
                   </div>
                   <div
                     className="h-2 overflow-hidden bg-muted"
@@ -94,14 +103,17 @@ function Refrigerantes() {
                     aria-valuenow={percent}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`Nivel de ${item.tipo}`}
+                    aria-label={`Nivel de ${item.nombre} respecto al stock mínimo`}
                   >
                     <div
-                      className={percent < 35 ? 'h-full bg-amber-800' : 'h-full bg-primary'}
+                      className={
+                        estado === 'STOCK_OPTIMO' ? 'h-full bg-primary' : 'h-full bg-warning'
+                      }
                       style={{ width: `${percent}%` }}
                     />
                   </div>
                 </div>
+                <StatusBadge group="stock" status={estado} />
               </CardContent>
             </Card>
           )
@@ -109,10 +121,25 @@ function Refrigerantes() {
       </div>
       <DataTable
         columns={[
-          { key: 'tipo', label: 'Tipo' },
-          { key: 'existencia', label: 'Existencia' },
-          { key: 'consumoMes', label: 'Consumo del mes' },
+          { key: 'nombre', label: 'Refrigerante' },
+          {
+            key: 'stockActual',
+            label: 'Existencia',
+            render: (row) => formatQuantity(row.stockActual, row.unidadMedida),
+          },
+          {
+            key: 'consumoMes',
+            label: 'Consumo del mes',
+            render: (row) => formatQuantity(row.consumoMes, row.unidadMedida),
+          },
           { key: 'ordenes', label: 'Órdenes' },
+          {
+            key: 'estado',
+            label: 'Estado',
+            render: (row) => (
+              <StatusBadge group="stock" status={getStockState(row.stockActual, row.stockMinimo)} />
+            ),
+          },
         ]}
         rows={refrigerantes}
       />
@@ -160,7 +187,7 @@ function Refrigerantes() {
                 <option value="">Selecciona refrigerante</option>
                 {refrigerantes.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.tipo} · {item.existencia}
+                    {item.nombre} · {formatQuantity(item.stockActual, item.unidadMedida)}
                   </option>
                 ))}
               </select>

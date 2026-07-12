@@ -10,7 +10,13 @@ export const apiEndpoints = {
   workOrders: '/api/v1/ordenes-trabajo',
   diagnostics: '/api/v1/ordenes-trabajo/:id/diagnostico',
   materials: '/api/v1/materiales',
+  inventoryMovements: '/api/v1/inventario-movimientos',
   invoices: '/api/v1/facturas',
+  users: '/api/v1/usuarios',
+  branches: '/api/v1/sucursales',
+  // Pendiente: requiere las tablas cotizaciones y cotizacion_detalles.
+  // Ver docs/solicitud-bd-cotizaciones.md
+  quotes: '/api/v1/cotizaciones',
 }
 
 export function endpointWithId(template, id) {

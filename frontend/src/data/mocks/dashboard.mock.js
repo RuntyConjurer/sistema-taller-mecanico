@@ -91,8 +91,15 @@ export const upcomingCitas = [
   },
 ]
 
+// Mismos campos que la tabla `materiales`: el stock es numérico y la unidad va aparte.
 export const stockAlerts = [
-  { id: 1, producto: 'R-134a 13.6kg', existencia: '2.5 kg', minimo: '5 kg' },
-  { id: 2, producto: 'Filtro secador universal', existencia: '3 uds', minimo: '8 uds' },
-  { id: 3, producto: 'Aceite PAG 46', existencia: '1.2 L', minimo: '4 L' },
+  { id: 1, nombre: 'R-134a', stockActual: 2.5, stockMinimo: 5, unidadMedida: 'kg' },
+  {
+    id: 2,
+    nombre: 'Filtro secador universal',
+    stockActual: 3,
+    stockMinimo: 8,
+    unidadMedida: 'uds',
+  },
+  { id: 3, nombre: 'Aceite PAG 46', stockActual: 1.2, stockMinimo: 4, unidadMedida: 'L' },
 ]

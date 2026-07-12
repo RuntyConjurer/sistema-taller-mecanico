@@ -8,7 +8,7 @@ import { demoRoles } from '@/constants/demoRoles'
 function Login() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
-  const [role, setRole] = useState('RECEPCION')
+  const [role, setRole] = useState('RECEPCIONISTA')
 
   function handleSubmit(event) {
     event.preventDefault()

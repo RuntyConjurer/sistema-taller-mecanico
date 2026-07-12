@@ -11,3 +11,11 @@ export function formatDate(value) {
     timeZone: 'America/Santo_Domingo',
   }).format(new Date(value))
 }
+
+// La base de datos guarda la cantidad y la unidad por separado (stock_actual y
+// unidad_medida). Unirlas es trabajo de presentación, no de almacenamiento.
+export function formatQuantity(value, unit) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '—'
+  const amount = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 2 }).format(Number(value))
+  return unit ? `${amount} ${unit}` : amount
+}

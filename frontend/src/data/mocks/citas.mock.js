@@ -32,33 +32,3 @@ export const citas = [
     motivo: 'Mantenimiento preventivo',
   },
 ]
-
-export const cotizaciones = [
-  {
-    id: 1,
-    numero: 'COT-SDQ-220',
-    cliente: 'María López',
-    vehiculo: 'Toyota Corolla',
-    total: 12500,
-    estado: 'Enviada',
-    vigencia: '2026-07-20',
-  },
-  {
-    id: 2,
-    numero: 'COT-SDQ-219',
-    cliente: 'Grupo Nova SRL',
-    vehiculo: 'Hyundai Tucson',
-    total: 28400,
-    estado: 'Aprobada',
-    vigencia: '2026-07-18',
-  },
-  {
-    id: 3,
-    numero: 'COT-SDQ-218',
-    cliente: 'Carlos Pérez',
-    vehiculo: 'Kia Sportage',
-    total: 8900,
-    estado: 'Borrador',
-    vigencia: '2026-07-25',
-  },
-]

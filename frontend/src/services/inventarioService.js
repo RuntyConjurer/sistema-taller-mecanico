@@ -1,7 +1,20 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
+import { movimientos } from '@/data/mocks/inventario.mock'
 import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
+
+export function listarMateriales() {
+  return Promise.resolve(
+    dataSource === 'mock' ? mockStore.materials() : apiRequest(apiEndpoints.materials),
+  )
+}
+
+export function listarMovimientos() {
+  return Promise.resolve(
+    dataSource === 'mock' ? movimientos : apiRequest(apiEndpoints.inventoryMovements),
+  )
+}
 
 export function listarRefrigerantes() {
   return Promise.resolve(

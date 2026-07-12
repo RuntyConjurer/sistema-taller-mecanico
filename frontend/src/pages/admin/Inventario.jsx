@@ -1,101 +1,166 @@
+import { useEffect, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { productos, movimientos } from '@/data/mocks/inventario.mock'
-import { Badge } from '@/components/ui/badge'
-import { useState } from 'react'
 import DetailPanel from '@/components/common/DetailPanel'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
+import StatusBadge from '@/components/domain/StatusBadge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getStockState } from '@/constants/domainStates'
+import { listarMateriales, listarMovimientos } from '@/services/inventarioService'
+import { formatCurrency, formatDate, formatQuantity } from '@/utils/formatters'
+
+const categoriaLabels = {
+  REPUESTO: 'Repuesto',
+  REFRIGERANTE: 'Refrigerante',
+  CONSUMIBLE: 'Consumible',
+}
 
 function Inventario() {
+  const [materiales, setMateriales] = useState([])
+  const [movimientos, setMovimientos] = useState([])
   const [selected, setSelected] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [items, moves] = await Promise.all([listarMateriales(), listarMovimientos()])
+        setMateriales(items)
+        setMovimientos(moves)
+      } catch (loadError) {
+        setError(loadError.message || 'No fue posible cargar el inventario.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadData()
+  }, [])
+
+  // Mismo cálculo que la vista vw_estado_inventario de PostgreSQL.
+  const stockColumn = {
+    key: 'estado',
+    label: 'Estado',
+    render: (row) => (
+      <StatusBadge group="stock" status={getStockState(row.stockActual, row.stockMinimo)} />
+    ),
+  }
+  const existenciaColumn = {
+    key: 'stockActual',
+    label: 'Existencia',
+    render: (row) => formatQuantity(row.stockActual, row.unidadMedida),
+  }
+  const minimoColumn = {
+    key: 'stockMinimo',
+    label: 'Mínimo',
+    render: (row) => formatQuantity(row.stockMinimo, row.unidadMedida),
+  }
+
+  if (error) return <ErrorState description={error} />
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Control de existencias"
         title="Inventario"
-        description="Productos, existencias por sucursal, movimientos y alertas de stock mínimo."
-        actionLabel="Nuevo producto"
-        actionTo="/app/inventario"
+        description="Materiales, existencias, movimientos y alertas de stock mínimo."
       />
 
-      <Tabs defaultValue="productos">
-        <TabsList>
-          <TabsTrigger value="productos">Productos</TabsTrigger>
-          <TabsTrigger value="existencias">Existencias</TabsTrigger>
-          <TabsTrigger value="movimientos">Movimientos</TabsTrigger>
-          <TabsTrigger value="alertas">Alertas</TabsTrigger>
-        </TabsList>
-        <TabsContent value="productos">
-          <DataTable
-            columns={[
-              { key: 'codigo', label: 'Código' },
-              { key: 'nombre', label: 'Producto' },
-              { key: 'categoria', label: 'Categoría' },
-              { key: 'existencia', label: 'Existencia' },
-              { key: 'minimo', label: 'Mínimo' },
-            ]}
-            rows={productos}
-            selectedId={selected?.id}
-            onRowSelect={setSelected}
-          />
-        </TabsContent>
-        <TabsContent value="existencias">
-          <DataTable
-            columns={[
-              { key: 'nombre', label: 'Producto' },
-              { key: 'existencia', label: 'Existencia actual' },
-              { key: 'minimo', label: 'Stock mínimo' },
-            ]}
-            rows={productos}
-          />
-        </TabsContent>
-        <TabsContent value="movimientos">
-          <DataTable
-            columns={[
-              { key: 'fecha', label: 'Fecha' },
-              { key: 'producto', label: 'Producto' },
-              { key: 'tipo', label: 'Tipo' },
-              { key: 'cantidad', label: 'Cantidad' },
-              { key: 'motivo', label: 'Referencia' },
-            ]}
-            rows={movimientos}
-          />
-        </TabsContent>
-        <TabsContent value="alertas">
-          <DataTable
-            columns={[
-              { key: 'nombre', label: 'Producto' },
-              { key: 'existencia', label: 'Existencia' },
-              { key: 'minimo', label: 'Mínimo' },
-              {
-                key: 'estado',
-                label: 'Estado',
-                render: (row) => {
-                  const low = parseFloat(row.existencia) < parseFloat(row.minimo)
-                  return (
-                    <Badge variant={low ? 'warning' : 'success'}>
-                      {low ? 'Bajo mínimo' : 'OK'}
-                    </Badge>
-                  )
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <Tabs defaultValue="materiales">
+          <TabsList>
+            <TabsTrigger value="materiales">Materiales</TabsTrigger>
+            <TabsTrigger value="movimientos">Movimientos</TabsTrigger>
+            <TabsTrigger value="alertas">Alertas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="materiales">
+            <DataTable
+              columns={[
+                { key: 'codigo', label: 'Código' },
+                { key: 'nombre', label: 'Material' },
+                {
+                  key: 'categoria',
+                  label: 'Categoría',
+                  render: (row) => categoriaLabels[row.categoria] || row.categoria,
                 },
-              },
-            ]}
-            rows={productos}
-          />
-        </TabsContent>
-      </Tabs>
+                existenciaColumn,
+                minimoColumn,
+              ]}
+              rows={materiales}
+              selectedId={selected?.id}
+              onRowSelect={setSelected}
+            />
+          </TabsContent>
+
+          <TabsContent value="movimientos">
+            <DataTable
+              columns={[
+                { key: 'fecha', label: 'Fecha', render: (row) => formatDate(row.fecha) },
+                { key: 'material', label: 'Material' },
+                { key: 'tipo', label: 'Tipo' },
+                {
+                  key: 'cantidad',
+                  label: 'Cantidad',
+                  render: (row) => formatQuantity(row.cantidad, row.unidadMedida),
+                },
+                { key: 'motivo', label: 'Referencia' },
+              ]}
+              rows={movimientos}
+              emptyMessage="Todavía no hay movimientos registrados."
+            />
+          </TabsContent>
+
+          <TabsContent value="alertas">
+            <DataTable
+              columns={[
+                { key: 'nombre', label: 'Material' },
+                existenciaColumn,
+                minimoColumn,
+                stockColumn,
+              ]}
+              rows={materiales.filter(
+                (item) => getStockState(item.stockActual, item.stockMinimo) !== 'STOCK_OPTIMO',
+              )}
+              emptyMessage="Ningún material está por debajo del mínimo."
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+
       <DetailPanel
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        title="Detalle de existencias"
+        title="Detalle del material"
         subtitle={selected?.nombre}
       >
-        <p className="technical-value">{selected?.codigo}</p>
-        <p className="mt-5 text-sm">Existencia: {selected?.existencia}</p>
-        <p className="mt-2 text-sm">Mínimo: {selected?.minimo}</p>
-        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
-          Los ajustes de stock requieren integración con el backend.
-        </p>
+        {selected ? (
+          <>
+            <p className="technical-value">{selected.codigo}</p>
+            <div className="mt-5 space-y-2 text-sm">
+              <p>Existencia: {formatQuantity(selected.stockActual, selected.unidadMedida)}</p>
+              <p>Mínimo: {formatQuantity(selected.stockMinimo, selected.unidadMedida)}</p>
+              <p>Costo unitario: {formatCurrency(selected.costoUnitario)}</p>
+              <p>Precio de venta: {formatCurrency(selected.precioVenta)}</p>
+              <p>
+                Valor en almacén: {formatCurrency(selected.stockActual * selected.costoUnitario)}
+              </p>
+            </div>
+            <div className="mt-5">
+              <StatusBadge
+                group="stock"
+                status={getStockState(selected.stockActual, selected.stockMinimo)}
+              />
+            </div>
+            <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+              Los ajustes de stock se registran en la base de datos: un trigger descuenta el
+              material y escribe el movimiento al consumirlo en una orden.
+            </p>
+          </>
+        ) : null}
       </DetailPanel>
     </div>
   )

@@ -1,19 +1,20 @@
 import { citas as initialAppointments } from '@/data/mocks/citas.mock'
 import { ordenes as initialWorkOrders } from '@/data/mocks/ordenes.mock'
 import {
-  productos as initialProducts,
-  refrigerantes as initialRefrigerants,
+  materiales as initialMaterials,
+  consumoRefrigerantes as initialRefrigerantUsage,
 } from '@/data/mocks/inventario.mock'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
+const round = (value) => Number(value.toFixed(2))
 
 let appointments = clone(initialAppointments)
 let workOrders = clone(initialWorkOrders).map((order) => ({
   ...order,
   diagnosticoRegistrado: order.id !== 1,
 }))
-let products = clone(initialProducts)
-let refrigerants = clone(initialRefrigerants)
+let materials = clone(initialMaterials)
+let refrigerantUsage = clone(initialRefrigerantUsage)
 let invoices = [
   {
     id: 1,
@@ -69,28 +70,42 @@ export const mockStore = {
       throw new Error('No se puede cerrar una OT sin factura pagada.')
     return this.updateWorkOrder(id, { estado: 'CERRADA' })
   },
-  refrigerants: () => clone(refrigerants),
-  products: () => clone(products),
+  materials: () => clone(materials),
+  // Los refrigerantes no son una tabla aparte: son los materiales cuya categoría
+  // es REFRIGERANTE, igual que en la base de datos. Aquí se les añade el consumo
+  // del mes, que la API traerá agregado desde inventario_movimientos.
+  refrigerants: () =>
+    clone(
+      materials
+        .filter((item) => item.categoria === 'REFRIGERANTE')
+        .map((item) => ({
+          ...item,
+          consumoMes: refrigerantUsage[item.id]?.consumoMes ?? 0,
+          ordenes: refrigerantUsage[item.id]?.ordenes ?? 0,
+        })),
+    ),
+  // Reproduce el trigger fn_validar_stock_inventario: la base de datos rechaza el
+  // consumo si no hay existencia suficiente (error P0004). Validarlo también aquí
+  // permite demostrar el flujo sin backend, pero la regla definitiva es la de PostgreSQL.
   consumeRefrigerant(id, quantity) {
-    const product = products.find((item) => item.id === id && item.esRefrigerante)
-    if (!product) throw new Error('Refrigerante no encontrado.')
-    const stock = Number.parseFloat(product.existencia)
+    const material = materials.find((item) => item.id === id && item.categoria === 'REFRIGERANTE')
+    if (!material) throw new Error('Refrigerante no encontrado.')
     if (quantity <= 0) throw new Error('Indica una cantidad mayor que cero.')
-    if (quantity > stock) throw new Error('Stock insuficiente para registrar la recarga.')
-    const remaining = Number((stock - quantity).toFixed(2))
-    products = products.map((item) =>
-      item.id === id ? { ...item, existencia: `${remaining} kg` } : item,
+    if (quantity > material.stockActual)
+      throw new Error('Stock insuficiente para registrar la recarga.')
+
+    const remaining = round(material.stockActual - quantity)
+    materials = materials.map((item) =>
+      item.id === id ? { ...item, stockActual: remaining } : item,
     )
-    refrigerants = refrigerants.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            existencia: `${remaining} kg`,
-            consumoMes: `${(Number.parseFloat(item.consumoMes) + quantity).toFixed(2)} kg`,
-          }
-        : item,
-    )
-    return { remaining }
+    refrigerantUsage = {
+      ...refrigerantUsage,
+      [id]: {
+        consumoMes: round((refrigerantUsage[id]?.consumoMes ?? 0) + quantity),
+        ordenes: (refrigerantUsage[id]?.ordenes ?? 0) + 1,
+      },
+    }
+    return { remaining, unidadMedida: material.unidadMedida }
   },
   invoices: () => clone(invoices),
   applyPayment(id, amount) {

@@ -108,8 +108,8 @@ function DashboardLayout() {
   const [sucursal, setSucursal] = useState(sucursales[0].id)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  const role = window.sessionStorage.getItem('sgtra-demo-role') || 'RECEPCION'
-  const activeRole = demoRoles[role] || demoRoles.RECEPCION
+  const role = window.sessionStorage.getItem('sgtra-demo-role') || 'RECEPCIONISTA'
+  const activeRole = demoRoles[role] || demoRoles.RECEPCIONISTA
   const visibleItems = useMemo(() => menuItems.filter((item) => item.roles.includes(role)), [role])
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
