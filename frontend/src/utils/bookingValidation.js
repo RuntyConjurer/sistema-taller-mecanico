@@ -34,8 +34,12 @@ export function validateBookingField(name, value) {
     return 'Escribe un correo con formato válido.'
   if (name === 'chasis' && text && text.length < 6)
     return 'El chasis debe tener al menos 6 caracteres.'
-  if (name === 'fecha' && text && text < new Date().toISOString().slice(0, 10))
-    return 'Selecciona una fecha futura.'
+  if (name === 'fecha' && text) {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santo_Domingo' }).format(
+      new Date(),
+    )
+    if (text < today) return 'Selecciona una fecha futura.'
+  }
   return ''
 }
 
