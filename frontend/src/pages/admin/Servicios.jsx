@@ -40,8 +40,6 @@ function Servicios() {
         eyebrow="Catálogo"
         title="Servicios"
         description="Catálogo base de servicios facturables del taller."
-        actionLabel="Nuevo servicio"
-        actionTo="/app/servicios"
       />
       <DataTable
         columns={[

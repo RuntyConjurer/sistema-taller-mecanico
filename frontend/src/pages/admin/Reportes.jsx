@@ -1,9 +1,6 @@
 import PageHeader from '@/components/common/PageHeader'
 import { BarChart, LineChart } from '@/components/common/OperationalCharts'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 function Reportes() {
   return (
@@ -14,28 +11,12 @@ function Reportes() {
         description="Reportes operativos, técnicos, de inventario y financieros."
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Filtros</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-4">
-          <div className="space-y-2">
-            <Label>Tipo de reporte</Label>
-            <Input defaultValue="Órdenes por estado" />
-          </div>
-          <div className="space-y-2">
-            <Label>Desde</Label>
-            <Input type="date" defaultValue="2026-07-01" />
-          </div>
-          <div className="space-y-2">
-            <Label>Hasta</Label>
-            <Input type="date" defaultValue="2026-07-12" />
-          </div>
-          <div className="flex items-end">
-            <Button className="w-full">Generar</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <p className="border-l-2 border-primary bg-muted p-4 text-sm text-muted-foreground">
+        Las cifras que se muestran son de demostración. Los reportes definitivos saldrán de las
+        vistas que ya existen en PostgreSQL: vw_ordenes_trabajo_resumen para la operación,
+        vw_estado_inventario para las existencias y vw_reporte_ingresos_pagos para el cuadre de
+        caja. El frontend solo tendrá que pedirlas al backend y dibujarlas.
+      </p>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <BarChart
@@ -55,13 +36,24 @@ function Reportes() {
         />
       </div>
 
-      <div className="flex gap-2">
-        <Button variant="outline" disabled>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          variant="outline"
+          disabled
+          title="Disponible cuando el backend exponga los reportes"
+        >
           Exportar CSV
         </Button>
-        <Button variant="outline" disabled>
+        <Button
+          variant="outline"
+          disabled
+          title="Disponible cuando el backend exponga los reportes"
+        >
           Exportar PDF
         </Button>
+        <span className="text-xs text-muted-foreground">
+          La exportación requiere los datos reales del backend.
+        </span>
       </div>
     </div>
   )

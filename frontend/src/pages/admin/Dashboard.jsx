@@ -35,28 +35,6 @@ function Dashboard() {
         description="Prioridades de citas, órdenes y existencias de la sucursal."
       />
 
-      <Card>
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-4">
-          <div className="space-y-2">
-            <Label htmlFor="dash-desde">Desde</Label>
-            <Input id="dash-desde" type="date" defaultValue="2026-07-01" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dash-hasta">Hasta</Label>
-            <Input id="dash-hasta" type="date" defaultValue="2026-07-12" />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="dash-sucursal">Sucursal (vista)</Label>
-            <div className="flex gap-2">
-              <Input id="dash-sucursal" defaultValue="Sucursal Churchill" readOnly />
-              <Button type="button" variant="secondary">
-                Aplicar
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid gap-px border-y border-border sm:grid-cols-2 xl:grid-cols-3">
         {dashboardStats.map((stat) => (
           <StatCard

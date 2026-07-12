@@ -9,10 +9,10 @@ function ErrorState({
 }) {
   return (
     <div
-      className="flex flex-col items-center justify-center rounded-lg border border-destructive/20 bg-red-50/60 px-6 py-16 text-center"
+      className="flex flex-col items-center justify-center rounded-lg border border-destructive/20 bg-destructive/5 px-6 py-16 text-center"
       role="alert"
     >
-      <div className="mb-4 rounded-full bg-red-100 p-3 text-destructive">
+      <div className="mb-4 rounded-full bg-destructive/10 p-3 text-destructive">
         <AlertTriangle className="h-6 w-6" aria-hidden="true" />
       </div>
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>

@@ -6,14 +6,16 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        // El fondo es el mismo color del texto al 10% de opacidad, así cada tono
+        // sale del token y no de la paleta suelta de Tailwind.
         default: 'border-transparent bg-primary text-primary-foreground',
         secondary: 'border-transparent bg-secondary text-secondary-foreground',
         outline: 'text-foreground',
-        success: 'border-transparent bg-emerald-100 text-emerald-800',
-        warning: 'border-transparent bg-amber-100 text-amber-800',
-        danger: 'border-transparent bg-red-100 text-red-800',
+        success: 'border-transparent bg-success/10 text-success',
+        warning: 'border-transparent bg-warning/10 text-warning',
+        danger: 'border-transparent bg-destructive/10 text-destructive',
         muted: 'border-transparent bg-muted text-muted-foreground',
-        info: 'border-transparent bg-sky-100 text-sky-800',
+        info: 'border-transparent bg-primary/10 text-primary',
       },
     },
     defaultVariants: {

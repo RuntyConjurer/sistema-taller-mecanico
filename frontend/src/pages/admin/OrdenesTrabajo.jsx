@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import StatusBadge from '@/components/domain/StatusBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { AlertTriangle, CheckCircle2, LockKeyhole } from 'lucide-react'
@@ -13,13 +14,24 @@ import { cerrarOrdenTrabajo, listarOrdenesTrabajo } from '@/services/ordenesServ
 import { listarFacturas } from '@/services/facturacionService'
 import { usingMocks } from '@/services/dataSource'
 
+const relatedModules = [
+  { to: '/app/diagnosticos', label: 'Diagnóstico' },
+  { to: '/app/servicios', label: 'Servicios' },
+  { to: '/app/inventario', label: 'Materiales' },
+  { to: '/app/refrigerantes', label: 'Refrigerante' },
+  { to: '/app/facturacion', label: 'Facturación' },
+  { to: '/app/historial-tecnico', label: 'Historial técnico' },
+]
+
 function OrdenesTrabajo() {
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS')
   const [ordenes, setOrdenes] = useState([])
   const [facturas, setFacturas] = useState([])
   const [selected, setSelected] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
+
   async function loadData() {
     try {
       const [orders, invoices] = await Promise.all([listarOrdenesTrabajo(), listarFacturas()])
@@ -27,11 +39,18 @@ function OrdenesTrabajo() {
       setFacturas(invoices)
     } catch (loadError) {
       setError(loadError.message || 'No fue posible cargar las órdenes.')
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  // loadData vive fuera del efecto porque closeOrder también la usa para recargar.
+  // Se difiere a un microtask para no llamar a setState de forma síncrona dentro
+  // del efecto, que es lo que exige la regla react-hooks/set-state-in-effect.
   useEffect(() => {
     void Promise.resolve().then(loadData)
   }, [])
+
   const filtered = useMemo(() => {
     if (estadoFiltro === 'TODOS') return ordenes
     return ordenes.filter((item) => item.estado === estadoFiltro)
@@ -62,14 +81,6 @@ function OrdenesTrabajo() {
         eyebrow="Operación técnica"
         title="Órdenes de Trabajo"
         description="Seguimiento de reparaciones, estados, diagnóstico y facturación."
-        action={
-          <Button
-            type="button"
-            onClick={() => window.alert('Alta de OT visual — sin persistencia.')}
-          >
-            Nueva orden
-          </Button>
-        }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -91,20 +102,28 @@ function OrdenesTrabajo() {
         </div>
       </div>
 
-      <DataTable
-        columns={[
-          { key: 'numero', label: 'Orden' },
-          { key: 'cliente', label: 'Cliente' },
-          { key: 'vehiculo', label: 'Vehículo' },
-          { key: 'tecnico', label: 'Técnico' },
-          { key: 'prioridad', label: 'Prioridad' },
-          { key: 'estado', label: 'Estado', render: (row) => <StatusBadge status={row.estado} /> },
-        ]}
-        rows={filtered}
-        selectedId={orden?.id}
-        onRowSelect={setSelected}
-        emptyMessage="No hay órdenes con ese estado."
-      />
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <DataTable
+          columns={[
+            { key: 'numero', label: 'Orden' },
+            { key: 'cliente', label: 'Cliente' },
+            { key: 'vehiculo', label: 'Vehículo' },
+            { key: 'tecnico', label: 'Técnico' },
+            { key: 'prioridad', label: 'Prioridad' },
+            {
+              key: 'estado',
+              label: 'Estado',
+              render: (row) => <StatusBadge status={row.estado} />,
+            },
+          ]}
+          rows={filtered}
+          selectedId={orden?.id}
+          onRowSelect={setSelected}
+          emptyMessage="No hay órdenes con ese estado."
+        />
+      )}
 
       {orden ? (
         <Card>
@@ -115,15 +134,7 @@ function OrdenesTrabajo() {
                 {orden.cliente} · {orden.vehiculo}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <StatusBadge status={orden.estado} />
-              <Button size="sm" variant="outline" type="button">
-                Asignar técnico
-              </Button>
-              <Button size="sm" type="button">
-                Cambiar estado
-              </Button>
-            </div>
+            <StatusBadge status={orden.estado} />
           </CardHeader>
           <CardContent className="space-y-6">
             <section
@@ -155,24 +166,24 @@ function OrdenesTrabajo() {
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div
-                  className={`flex gap-2 rounded border bg-card p-3 text-sm ${orden.diagnosticoRegistrado ? 'border-emerald-700/30' : 'border-amber-800/30'}`}
+                  className={`flex gap-2 rounded border bg-card p-3 text-sm ${orden.diagnosticoRegistrado ? 'border-success/30' : 'border-warning/30'}`}
                 >
                   {orden.diagnosticoRegistrado ? (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-800" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                   ) : (
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" />
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                   )}
                   {orden.diagnosticoRegistrado
                     ? 'Diagnóstico técnico registrado'
                     : 'Falta diagnóstico para habilitar el cierre'}
                 </div>
                 <div
-                  className={`flex gap-2 rounded border bg-card p-3 text-sm ${factura?.estado === 'PAGADA' ? 'border-emerald-700/30' : 'border-amber-800/30'}`}
+                  className={`flex gap-2 rounded border bg-card p-3 text-sm ${factura?.estado === 'PAGADA' ? 'border-success/30' : 'border-warning/30'}`}
                 >
                   {factura?.estado === 'PAGADA' ? (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-800" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                   ) : (
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-800" />
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                   )}
                   {factura?.estado === 'PAGADA'
                     ? 'Factura pagada'
@@ -181,77 +192,52 @@ function OrdenesTrabajo() {
               </div>
             </section>
 
-            <div className="flex flex-wrap gap-3">
-              {ordenTimeline.map((item) => (
-                <div
-                  key={item.estado}
-                  className="rounded-lg border border-border px-3 py-2 text-xs"
-                >
-                  <StatusBadge status={item.estado} />
-                  <p className="mt-2 text-muted-foreground">{item.fecha}</p>
-                  <p className="text-muted-foreground">{item.usuario}</p>
-                </div>
-              ))}
-            </div>
+            <section aria-labelledby="recepcion" className="rounded-md border border-border p-4">
+              <h2 id="recepcion" className="text-sm font-semibold">
+                Recepción
+              </h2>
+              <p className="mt-2 text-sm">
+                <strong>Síntomas:</strong> {orden.sintomas}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Recibida por {orden.recepcion} · Prioridad {orden.prioridad}
+              </p>
+            </section>
 
-            <Tabs defaultValue="recepcion">
-              <TabsList className="flex-wrap">
-                <TabsTrigger value="recepcion">Recepción</TabsTrigger>
-                <TabsTrigger value="diagnostico">Diagnóstico</TabsTrigger>
-                <TabsTrigger value="servicios">Servicios</TabsTrigger>
-                <TabsTrigger value="materiales">Materiales</TabsTrigger>
-                <TabsTrigger value="refrigerante">Refrigerante</TabsTrigger>
-                <TabsTrigger value="facturacion">Facturación</TabsTrigger>
-                <TabsTrigger value="historial">Historial</TabsTrigger>
-              </TabsList>
-              <TabsContent
-                value="recepcion"
-                className="rounded-lg border border-border p-4 text-sm"
-              >
-                <p>
-                  <strong>Síntomas:</strong> {orden.sintomas}
-                </p>
-                <p className="mt-2 text-muted-foreground">
-                  Recepción: {orden.recepcion} · Prioridad: {orden.prioridad}
-                </p>
-              </TabsContent>
-              <TabsContent
-                value="diagnostico"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Formulario técnico y mediciones HVAC de la orden seleccionada.
-              </TabsContent>
-              <TabsContent
-                value="servicios"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Servicios autorizados y ejecutados con precios aplicados.
-              </TabsContent>
-              <TabsContent
-                value="materiales"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Repuestos consumidos y movimientos de inventario asociados.
-              </TabsContent>
-              <TabsContent
-                value="refrigerante"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Consumo de gas refrigerante por tipo, cantidad y técnico responsable.
-              </TabsContent>
-              <TabsContent
-                value="facturacion"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Estado de factura, pagos y balance pendiente para habilitar entrega.
-              </TabsContent>
-              <TabsContent
-                value="historial"
-                className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-              >
-                Línea de tiempo de cambios de estado y auditoría de la orden.
-              </TabsContent>
-            </Tabs>
+            <section aria-labelledby="linea-tiempo">
+              <h2 id="linea-tiempo" className="text-sm font-semibold">
+                Línea de tiempo
+              </h2>
+              <ol className="mt-3 flex flex-wrap gap-3">
+                {ordenTimeline.map((item) => (
+                  <li
+                    key={item.estado}
+                    className="rounded-md border border-border px-3 py-2 text-xs"
+                  >
+                    <StatusBadge status={item.estado} />
+                    <p className="mt-2 text-muted-foreground">{item.fecha}</p>
+                    <p className="text-muted-foreground">{item.usuario}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+
+            {/* El resto del expediente de la OT vive en sus propios módulos. Enlazar
+                evita duplicar aquí pantallas que ya existen. */}
+            <nav
+              aria-label="Módulos relacionados con la orden"
+              className="border-t border-border pt-4"
+            >
+              <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-primary">
+                {relatedModules.map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to} className="hover:underline">
+                      {item.label} →
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </CardContent>
         </Card>
       ) : null}
@@ -261,7 +247,7 @@ function OrdenesTrabajo() {
         </p>
       ) : null}
       {feedback ? (
-        <p className="text-sm font-medium text-emerald-800" role="status">
+        <p className="text-sm font-medium text-success" role="status">
           {feedback}
         </p>
       ) : null}

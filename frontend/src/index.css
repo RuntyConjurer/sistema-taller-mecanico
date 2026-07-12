@@ -23,14 +23,22 @@
   --color-secondary-foreground: #004e60;
   --color-muted: #eef5f8;
   --color-muted-foreground: #52636b;
+  /* El cian es la señal de acción: solo se usa sobre fondo oscuro, donde contrasta
+     9.3:1. Sobre blanco solo llega a 1.8:1, así que no sirve como color de texto
+     ni como anillo de foco. */
   --color-accent: #00d1ff;
   --color-accent-foreground: #0f172a;
   --color-border: #e2e8f0;
   --color-input: #bbc9cf;
-  --color-ring: #00d1ff;
+  /* El anillo de foco debe alcanzar 3:1 contra el fondo (WCAG 1.4.11). El azul
+     petróleo llega a 6.5:1 sobre blanco; el cian se quedaba en 1.8:1. */
+  --color-ring: #00677f;
   --color-destructive: #ba1a1a;
+  --color-destructive-foreground: #ffffff;
   --color-success: #166534;
+  --color-success-foreground: #ffffff;
   --color-warning: #92400e;
+  --color-warning-foreground: #ffffff;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;

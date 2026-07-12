@@ -170,7 +170,7 @@ function Diagnosticos() {
               className={
                 feedback.includes('No fue')
                   ? 'text-sm font-medium text-destructive'
-                  : 'text-sm font-medium text-emerald-800'
+                  : 'text-sm font-medium text-success'
               }
               role="status"
             >

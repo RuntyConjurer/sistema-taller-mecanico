@@ -41,14 +41,6 @@ function Clientes() {
         eyebrow="Gestión de clientes"
         title="Clientes"
         description="Registro, consulta y ficha de clientes del taller."
-        action={
-          <Button
-            type="button"
-            onClick={() => window.alert('Formulario visual — sin persistencia.')}
-          >
-            Nuevo cliente
-          </Button>
-        }
       />
 
       <Card>

@@ -10,7 +10,7 @@ function AppLogo({ to = '/', compact = false, inverse = false }) {
         <b className="font-display tracking-tight">{brand.shortName}</b>
         {!compact ? (
           <small
-            className={`ml-1 text-[0.65rem] font-medium tracking-wide ${inverse ? 'text-cyan-200' : 'text-primary'}`}
+            className={`ml-1 text-[0.65rem] font-medium tracking-wide ${inverse ? 'text-accent' : 'text-primary'}`}
           >
             REFRIGERACIÓN AUTOMOTRIZ
           </small>

@@ -10,7 +10,7 @@ function AuthLayout() {
         <WorkshopMedia className="h-full border-0" priority />
         <div className="absolute inset-0 bg-foreground/80" />
         <div className="absolute inset-x-10 bottom-12 text-white">
-          <p className="eyebrow text-cyan-300">Precisión operativa</p>
+          <p className="eyebrow text-accent">Precisión operativa</p>
           <p className="mt-3 max-w-md font-display text-3xl font-semibold">
             Gestión técnica para refrigeración automotriz.
           </p>

@@ -119,7 +119,7 @@ function AgendarCita() {
     return (
       <section className="public-section">
         <div className="page-container max-w-2xl border border-border bg-card p-8 text-center">
-          <CircleCheckBig className="mx-auto h-12 w-12 text-emerald-800" aria-hidden="true" />
+          <CircleCheckBig className="mx-auto h-12 w-12 text-success" aria-hidden="true" />
           <h1 ref={headingRef} tabIndex="-1" className="mt-5 text-3xl font-bold focus:outline-none">
             Solicitud preparada
           </h1>
@@ -160,12 +160,12 @@ function AgendarCita() {
         noValidate
       >
         <aside className="h-fit border-t-4 border-primary bg-foreground p-5 text-white lg:sticky lg:top-24">
-          <p className="eyebrow text-cyan-300">Tu solicitud</p>
+          <p className="eyebrow text-accent">Tu solicitud</p>
           <ol className="mt-7 space-y-5">
             {steps.map((item, index) => (
               <li key={item.title} className="flex gap-3">
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center border text-xs font-bold ${index < step ? 'border-emerald-700 bg-emerald-700' : index === step ? 'border-accent text-accent' : 'border-slate-600 text-slate-400'}`}
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center border text-xs font-bold ${index < step ? 'border-success bg-success' : index === step ? 'border-accent text-accent' : 'border-slate-600 text-slate-400'}`}
                 >
                   {index < step ? <Check className="h-3 w-3" /> : index + 1}
                 </span>

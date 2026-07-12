@@ -25,8 +25,6 @@ function Vehiculos() {
         eyebrow="Parque vehicular"
         title="Vehículos"
         description="Consulta técnica por placa, propietario y refrigerante recomendado."
-        actionLabel="Agregar vehículo"
-        actionTo="/app/vehiculos"
       />
 
       <DataTable

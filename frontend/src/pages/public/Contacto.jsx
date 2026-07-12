@@ -32,7 +32,7 @@ function Contacto() {
             <ContactField id="motivo" label="Motivo de visita" placeholder="Ej. Aire no enfría" />
             <Button type="submit">Enviar consulta</Button>
             {sent ? (
-              <p className="text-sm font-medium text-emerald-800" role="status">
+              <p className="text-sm font-medium text-success" role="status">
                 Consulta preparada. El envío se conectará al backend cuando esté disponible.
               </p>
             ) : (

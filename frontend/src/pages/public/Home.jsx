@@ -9,7 +9,7 @@ const symptomIcons = [ThermometerSnowflake, Gauge, Wrench, ThermometerSnowflake]
 function Home() {
   return (
     <>
-      <section className="border-b border-border bg-[#eef5f8]">
+      <section className="border-b border-border bg-muted">
         <div className="page-container grid min-h-[620px] items-center gap-10 py-12 lg:grid-cols-[0.9fr_1.1fr] lg:py-20">
           <div className="relative z-10 max-w-xl">
             <p className="eyebrow">Climatización automotriz</p>
@@ -68,7 +68,7 @@ function Home() {
       <section className="border-y border-border bg-foreground text-white">
         <div className="page-container grid gap-10 py-16 lg:grid-cols-[1fr_1.15fr]">
           <div>
-            <p className="eyebrow text-cyan-300">Cómo trabajamos</p>
+            <p className="eyebrow text-accent">Cómo trabajamos</p>
             <h2 className="mt-3 text-3xl font-bold">
               Antes de reparar, te explicamos el hallazgo.
             </h2>
@@ -76,8 +76,8 @@ function Home() {
           <ol className="grid gap-5 sm:grid-cols-3">
             {['Revisamos el sistema', 'Confirmas el alcance', 'Conservas el historial'].map(
               (item, i) => (
-                <li key={item} className="border-t border-cyan-300 pt-4">
-                  <span className="technical-value text-cyan-300">0{i + 1}</span>
+                <li key={item} className="border-t border-accent pt-4">
+                  <span className="technical-value text-accent">0{i + 1}</span>
                   <p className="mt-4 font-semibold">{item}</p>
                 </li>
               ),

@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils'
 function StatCard({ title, value, hint, icon: Icon, tone = 'default', className }) {
   const toneClasses = {
     default: 'border-primary',
-    success: 'border-emerald-800',
-    warning: 'border-amber-800',
+    success: 'border-success',
+    warning: 'border-warning',
     danger: 'border-destructive',
   }
 

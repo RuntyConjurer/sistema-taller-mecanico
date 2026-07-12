@@ -143,7 +143,7 @@ function Citas() {
         </p>
       ) : null}
       {feedback ? (
-        <p className="text-sm font-medium text-emerald-800" role="status">
+        <p className="text-sm font-medium text-success" role="status">
           {feedback}
         </p>
       ) : null}
