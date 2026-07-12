@@ -1,3 +1,10 @@
+// Cliente HTTP del proyecto. Toda petición al backend pasa por aquí.
+//
+// Contrato de los services: todos son `async`, así que devuelven siempre una promesa,
+// y un error de negocio siempre llega como promesa rechazada, tanto con datos de
+// prueba como contra la API. Antes no era así: en modo mock el error se lanzaba de
+// forma síncrona y en modo API se rechazaba, que es el mismo fallo con dos
+// comportamientos distintos.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
 
 export async function apiRequest(path, options = {}) {

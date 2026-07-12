@@ -4,36 +4,30 @@ import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
-export function listarMateriales() {
-  return Promise.resolve(
-    dataSource === 'mock' ? mockStore.materials() : apiRequest(apiEndpoints.materials),
-  )
+export async function listarMateriales() {
+  return dataSource === 'mock' ? mockStore.materials() : apiRequest(apiEndpoints.materials)
 }
 
-export function listarMovimientos() {
-  return Promise.resolve(
-    dataSource === 'mock' ? movimientos : apiRequest(apiEndpoints.inventoryMovements),
-  )
+export async function listarMovimientos() {
+  return dataSource === 'mock' ? movimientos : apiRequest(apiEndpoints.inventoryMovements)
 }
 
-export function listarRefrigerantes() {
-  return Promise.resolve(
-    dataSource === 'mock'
-      ? mockStore.refrigerants()
-      : apiRequest(`${apiEndpoints.materials}?categoria=REFRIGERANTE`),
-  )
+// Los refrigerantes son los materiales de categoría REFRIGERANTE, no una tabla aparte.
+export async function listarRefrigerantes() {
+  if (dataSource === 'mock') return mockStore.refrigerants()
+  return apiRequest(`${apiEndpoints.materials}?categoria=REFRIGERANTE`)
 }
 
-export function listarOrdenesParaConsumo() {
-  return Promise.resolve(
-    dataSource === 'mock' ? mockStore.workOrders() : apiRequest(apiEndpoints.workOrders),
-  )
+export async function listarOrdenesParaConsumo() {
+  return dataSource === 'mock' ? mockStore.workOrders() : apiRequest(apiEndpoints.workOrders)
 }
 
-export function registrarConsumoRefrigerante({ ordenId, refrigeranteId, cantidad }) {
+// Insertar el consumo es lo único que hace el backend: el trigger de PostgreSQL valida
+// el stock, lo descuenta y registra el movimiento de inventario.
+export async function registrarConsumoRefrigerante({ ordenId, refrigeranteId, cantidad }) {
   if (dataSource === 'mock') {
-    const result = mockStore.consumeRefrigerant(Number(refrigeranteId), Number(cantidad))
-    return Promise.resolve({ ...result, ordenId })
+    const resultado = mockStore.consumeRefrigerant(Number(refrigeranteId), Number(cantidad))
+    return { ...resultado, ordenId }
   }
   return apiRequest(`${endpointWithId(apiEndpoints.workOrders, ordenId)}/materiales`, {
     method: 'POST',

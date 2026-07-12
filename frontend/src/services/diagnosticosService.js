@@ -3,11 +3,9 @@ import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
-export function guardarDiagnostico(ordenId, diagnostico) {
+export async function guardarDiagnostico(ordenId, diagnostico) {
   if (dataSource === 'mock') {
-    return Promise.resolve(
-      mockStore.updateWorkOrder(ordenId, { diagnosticoRegistrado: true, diagnostico }),
-    )
+    return mockStore.updateWorkOrder(ordenId, { diagnosticoRegistrado: true, diagnostico })
   }
   return apiRequest(endpointWithId(apiEndpoints.diagnostics, ordenId), {
     method: 'PUT',
