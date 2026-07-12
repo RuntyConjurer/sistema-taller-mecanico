@@ -11,31 +11,30 @@ import DetailPanel from '@/components/common/DetailPanel'
 import { getStateMeta } from '@/constants/domainStates'
 import { listarFacturas, registrarPago } from '@/services/facturacionService'
 import { listarOrdenesTrabajo } from '@/services/ordenesService'
+import { listarServicios } from '@/services/catalogoService'
 import { usingMocks } from '@/services/dataSource'
-
-const billableItems = [
-  { id: 'diagnostico', label: 'Diagnóstico HVAC', price: 1800 },
-  { id: 'recarga', label: 'Recarga de refrigerante', price: 4200 },
-  { id: 'filtro', label: 'Filtro secador', price: 2900 },
-]
 
 function Facturacion() {
   const [facturas, setFacturas] = useState([])
   const [ordenes, setOrdenes] = useState([])
+  // El detalle facturable sale del catálogo de servicios, no de una lista escrita a mano.
+  const [servicios, setServicios] = useState([])
   const [selected, setSelected] = useState(null)
-  const [draft, setDraft] = useState({ ordenId: '', items: ['diagnostico'] })
+  const [draft, setDraft] = useState({ ordenId: '', items: [] })
   const [payment, setPayment] = useState({ facturaId: '', monto: '' })
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
 
   async function loadData() {
     try {
-      const [invoiceData, workOrders] = await Promise.all([
+      const [invoiceData, workOrders, catalogo] = await Promise.all([
         listarFacturas(),
         listarOrdenesTrabajo(),
+        listarServicios(),
       ])
       setFacturas(invoiceData)
       setOrdenes(workOrders)
+      setServicios(catalogo)
     } catch (loadError) {
       setError(loadError.message || 'No fue posible cargar facturación.')
     }
@@ -46,10 +45,10 @@ function Facturacion() {
   }, [])
   const draftTotal = useMemo(
     () =>
-      billableItems
+      servicios
         .filter((item) => draft.items.includes(item.id))
-        .reduce((sum, item) => sum + item.price, 0),
-    [draft.items],
+        .reduce((sum, item) => sum + item.precioBase, 0),
+    [draft.items, servicios],
   )
 
   function toggleItem(id) {
@@ -154,7 +153,7 @@ function Facturacion() {
               <fieldset>
                 <legend className="mb-2 text-sm font-semibold">Detalle facturable</legend>
                 <div className="space-y-2">
-                  {billableItems.map((item) => (
+                  {servicios.map((item) => (
                     <label
                       key={item.id}
                       className="flex min-h-11 items-center justify-between border border-border px-3 text-sm"
@@ -166,9 +165,9 @@ function Facturacion() {
                           checked={draft.items.includes(item.id)}
                           onChange={() => toggleItem(item.id)}
                         />
-                        {item.label}
+                        {item.nombre}
                       </span>
-                      <span className="technical-value">{formatCurrency(item.price)}</span>
+                      <span className="technical-value">{formatCurrency(item.precioBase)}</span>
                     </label>
                   ))}
                 </div>

@@ -9,7 +9,7 @@ import { obtenerSucursal } from '@/services/catalogoService'
 
 function Sucursal() {
   const { branchId } = useParams()
-  const { data: branch, isLoading } = useAsyncData(() => obtenerSucursal(branchId), [branchId])
+  const { data: sucursal, isLoading } = useAsyncData(() => obtenerSucursal(branchId), [branchId])
 
   if (isLoading) {
     return (
@@ -22,7 +22,7 @@ function Sucursal() {
   }
 
   // Antes, una sucursal inexistente mostraba la primera de la lista sin avisar.
-  if (!branch) {
+  if (!sucursal) {
     return (
       <section className="public-section">
         <div className="page-container">
@@ -40,8 +40,8 @@ function Sucursal() {
       <section className="border-b border-border bg-muted">
         <div className="page-container py-14">
           <p className="eyebrow">Sucursal SGTRA</p>
-          <h1 className="mt-3 text-4xl font-bold">{branch.name}</h1>
-          <p className="mt-3 text-muted-foreground">{branch.city}</p>
+          <h1 className="mt-3 text-4xl font-bold">{sucursal.nombre}</h1>
+          <p className="mt-3 text-muted-foreground">{sucursal.ciudad}</p>
         </div>
       </section>
       <section className="public-section">
@@ -51,9 +51,9 @@ function Sucursal() {
             <address className="mt-5 not-italic">
               <p className="flex gap-3">
                 <MapPin className="h-5 w-5 shrink-0 text-primary" />
-                {branch.address}
+                {sucursal.direccion}
               </p>
-              <p className="mt-4 text-sm text-muted-foreground">{branch.schedule}</p>
+              <p className="mt-4 text-sm text-muted-foreground">{sucursal.horario}</p>
             </address>
             <div className="mt-7 flex flex-wrap gap-5">
               <Button asChild>
@@ -78,7 +78,7 @@ function Sucursal() {
             </div>
             <h2 className="mt-12 font-display text-xl font-semibold">Equipo de la sede</h2>
             <ul className="mt-4 divide-y divide-border border-y border-border">
-              {branch.technicians.map((tech) => (
+              {sucursal.tecnicos.map((tech) => (
                 <li key={tech} className="py-4 text-sm">
                   {tech}
                 </li>

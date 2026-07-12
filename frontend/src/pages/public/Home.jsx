@@ -3,15 +3,15 @@ import { ArrowRight, Gauge, MapPin, ThermometerSnowflake, Wrench } from 'lucide-
 import { Button } from '@/components/ui/button'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { listarServicios } from '@/services/catalogoService'
-// `symptoms` es texto de la web, no un dato del taller: no vendrá nunca de la base
-// de datos, así que se importa directamente en lugar de pasar por un servicio.
-import { symptoms } from '@/data/mocks/landing.mock'
+import { listarServicios, listarSucursales } from '@/services/catalogoService'
+// Texto de la web, no un dato del taller: nunca saldrá de PostgreSQL.
+import { sintomasFrecuentes } from '@/data/mocks/contenidoWeb.mock'
 
 const symptomIcons = [ThermometerSnowflake, Gauge, Wrench, ThermometerSnowflake]
 
 function Home() {
-  const { data: services } = useAsyncData(() => listarServicios(), [])
+  const { data: servicios } = useAsyncData(() => listarServicios(), [])
+  const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
 
   return (
     <>
@@ -50,7 +50,7 @@ function Home() {
             <h2 className="mt-3 text-3xl font-bold">Cuéntanos lo que notas, empezamos por ahí.</h2>
           </div>
           <div className="mt-10 grid border-l border-t border-border sm:grid-cols-2 lg:grid-cols-4">
-            {symptoms.map((symptom, index) => {
+            {sintomasFrecuentes.map((symptom, index) => {
               const Icon = symptomIcons[index]
               return (
                 <Link
@@ -104,18 +104,18 @@ function Home() {
             </Link>
           </div>
           <div className="mt-10 divide-y divide-border border-y border-border">
-            {(services || []).map((service, index) => (
+            {(servicios || []).map((service, index) => (
               <Link
                 key={service.id}
-                to={`/servicios/${service.id}`}
+                to={`/servicios/${service.slug}`}
                 className="grid gap-4 py-5 transition-colors hover:bg-muted md:grid-cols-[56px_1fr_180px_100px]"
               >
                 <span className="technical-value text-primary">0{index + 1}</span>
                 <div>
-                  <h3 className="font-display text-xl font-semibold">{service.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{service.short}</p>
+                  <h3 className="font-display text-xl font-semibold">{service.nombre}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{service.descripcion}</p>
                 </div>
-                <span className="text-sm text-muted-foreground">{service.duration}</span>
+                <span className="text-sm text-muted-foreground">{service.duracion}</span>
                 <span className="font-semibold">Ver detalle →</span>
               </Link>
             ))}
@@ -132,19 +132,25 @@ function Home() {
               Consulta horarios, técnicos y vías de contacto antes de reservar.
             </p>
           </div>
-          <Link
-            to="/sucursal/norte"
-            className="flex items-center justify-between border border-border p-6 transition-colors hover:bg-muted"
-          >
-            <span>
-              <MapPin className="h-5 w-5 text-primary" />
-              <b className="mt-3 block font-display text-xl">Sucursal Norte</b>
-              <small className="mt-1 block text-muted-foreground">
-                Santo Domingo · atención hoy
-              </small>
-            </span>
-            <ArrowRight className="h-5 w-5 text-primary" />
-          </Link>
+          <ul className="space-y-3">
+            {(sucursales || []).map((sucursal) => (
+              <li key={sucursal.id}>
+                <Link
+                  to={`/sucursal/${sucursal.slug}`}
+                  className="flex items-center justify-between border border-border p-6 transition-colors hover:bg-muted"
+                >
+                  <span>
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <b className="mt-3 block font-display text-xl">{sucursal.nombre}</b>
+                    <small className="mt-1 block text-muted-foreground">
+                      {sucursal.ciudad} · {sucursal.direccion}
+                    </small>
+                  </span>
+                  <ArrowRight className="h-5 w-5 text-primary" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </>

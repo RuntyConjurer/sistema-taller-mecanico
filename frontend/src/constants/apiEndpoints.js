@@ -1,6 +1,9 @@
 /**
- * Rutas que el equipo de backend debe implementar sobre las migraciones actuales.
- * Las pantallas no conocen estas rutas directamente: usan services/.
+ * Rutas que el backend debe exponer. Las pantallas nunca las usan directamente:
+ * pasan por services/, y cada service decide si pide los datos aquí o a los mocks.
+ *
+ * El contrato completo, con ejemplos de petición y respuesta, está en
+ * docs/integracion-backend.md.
  */
 export const apiEndpoints = {
   appointmentRequests: '/api/v1/solicitudes-cita',

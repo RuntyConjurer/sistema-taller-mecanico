@@ -1,29 +1,39 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
+import DetailPanel from '@/components/common/DetailPanel'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import DetailPanel from '@/components/common/DetailPanel'
 import { listarClientes } from '@/services/clientesService'
+
+// Etiquetas de los CHECK constraints de la tabla `clientes`.
+const tipoClienteLabels = { PERSONA: 'Persona', EMPRESA: 'Empresa' }
+const tipoIdentificacionLabels = { CEDULA: 'Cédula', RNC: 'RNC', PASAPORTE: 'Pasaporte' }
 
 function Clientes() {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(null)
   const [clientes, setClientes] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+
   useEffect(() => {
-    void Promise.resolve().then(async () => {
+    async function loadClientes() {
       try {
         setClientes(await listarClientes())
       } catch (loadError) {
         setError(loadError.message || 'No fue posible cargar los clientes.')
+      } finally {
+        setIsLoading(false)
       }
-    })
+    }
+    void loadClientes()
   }, [])
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
     if (!term) return clientes
@@ -35,12 +45,14 @@ function Clientes() {
     )
   }, [clientes, query])
 
+  if (error) return <ErrorState description={error} />
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Gestión de clientes"
         title="Clientes"
-        description="Registro, consulta y ficha de clientes del taller."
+        description="Registro y consulta de los clientes del taller."
       />
 
       <Card>
@@ -62,30 +74,43 @@ function Clientes() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={[
-              { key: 'nombre', label: 'Cliente' },
-              { key: 'identificacion', label: 'Identificación' },
-              { key: 'telefono', label: 'Teléfono' },
-              { key: 'vehiculos', label: 'Vehículos' },
-              {
-                key: 'estado',
-                label: 'Estado',
-                render: (row) => <Badge variant="success">{row.estado}</Badge>,
-              },
-            ]}
-            rows={filtered}
-            selectedId={selected?.id}
-            onRowSelect={setSelected}
-            emptyMessage="No hay clientes que coincidan con la búsqueda."
-          />
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : (
+            <DataTable
+              columns={[
+                { key: 'nombre', label: 'Cliente' },
+                {
+                  key: 'tipoCliente',
+                  label: 'Tipo',
+                  render: (row) => tipoClienteLabels[row.tipoCliente] || row.tipoCliente,
+                },
+                {
+                  key: 'identificacion',
+                  label: 'Identificación',
+                  render: (row) =>
+                    `${tipoIdentificacionLabels[row.tipoIdentificacion] || row.tipoIdentificacion}: ${row.identificacion}`,
+                },
+                { key: 'telefono', label: 'Teléfono' },
+                { key: 'vehiculos', label: 'Vehículos' },
+                {
+                  key: 'activo',
+                  label: 'Estado',
+                  render: (row) => (
+                    <Badge variant={row.activo ? 'success' : 'muted'}>
+                      {row.activo ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  ),
+                },
+              ]}
+              rows={filtered}
+              selectedId={selected?.id}
+              onRowSelect={setSelected}
+              emptyMessage="No hay clientes que coincidan con la búsqueda."
+            />
+          )}
         </CardContent>
       </Card>
-      {error ? (
-        <p className="text-sm font-medium text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
 
       <DetailPanel
         open={Boolean(selected)}
@@ -93,55 +118,42 @@ function Clientes() {
         title="Ficha de cliente"
         subtitle={selected?.nombre}
       >
-        <p className="technical-value">{selected?.identificacion}</p>
-        <p className="mt-4 text-sm">{selected?.telefono}</p>
-        <div className="mt-8 border-y border-border py-4 text-sm">
-          <b>Vehículos vinculados</b>
-          <p className="mt-2 text-muted-foreground">
-            Consulta el historial técnico y las órdenes desde el vehículo seleccionado.
-          </p>
-        </div>
+        {selected ? (
+          <>
+            <p className="technical-value">{selected.identificacion}</p>
+            <dl className="mt-5 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Tipo</dt>
+                <dd>{tipoClienteLabels[selected.tipoCliente]}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Teléfono</dt>
+                <dd>{selected.telefono}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Correo</dt>
+                <dd>{selected.email}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Dirección</dt>
+                <dd className="text-right">{selected.direccion}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Vehículos</dt>
+                <dd>{selected.vehiculos}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Órdenes</dt>
+                <dd>{selected.ordenes}</dd>
+              </div>
+            </dl>
+            <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+              Los vehículos de este cliente y su historial se consultan desde los módulos de
+              Vehículos e Historial Técnico.
+            </p>
+          </>
+        ) : null}
       </DetailPanel>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ficha de cliente (vista previa)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="datos">
-            <TabsList>
-              <TabsTrigger value="datos">Datos</TabsTrigger>
-              <TabsTrigger value="vehiculos">Vehículos</TabsTrigger>
-              <TabsTrigger value="ordenes">Órdenes</TabsTrigger>
-              <TabsTrigger value="facturas">Facturas</TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value="datos"
-              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-            >
-              Información de contacto, identificación y notas del cliente seleccionado.
-            </TabsContent>
-            <TabsContent
-              value="vehiculos"
-              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-            >
-              Vehículos asociados con placa, refrigerante recomendado y acceso al historial.
-            </TabsContent>
-            <TabsContent
-              value="ordenes"
-              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-            >
-              Órdenes de trabajo vinculadas al cliente con estados y fechas.
-            </TabsContent>
-            <TabsContent
-              value="facturas"
-              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
-            >
-              Facturas emitidas, pagos aplicados y balances pendientes.
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
     </div>
   )
 }

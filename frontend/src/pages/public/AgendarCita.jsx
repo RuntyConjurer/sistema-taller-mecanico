@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { listarServicios, listarSucursalesPublicas } from '@/services/catalogoService'
+import { listarServicios, listarSucursales } from '@/services/catalogoService'
 import { crearSolicitudCita } from '@/services/bookingService'
 import { usingMocks } from '@/services/dataSource'
 import {
@@ -57,8 +57,8 @@ function AgendarCita() {
   const headingRef = useRef(null)
 
   // El catálogo de servicios y sucursales vendrá de las tablas `servicios` y `sucursales`.
-  const { data: services } = useAsyncData(() => listarServicios(), [])
-  const { data: branches } = useAsyncData(() => listarSucursalesPublicas(), [])
+  const { data: servicios } = useAsyncData(() => listarServicios(), [])
+  const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
 
   useEffect(() => {
     window.sessionStorage.setItem('sgtra-booking-draft', JSON.stringify(form))
@@ -70,11 +70,11 @@ function AgendarCita() {
   const summary = useMemo(
     () => [
       form.marca ? `${form.marca} ${form.modelo}` : 'Pendiente',
-      (services || []).find((item) => item.id === form.servicio)?.title || 'Pendiente',
+      (servicios || []).find((item) => item.slug === form.servicio)?.nombre || 'Pendiente',
       form.fecha ? `${form.fecha} · ${form.hora || 'hora pendiente'}` : 'Pendiente',
       form.nombre || 'Pendiente',
     ],
-    [form, services],
+    [form, servicios],
   )
 
   function validate(name, value = form[name]) {
@@ -200,10 +200,10 @@ function AgendarCita() {
           <div className="p-6">
             {step === 0 && <VehicleStep errors={errors} inputProps={inputProps} />}
             {step === 1 && (
-              <ServiceStep errors={errors} inputProps={inputProps} services={services || []} />
+              <ServiceStep errors={errors} inputProps={inputProps} servicios={servicios || []} />
             )}
             {step === 2 && (
-              <ScheduleStep errors={errors} inputProps={inputProps} branches={branches || []} />
+              <ScheduleStep errors={errors} inputProps={inputProps} sucursales={sucursales || []} />
             )}
             {step === 3 && <ContactStep errors={errors} inputProps={inputProps} />}
             {errors.form ? (
@@ -274,7 +274,7 @@ function VehicleStep({ errors, inputProps }) {
   )
 }
 
-function ServiceStep({ errors, inputProps, services }) {
+function ServiceStep({ errors, inputProps, servicios }) {
   return (
     <div className="space-y-5">
       <BookingField id="servicio" label="Servicio o síntoma" error={errors.servicio}>
@@ -283,9 +283,9 @@ function ServiceStep({ errors, inputProps, services }) {
           className="h-11 w-full border border-input bg-card px-3"
         >
           <option value="">Selecciona una opción</option>
-          {services.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.title}
+          {servicios.map((item) => (
+            <option key={item.id} value={item.slug}>
+              {item.nombre}
             </option>
           ))}
         </select>
@@ -302,7 +302,7 @@ function ServiceStep({ errors, inputProps, services }) {
   )
 }
 
-function ScheduleStep({ errors, inputProps, branches }) {
+function ScheduleStep({ errors, inputProps, sucursales }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <BookingField id="sucursal" label="Sucursal" error={errors.sucursal}>
@@ -311,9 +311,9 @@ function ScheduleStep({ errors, inputProps, branches }) {
           className="h-11 w-full border border-input bg-card px-3"
         >
           <option value="">Elige una sucursal</option>
-          {branches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name} · {branch.city}
+          {sucursales.map((item) => (
+            <option key={item.id} value={item.slug}>
+              {item.nombre} · {item.ciudad}
             </option>
           ))}
         </select>

@@ -1,25 +1,5 @@
-// Refleja las tablas `sucursales`, `usuarios` y `usuario_roles`. Los valores
-// coinciden con database/seeds/001_seed_configuracion_base.sql para que la demo
-// muestre los mismos datos que ya existen en PostgreSQL.
-export const sucursales = [
-  {
-    id: 1,
-    nombre: 'Sucursal Central',
-    direccion: 'Av. 27 de Febrero #150, Distrito Nacional',
-    telefono: '809-555-0100',
-    email: 'central@refrigeracion.com',
-    activa: true,
-  },
-  {
-    id: 2,
-    nombre: 'Sucursal Norte',
-    direccion: 'Av. Monumental #45, Los Girasoles',
-    telefono: '809-555-0101',
-    email: 'norte@refrigeracion.com',
-    activa: true,
-  },
-]
-
+// Refleja las tablas `usuarios` y `usuario_roles`. Los valores coinciden con
+// database/seeds/001_seed_configuracion_base.sql.
 // `roles` es un array porque usuario_roles es una relación N:M: un usuario puede
 // tener más de un rol. La contraseña nunca viaja al frontend (la tabla guarda
 // password_hash y el backend solo lo usa para comparar).

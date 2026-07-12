@@ -1,6 +1,4 @@
-// Texto de la web, no un dato del taller: no vendrá nunca de la base de datos, así
-// que se importa directamente en lugar de pasar por un servicio.
-import { processSteps } from '@/data/mocks/landing.mock'
+import { pasosDelProceso } from '@/data/mocks/contenidoWeb.mock'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 
 function Proceso() {
@@ -18,7 +16,7 @@ function Proceso() {
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <ol className="divide-y divide-border border-y border-border">
-            {processSteps.map((step, index) => (
+            {pasosDelProceso.map((step, index) => (
               <li key={step.step} className="grid grid-cols-[48px_1fr] gap-4 py-5">
                 <span className="technical-value text-primary">0{index + 1}</span>
                 <div>

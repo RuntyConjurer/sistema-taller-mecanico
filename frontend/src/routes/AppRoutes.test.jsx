@@ -23,7 +23,19 @@ async function montar(ruta) {
   return container
 }
 
-const rutasPublicas = ['/', '/servicios', '/servicios/diagnostico', '/agendar-cita', '/proceso']
+const rutasPublicas = [
+  '/',
+  '/servicios',
+  '/servicios/diagnostico',
+  '/servicios/no-existe',
+  '/agendar-cita',
+  '/sucursal/central',
+  '/sucursal/no-existe',
+  '/proceso',
+  '/nosotros',
+  '/contacto',
+  '/ruta-inventada',
+]
 
 const rutasPanel = [
   '/app',
@@ -33,8 +45,10 @@ const rutasPanel = [
   '/app/diagnosticos',
   '/app/clientes',
   '/app/vehiculos',
+  '/app/historial-tecnico',
   '/app/inventario',
   '/app/refrigerantes',
+  '/app/servicios',
   '/app/facturacion',
   '/app/usuarios',
   '/app/reportes',

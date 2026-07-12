@@ -5,18 +5,19 @@ import { Button } from '@/components/ui/button'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { listarServicios } from '@/services/catalogoService'
+import { formatCurrency } from '@/utils/formatters'
 
 function ServiciosPublicos() {
   const [query, setQuery] = useState('')
-  const { data: services } = useAsyncData(() => listarServicios(), [])
+  const { data: servicios } = useAsyncData(() => listarServicios(), [])
   const filtered = useMemo(
     () =>
-      (services || []).filter((service) =>
-        `${service.title} ${service.short} ${service.symptoms.join(' ')}`
+      (servicios || []).filter((service) =>
+        `${service.nombre} ${service.descripcion} ${service.sintomas.join(' ')}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [query, services],
+    [query, servicios],
   )
   return (
     <>
@@ -51,17 +52,17 @@ function ServiciosPublicos() {
               <article key={service.id} className="grid gap-5 py-7 md:grid-cols-[70px_1fr_auto]">
                 <span className="technical-value text-primary">0{index + 1}</span>
                 <div>
-                  <h2 className="font-display text-2xl font-semibold">{service.title}</h2>
-                  <p className="mt-2 max-w-xl text-muted-foreground">{service.short}</p>
+                  <h2 className="font-display text-2xl font-semibold">{service.nombre}</h2>
+                  <p className="mt-2 max-w-xl text-muted-foreground">{service.descripcion}</p>
                   <p className="mt-4 text-sm">
-                    <b>Señales:</b> {service.symptoms.join(' · ')}
+                    <b>Señales:</b> {service.sintomas.join(' · ')}
                   </p>
                 </div>
                 <div className="flex flex-col items-start gap-3 md:items-end">
-                  <span className="technical-value">{service.duration}</span>
-                  <span className="font-semibold">{service.price}</span>
+                  <span className="technical-value">{service.duracion}</span>
+                  <span className="font-semibold">Desde {formatCurrency(service.precioBase)}</span>
                   <Button variant="outline" asChild>
-                    <Link to={`/servicios/${service.id}`}>
+                    <Link to={`/servicios/${service.slug}`}>
                       Ver proceso <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>

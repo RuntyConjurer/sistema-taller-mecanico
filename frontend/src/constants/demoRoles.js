@@ -8,5 +8,3 @@ export const demoRoles = {
   CAJERO: { label: 'Cajero', name: 'Marta Ruiz' },
   ADMINISTRADOR: { label: 'Administrador', name: 'Sofía Rojas' },
 }
-
-export const allDemoRoles = Object.keys(demoRoles)

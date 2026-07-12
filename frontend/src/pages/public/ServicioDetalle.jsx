@@ -1,14 +1,16 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowRight, Check, Phone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import EmptyState from '@/components/common/EmptyState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
+import { formatCurrency } from '@/utils/formatters'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { obtenerServicio } from '@/services/catalogoService'
 
 function ServicioDetalle() {
   const { serviceId } = useParams()
+  const navigate = useNavigate()
   const { data: service, isLoading } = useAsyncData(() => obtenerServicio(serviceId), [serviceId])
 
   if (isLoading) {
@@ -30,7 +32,7 @@ function ServicioDetalle() {
             title="Ese servicio no existe"
             description="Puede que el enlace esté mal escrito o que ya no ofrezcamos ese servicio."
             actionLabel="Ver todos los servicios"
-            onAction={() => window.location.assign('/servicios')}
+            onAction={() => navigate('/servicios')}
           />
         </div>
       </section>
@@ -46,8 +48,8 @@ function ServicioDetalle() {
               ← Servicios
             </Link>
             <p className="eyebrow mt-8">Servicio especializado</p>
-            <h1 className="mt-3 text-4xl font-bold">{service.title}</h1>
-            <p className="mt-4 text-lg text-muted-foreground">{service.short}</p>
+            <h1 className="mt-3 text-4xl font-bold">{service.nombre}</h1>
+            <p className="mt-4 text-lg text-muted-foreground">{service.descripcion}</p>
           </div>
           <WorkshopMedia className="h-72" />
         </div>
@@ -57,7 +59,7 @@ function ServicioDetalle() {
           <div>
             <h2 className="font-display text-2xl font-semibold">Qué revisamos</h2>
             <ol className="mt-6 divide-y divide-border border-y border-border">
-              {service.process.map((item, index) => (
+              {service.proceso.map((item, index) => (
                 <li key={item} className="flex gap-5 py-5">
                   <span className="technical-value text-primary">0{index + 1}</span>
                   <span>{item}</span>
@@ -79,10 +81,12 @@ function ServicioDetalle() {
           </div>
           <aside className="h-fit border border-border bg-card p-6 lg:sticky lg:top-24">
             <p className="eyebrow">Reserva</p>
-            <p className="mt-3 font-display text-2xl font-semibold">{service.price}</p>
-            <p className="mt-1 technical-value text-muted-foreground">{service.duration}</p>
+            <p className="mt-3 font-display text-2xl font-semibold">
+              Desde {formatCurrency(service.precioBase)}
+            </p>
+            <p className="mt-1 technical-value text-muted-foreground">{service.duracion}</p>
             <Button className="mt-6 w-full" asChild>
-              <Link to={`/agendar-cita?servicio=${service.id}`}>
+              <Link to={`/agendar-cita?servicio=${service.slug}`}>
                 Agendar este servicio <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>

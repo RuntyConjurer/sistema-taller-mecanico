@@ -1,55 +1,72 @@
+import { useEffect, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
+import { Badge } from '@/components/ui/badge'
+import { listarServicios } from '@/services/catalogoService'
 import { formatCurrency } from '@/utils/formatters'
 
-const servicios = [
-  {
-    id: 1,
-    codigo: 'SRV-001',
-    nombre: 'Diagnóstico HVAC',
-    precio: formatCurrency(2500),
-    duracion: '45 min',
-  },
-  {
-    id: 2,
-    codigo: 'SRV-002',
-    nombre: 'Recarga de refrigerante',
-    precio: formatCurrency(4500),
-    duracion: '60 min',
-  },
-  {
-    id: 3,
-    codigo: 'SRV-003',
-    nombre: 'Detección de fugas',
-    precio: formatCurrency(3200),
-    duracion: '50 min',
-  },
-  {
-    id: 4,
-    codigo: 'SRV-004',
-    nombre: 'Limpieza de evaporador',
-    precio: formatCurrency(6800),
-    duracion: '120 min',
-  },
-]
-
 function Servicios() {
+  const [servicios, setServicios] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadServicios() {
+      try {
+        setServicios(await listarServicios())
+      } catch (loadError) {
+        setError(loadError.message || 'No fue posible cargar el catálogo.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    void loadServicios()
+  }, [])
+
+  if (error) return <ErrorState description={error} />
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Catálogo"
         title="Servicios"
-        description="Catálogo base de servicios facturables del taller."
+        description="Servicios facturables del taller, con su precio base e impuesto aplicable."
       />
-      <DataTable
-        columns={[
-          { key: 'codigo', label: 'Código' },
-          { key: 'nombre', label: 'Servicio' },
-          { key: 'precio', label: 'Precio base' },
-          { key: 'duracion', label: 'Duración' },
-        ]}
-        rows={servicios}
-      />
+
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <DataTable
+          columns={[
+            { key: 'nombre', label: 'Servicio' },
+            { key: 'descripcion', label: 'Descripción' },
+            {
+              key: 'precioBase',
+              label: 'Precio base',
+              render: (row) => formatCurrency(row.precioBase),
+            },
+            {
+              key: 'porcentajeImpuesto',
+              label: 'ITBIS',
+              render: (row) => `${row.porcentajeImpuesto}%`,
+            },
+            { key: 'duracion', label: 'Duración' },
+            {
+              key: 'activo',
+              label: 'Estado',
+              render: (row) => (
+                <Badge variant={row.activo ? 'success' : 'muted'}>
+                  {row.activo ? 'Activo' : 'Inactivo'}
+                </Badge>
+              ),
+            },
+          ]}
+          rows={servicios}
+          emptyMessage="Todavía no hay servicios en el catálogo."
+        />
+      )}
     </div>
   )
 }

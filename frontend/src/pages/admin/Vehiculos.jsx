@@ -1,48 +1,67 @@
+import { useEffect, useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { useEffect, useState } from 'react'
 import DetailPanel from '@/components/common/DetailPanel'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
+import { Badge } from '@/components/ui/badge'
 import { listarVehiculos } from '@/services/vehiculosService'
 
 function Vehiculos() {
   const [selected, setSelected] = useState(null)
   const [vehiculos, setVehiculos] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+
   useEffect(() => {
-    void Promise.resolve().then(async () => {
+    async function loadVehiculos() {
       try {
         setVehiculos(await listarVehiculos())
       } catch (loadError) {
         setError(loadError.message || 'No fue posible cargar los vehículos.')
+      } finally {
+        setIsLoading(false)
       }
-    })
+    }
+    void loadVehiculos()
   }, [])
+
+  if (error) return <ErrorState description={error} />
+
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Parque vehicular"
         title="Vehículos"
-        description="Consulta técnica por placa, propietario y refrigerante recomendado."
+        description="Consulta por placa, propietario y tipo de refrigerante del sistema."
       />
 
-      <DataTable
-        columns={[
-          { key: 'placa', label: 'Placa' },
-          { key: 'chasis', label: 'Chasis' },
-          { key: 'marca', label: 'Marca / Modelo', render: (row) => `${row.marca} ${row.modelo}` },
-          { key: 'propietario', label: 'Propietario' },
-          {
-            key: 'refrigerante',
-            label: 'Refrigerante',
-            render: (row) => <Badge variant="info">{row.refrigerante}</Badge>,
-          },
-        ]}
-        rows={vehiculos}
-        selectedId={selected?.id}
-        onRowSelect={setSelected}
-      />
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <DataTable
+          columns={[
+            { key: 'placa', label: 'Placa' },
+            { key: 'chasis', label: 'Chasis' },
+            {
+              key: 'marca',
+              label: 'Marca / Modelo',
+              render: (row) => `${row.marca} ${row.modelo} (${row.anio})`,
+            },
+            { key: 'color', label: 'Color' },
+            { key: 'propietario', label: 'Propietario' },
+            {
+              key: 'tipoRefrigerante',
+              label: 'Refrigerante',
+              render: (row) => <Badge variant="info">{row.tipoRefrigerante}</Badge>,
+            },
+          ]}
+          rows={vehiculos}
+          selectedId={selected?.id}
+          onRowSelect={setSelected}
+          emptyMessage="Todavía no hay vehículos registrados."
+        />
+      )}
 
       <DetailPanel
         open={Boolean(selected)}
@@ -50,36 +69,36 @@ function Vehiculos() {
         title="Ficha técnica"
         subtitle={selected ? `${selected.marca} ${selected.modelo}` : ''}
       >
-        <p className="technical-value">
-          {selected?.placa} · {selected?.chasis}
-        </p>
-        <p className="mt-5 text-sm">Propietario: {selected?.propietario}</p>
-        <p className="mt-3 text-sm">Refrigerante: {selected?.refrigerante}</p>
-        <p className="mt-8 border-t border-border pt-4 text-sm text-muted-foreground">
-          Historial cronológico, diagnósticos, materiales y facturación aparecerán aquí al conectar
-          datos.
-        </p>
+        {selected ? (
+          <>
+            <p className="technical-value">
+              {selected.placa} · {selected.chasis}
+            </p>
+            <dl className="mt-5 space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Año</dt>
+                <dd>{selected.anio}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Color</dt>
+                <dd>{selected.color}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Propietario</dt>
+                <dd>{selected.propietario}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Refrigerante</dt>
+                <dd>{selected.tipoRefrigerante}</dd>
+              </div>
+            </dl>
+            <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+              Todo vehículo pertenece a un cliente registrado: la columna id_cliente de la tabla es
+              NOT NULL, así que la base de datos no permite guardarlo sin propietario.
+            </p>
+          </>
+        ) : null}
       </DetailPanel>
-      {error ? (
-        <p className="text-sm font-medium text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ficha técnica (vista previa)</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-border p-4 text-sm">
-            <p className="font-semibold">Toyota Corolla 2019</p>
-            <p className="mt-2 text-muted-foreground">Placa A123456 · R-134a · Capacidad 650g</p>
-          </div>
-          <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
-            Historial cronológico de diagnósticos, servicios, materiales y facturas del vehículo.
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

@@ -3,13 +3,14 @@ import { Menu, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { brand } from '@/constants/brand'
 import { menuItems } from '@/constants/menuItems'
-import { sucursales } from '@/data/mocks/usuarios.mock'
 import { cn } from '@/lib/utils'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import { Button } from '@/components/ui/button'
 import AppLogo from '@/components/brand/AppLogo'
 import { demoRoles } from '@/constants/demoRoles'
 import { endSession, getBranchId, getRole, setBranchId } from '@/services/sessionStore'
+import { listarSucursales } from '@/services/catalogoService'
+import { useAsyncData } from '@/hooks/useAsyncData'
 import {
   BarChart3,
   Calendar,
@@ -105,7 +106,9 @@ function SidebarNav({ groups, onNavigate }) {
 }
 
 function DashboardLayout() {
-  const [sucursalId, setSucursalId] = useState(() => getBranchId() ?? sucursales[0].id)
+  // Las sucursales salen del catálogo, igual que en el sitio público: una sola fuente.
+  const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
+  const [sucursalId, setSucursalId] = useState(() => getBranchId() ?? 1)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -114,7 +117,7 @@ function DashboardLayout() {
   const visibleItems = useMemo(() => menuItems.filter((item) => item.roles.includes(role)), [role])
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
-  const sucursalActiva = sucursales.find((item) => item.id === sucursalId)
+  const sucursalActiva = (sucursales || []).find((item) => item.id === sucursalId)
   const isAllowed =
     location.pathname === '/app' || visibleItems.some((item) => item.path === location.pathname)
 
@@ -205,7 +208,7 @@ function DashboardLayout() {
                   onChange={(event) => cambiarSucursal(Number(event.target.value))}
                   aria-label="Sucursal activa"
                 >
-                  {sucursales.map((item) => (
+                  {(sucursales || []).map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.nombre}
                     </option>

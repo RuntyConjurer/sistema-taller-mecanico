@@ -4,6 +4,7 @@ import {
   materiales as initialMaterials,
   consumoRefrigerantes as initialRefrigerantUsage,
 } from '@/data/mocks/inventario.mock'
+import { facturas as initialInvoices } from '@/data/mocks/facturas.mock'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 const round = (value) => Number(value.toFixed(2))
@@ -15,35 +16,7 @@ let workOrders = clone(initialWorkOrders).map((order) => ({
 }))
 let materials = clone(initialMaterials)
 let refrigerantUsage = clone(initialRefrigerantUsage)
-let invoices = [
-  {
-    id: 1,
-    numero: 'FAC-SDQ-501',
-    cliente: 'Carlos Pérez',
-    total: 8900,
-    balance: 0,
-    estado: 'PAGADA',
-    ordenId: 3,
-  },
-  {
-    id: 2,
-    numero: 'FAC-SDQ-500',
-    cliente: 'Grupo Nova SRL',
-    total: 28400,
-    balance: 14200,
-    estado: 'PENDIENTE',
-    ordenId: 2,
-  },
-  {
-    id: 3,
-    numero: 'FAC-SDQ-499',
-    cliente: 'María López',
-    total: 12500,
-    balance: 12500,
-    estado: 'PENDIENTE',
-    ordenId: 1,
-  },
-]
+let invoices = clone(initialInvoices)
 
 export const mockStore = {
   appointments: () => clone(appointments),
