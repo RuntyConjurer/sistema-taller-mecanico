@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
@@ -24,6 +24,7 @@ const relatedModules = [
 ]
 
 function OrdenesTrabajo() {
+  const { sucursalId } = useOutletContext()
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS')
   const [ordenes, setOrdenes] = useState([])
   const [facturas, setFacturas] = useState([])
@@ -34,7 +35,10 @@ function OrdenesTrabajo() {
 
   async function loadData() {
     try {
-      const [orders, invoices] = await Promise.all([listarOrdenesTrabajo(), listarFacturas()])
+      const [orders, invoices] = await Promise.all([
+        listarOrdenesTrabajo(sucursalId),
+        listarFacturas(),
+      ])
       setOrdenes(orders)
       setFacturas(invoices)
     } catch (loadError) {
@@ -47,9 +51,14 @@ function OrdenesTrabajo() {
   // loadData vive fuera del efecto porque closeOrder también la usa para recargar.
   // Se difiere a un microtask para no llamar a setState de forma síncrona dentro
   // del efecto, que es lo que exige la regla react-hooks/set-state-in-effect.
+  // Al cambiar de sucursal se descarta la orden seleccionada y se recarga la lista.
   useEffect(() => {
-    void Promise.resolve().then(loadData)
-  }, [])
+    void Promise.resolve().then(() => {
+      setSelected(null)
+      return loadData()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sucursalId])
 
   const filtered = useMemo(() => {
     if (estadoFiltro === 'TODOS') return ordenes

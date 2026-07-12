@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import { actualizarEstadoCita, convertirCitaEnOrden, listarCitas } from '@/servi
 import { usingMocks } from '@/services/dataSource'
 
 function Citas() {
+  const { sucursalId } = useOutletContext()
   const [citas, setCitas] = useState([])
   const [selected, setSelected] = useState(null)
   const [feedback, setFeedback] = useState('')
@@ -17,15 +19,20 @@ function Citas() {
 
   async function loadAppointments() {
     try {
-      setCitas(await listarCitas())
+      setCitas(await listarCitas(sucursalId))
     } catch (loadError) {
       setError(loadError.message || 'No fue posible cargar las citas.')
     }
   }
 
+  // Se recarga la agenda cada vez que se cambia de sucursal.
   useEffect(() => {
-    void Promise.resolve().then(loadAppointments)
-  }, [])
+    void Promise.resolve().then(() => {
+      setSelected(null)
+      return loadAppointments()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sucursalId])
 
   async function changeStatus(estado) {
     setFeedback('')

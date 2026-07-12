@@ -1,6 +1,7 @@
 export const ordenes = [
   {
     id: 1,
+    idSucursal: 1,
     numero: 'OT-SDQ-1042',
     cliente: 'María López',
     vehiculo: 'Toyota Corolla · A123456',
@@ -12,6 +13,7 @@ export const ordenes = [
   },
   {
     id: 2,
+    idSucursal: 2,
     numero: 'OT-SDQ-1041',
     cliente: 'Grupo Nova SRL',
     vehiculo: 'Hyundai Tucson · B987654',
@@ -23,6 +25,7 @@ export const ordenes = [
   },
   {
     id: 3,
+    idSucursal: 1,
     numero: 'OT-SDQ-1040',
     cliente: 'Carlos Pérez',
     vehiculo: 'Kia Sportage · C456789',

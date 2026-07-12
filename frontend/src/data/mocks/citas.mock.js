@@ -1,6 +1,7 @@
 export const citas = [
   {
     id: 1,
+    idSucursal: 1,
     fecha: '2026-07-12 09:00',
     cliente: 'Luis Ramírez',
     vehiculo: 'Honda CR-V',
@@ -9,6 +10,7 @@ export const citas = [
   },
   {
     id: 2,
+    idSucursal: 2,
     fecha: '2026-07-12 10:30',
     cliente: 'Transporte del Caribe',
     vehiculo: 'Ford Transit',
@@ -17,6 +19,7 @@ export const citas = [
   },
   {
     id: 3,
+    idSucursal: 1,
     fecha: '2026-07-12 14:00',
     cliente: 'Sofía Encarnación',
     vehiculo: 'Mazda 3',
@@ -25,6 +28,7 @@ export const citas = [
   },
   {
     id: 4,
+    idSucursal: 2,
     fecha: '2026-07-13 11:00',
     cliente: 'Roberto Díaz',
     vehiculo: 'Suzuki Vitara',

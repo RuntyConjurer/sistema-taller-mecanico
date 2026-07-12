@@ -1,15 +1,15 @@
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Menu, Search, UserRound, X } from 'lucide-react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { brand } from '@/constants/brand'
 import { menuItems } from '@/constants/menuItems'
-import { sucursales } from '@/data/mocks/dashboard.mock'
+import { sucursales } from '@/data/mocks/usuarios.mock'
 import { cn } from '@/lib/utils'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import AppLogo from '@/components/brand/AppLogo'
 import { demoRoles } from '@/constants/demoRoles'
+import { endSession, getBranchId, getRole, setBranchId } from '@/services/sessionStore'
 import {
   BarChart3,
   Calendar,
@@ -105,17 +105,28 @@ function SidebarNav({ groups, onNavigate }) {
 }
 
 function DashboardLayout() {
-  const [sucursal, setSucursal] = useState(sucursales[0].id)
+  const [sucursalId, setSucursalId] = useState(() => getBranchId() ?? sucursales[0].id)
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
-  const role = window.sessionStorage.getItem('sgtra-demo-role') || 'RECEPCIONISTA'
+  const navigate = useNavigate()
+  const role = getRole() || 'RECEPCIONISTA'
   const activeRole = demoRoles[role] || demoRoles.RECEPCIONISTA
   const visibleItems = useMemo(() => menuItems.filter((item) => item.roles.includes(role)), [role])
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
-  const sucursalActiva = sucursales.find((item) => item.id === sucursal)
+  const sucursalActiva = sucursales.find((item) => item.id === sucursalId)
   const isAllowed =
     location.pathname === '/app' || visibleItems.some((item) => item.path === location.pathname)
+
+  function cambiarSucursal(id) {
+    setSucursalId(id)
+    setBranchId(id)
+  }
+
+  function salir() {
+    endSession()
+    navigate('/', { replace: true })
+  }
 
   useEffect(() => {
     function closeOnEscape(event) {
@@ -185,19 +196,13 @@ function DashboardLayout() {
                   </p>
                 </div>
               </div>
-              <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center lg:max-w-3xl lg:justify-end">
-                <div className="relative flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    className="pl-9"
-                    placeholder="Buscar cliente, placa u orden..."
-                    aria-label="Búsqueda global"
-                  />
-                </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                {/* El SRS pide soporte multi-sucursal. La sucursal elegida filtra los
+                    módulos operativos y se conserva al navegar entre pantallas. */}
                 <select
                   className="h-10 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={sucursal}
-                  onChange={(event) => setSucursal(Number(event.target.value))}
+                  value={sucursalId}
+                  onChange={(event) => cambiarSucursal(Number(event.target.value))}
                   aria-label="Sucursal activa"
                 >
                   {sucursales.map((item) => (
@@ -206,15 +211,12 @@ function DashboardLayout() {
                     </option>
                   ))}
                 </select>
-                <Button type="button" variant="outline" size="icon" aria-label="Notificaciones">
-                  <Bell className="h-4 w-4" />
-                </Button>
                 <div className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
                   <UserRound className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span>{activeRole.name}</span>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/">Salir</Link>
+                <Button variant="outline" size="sm" type="button" onClick={salir}>
+                  Salir
                 </Button>
               </div>
             </div>
@@ -224,7 +226,9 @@ function DashboardLayout() {
 
         <main id="contenido-admin" className="flex-1 p-4 lg:p-6">
           {isAllowed ? (
-            <Outlet />
+            // Las pantallas leen la sucursal con useOutletContext(). Es el mecanismo
+            // que ya trae React Router, así que no hace falta Redux ni un contexto propio.
+            <Outlet context={{ sucursalId, role }} />
           ) : (
             <section className="border border-border bg-card p-6">
               <p className="eyebrow">Acceso restringido</p>
@@ -240,8 +244,8 @@ function DashboardLayout() {
         </main>
 
         <footer className="border-t border-border px-4 py-3 text-xs text-muted-foreground lg:px-6">
-          {brand.shortName} · v0.1 prototipo · {activeRole.label} demo · Sucursal{' '}
-          {sucursalActiva?.codigo}
+          {brand.shortName} · prototipo académico · Rol {activeRole.label} ·{' '}
+          {sucursalActiva?.nombre}
         </footer>
       </div>
     </div>

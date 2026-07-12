@@ -3,8 +3,14 @@ import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
-export async function listarCitas() {
-  return dataSource === 'mock' ? mockStore.appointments() : apiRequest(apiEndpoints.appointments)
+// Igual que en órdenes: el backend filtrará por sucursal; con mocks se filtra aquí.
+export async function listarCitas(sucursalId) {
+  if (dataSource === 'mock') {
+    const citas = mockStore.appointments()
+    return sucursalId ? citas.filter((item) => item.idSucursal === sucursalId) : citas
+  }
+  const query = sucursalId ? `?sucursalId=${sucursalId}` : ''
+  return apiRequest(`${apiEndpoints.appointments}${query}`)
 }
 
 export async function actualizarEstadoCita(id, estado) {

@@ -1,8 +1,3 @@
-export const sucursales = [
-  { id: 1, nombre: 'Sucursal Churchill', codigo: 'SDQ-01' },
-  { id: 2, nombre: 'Sucursal Santiago', codigo: 'STI-02' },
-]
-
 export const dashboardStats = [
   { key: 'citas', title: 'Citas hoy', value: '8', hint: '3 confirmadas', tone: 'default' },
   {

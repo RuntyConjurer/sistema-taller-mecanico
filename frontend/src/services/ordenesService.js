@@ -3,10 +3,17 @@ import { apiRequest } from './api'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
-export function listarOrdenesTrabajo() {
-  return Promise.resolve(
-    dataSource === 'mock' ? mockStore.workOrders() : apiRequest(apiEndpoints.workOrders),
-  )
+// El backend filtrará por sucursal en la consulta SQL. Con mocks se filtra aquí para
+// que la demostración se comporte igual. Sin sucursal, devuelve todas.
+export function listarOrdenesTrabajo(sucursalId) {
+  if (dataSource === 'mock') {
+    const ordenes = mockStore.workOrders()
+    return Promise.resolve(
+      sucursalId ? ordenes.filter((item) => item.idSucursal === sucursalId) : ordenes,
+    )
+  }
+  const query = sucursalId ? `?sucursalId=${sucursalId}` : ''
+  return apiRequest(`${apiEndpoints.workOrders}${query}`)
 }
 
 export function cerrarOrdenTrabajo(id) {

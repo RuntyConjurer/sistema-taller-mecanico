@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import PublicLayout from '../layouts/PublicLayout'
 import AuthLayout from '../layouts/AuthLayout'
 import DashboardLayout from '../layouts/DashboardLayout'
+import RequireSession from './RequireSession'
 import Home from '../pages/public/Home'
 import Proceso from '../pages/public/Proceso'
 import Nosotros from '../pages/public/Nosotros'
@@ -45,7 +46,14 @@ function AppRoutes() {
         <Route path="login" element={<Login />} />
       </Route>
 
-      <Route path="app" element={<DashboardLayout />}>
+      <Route
+        path="app"
+        element={
+          <RequireSession>
+            <DashboardLayout />
+          </RequireSession>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="vehiculos" element={<Vehiculos />} />

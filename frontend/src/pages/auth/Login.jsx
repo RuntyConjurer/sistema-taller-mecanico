@@ -1,21 +1,28 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { demoRoles } from '@/constants/demoRoles'
+import { startSession } from '@/services/sessionStore'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [role, setRole] = useState('RECEPCIONISTA')
+
+  // Si el guard interceptó una ruta, se vuelve a ella tras entrar.
+  const destino = location.state?.from || '/app'
 
   function handleSubmit(event) {
     event.preventDefault()
     setLoading(true)
+    // El retardo imita la espera de una petición real. Cuando exista el backend,
+    // aquí se llamará a POST /api/v1/sesiones y se guardará el token que devuelva.
     window.setTimeout(() => {
-      window.sessionStorage.setItem('sgtra-demo-role', role)
-      navigate('/app')
+      startSession(role)
+      navigate(destino, { replace: true })
     }, 500)
   }
 
