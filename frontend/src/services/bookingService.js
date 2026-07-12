@@ -6,7 +6,10 @@ import { mockStore } from './mockStore'
 /** Agrupa cliente, vehículo y solicitud para evitar registros parciales cuando exista API. */
 export async function crearSolicitudCita(form) {
   if (dataSource === 'api') {
-    return apiRequest(apiEndpoints.appointmentRequests, { method: 'POST', body: JSON.stringify(form) })
+    return apiRequest(apiEndpoints.appointmentRequests, {
+      method: 'POST',
+      body: JSON.stringify(form),
+    })
   }
 
   return mockStore.createAppointment({

@@ -27,7 +27,10 @@ function Breadcrumb({ items = [] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span className={cn(isLast && 'font-medium text-foreground')} aria-current={isLast ? 'page' : undefined}>
+                <span
+                  className={cn(isLast && 'font-medium text-foreground')}
+                  aria-current={isLast ? 'page' : undefined}
+                >
                   {item.label}
                 </span>
               )}

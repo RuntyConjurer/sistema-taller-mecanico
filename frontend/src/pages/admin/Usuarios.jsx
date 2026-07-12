@@ -27,14 +27,29 @@ function Usuarios() {
           { key: 'nombre', label: 'Usuario' },
           { key: 'rol', label: 'Rol' },
           { key: 'sucursal', label: 'Sucursal' },
-          { key: 'estado', label: 'Estado', render: (row) => <Badge variant={row.estado === 'Activo' ? 'success' : 'muted'}>{row.estado}</Badge> },
+          {
+            key: 'estado',
+            label: 'Estado',
+            render: (row) => (
+              <Badge variant={row.estado === 'Activo' ? 'success' : 'muted'}>{row.estado}</Badge>
+            ),
+          },
         ]}
         rows={usuarios}
         selectedId={selected?.id}
         onRowSelect={setSelected}
       />
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Acceso de usuario" subtitle={selected?.nombre}>
-        <p className="text-sm">Rol: {selected?.rol}</p><p className="mt-2 text-sm">Sucursal: {selected?.sucursal}</p><p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">Los permisos son solo visuales en esta demostración.</p>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Acceso de usuario"
+        subtitle={selected?.nombre}
+      >
+        <p className="text-sm">Rol: {selected?.rol}</p>
+        <p className="mt-2 text-sm">Sucursal: {selected?.sucursal}</p>
+        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+          Los permisos son solo visuales en esta demostración.
+        </p>
       </DetailPanel>
     </div>
   )

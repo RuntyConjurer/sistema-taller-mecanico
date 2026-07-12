@@ -16,7 +16,9 @@ function ErrorState({
         <AlertTriangle className="h-6 w-6" aria-hidden="true" />
       </div>
       <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-      {description ? <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p> : null}
+      {description ? (
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
+      ) : null}
       {onAction ? (
         <Button className="mt-6" variant="outline" onClick={onAction}>
           {actionLabel}

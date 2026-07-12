@@ -5,9 +5,30 @@ import { useState } from 'react'
 import DetailPanel from '@/components/common/DetailPanel'
 
 const historial = [
-  { id: 1, fecha: '2026-07-09', orden: 'OT-SDQ-1040', servicio: 'Recarga + limpieza evaporador', tecnico: 'Ana Rodríguez', estado: 'CERRADA' },
-  { id: 2, fecha: '2026-05-14', orden: 'OT-SDQ-0988', servicio: 'Detección de fugas', tecnico: 'Juan Méndez', estado: 'CERRADA' },
-  { id: 3, fecha: '2026-02-02', orden: 'OT-SDQ-0911', servicio: 'Mantenimiento preventivo', tecnico: 'Pedro Santos', estado: 'CERRADA' },
+  {
+    id: 1,
+    fecha: '2026-07-09',
+    orden: 'OT-SDQ-1040',
+    servicio: 'Recarga + limpieza evaporador',
+    tecnico: 'Ana Rodríguez',
+    estado: 'CERRADA',
+  },
+  {
+    id: 2,
+    fecha: '2026-05-14',
+    orden: 'OT-SDQ-0988',
+    servicio: 'Detección de fugas',
+    tecnico: 'Juan Méndez',
+    estado: 'CERRADA',
+  },
+  {
+    id: 3,
+    fecha: '2026-02-02',
+    orden: 'OT-SDQ-0911',
+    servicio: 'Mantenimiento preventivo',
+    tecnico: 'Pedro Santos',
+    estado: 'CERRADA',
+  },
 ]
 
 function HistorialTecnico() {
@@ -31,8 +52,15 @@ function HistorialTecnico() {
         selectedId={selected?.id}
         onRowSelect={setSelected}
       />
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Intervención registrada" subtitle={selected?.orden}>
-        <p className="text-sm">{selected?.servicio}</p><p className="mt-3 text-sm">Técnico: {selected?.tecnico}</p><p className="mt-3 technical-value">{selected?.fecha}</p>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Intervención registrada"
+        subtitle={selected?.orden}
+      >
+        <p className="text-sm">{selected?.servicio}</p>
+        <p className="mt-3 text-sm">Técnico: {selected?.tecnico}</p>
+        <p className="mt-3 technical-value">{selected?.fecha}</p>
       </DetailPanel>
     </div>
   )

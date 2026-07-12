@@ -10,7 +10,15 @@ function Vehiculos() {
   const [selected, setSelected] = useState(null)
   const [vehiculos, setVehiculos] = useState([])
   const [error, setError] = useState('')
-  useEffect(() => { void Promise.resolve().then(async () => { try { setVehiculos(await listarVehiculos()) } catch (loadError) { setError(loadError.message || 'No fue posible cargar los vehículos.') } }) }, [])
+  useEffect(() => {
+    void Promise.resolve().then(async () => {
+      try {
+        setVehiculos(await listarVehiculos())
+      } catch (loadError) {
+        setError(loadError.message || 'No fue posible cargar los vehículos.')
+      }
+    })
+  }, [])
   return (
     <div className="space-y-6">
       <PageHeader
@@ -27,17 +35,38 @@ function Vehiculos() {
           { key: 'chasis', label: 'Chasis' },
           { key: 'marca', label: 'Marca / Modelo', render: (row) => `${row.marca} ${row.modelo}` },
           { key: 'propietario', label: 'Propietario' },
-          { key: 'refrigerante', label: 'Refrigerante', render: (row) => <Badge variant="info">{row.refrigerante}</Badge> },
+          {
+            key: 'refrigerante',
+            label: 'Refrigerante',
+            render: (row) => <Badge variant="info">{row.refrigerante}</Badge>,
+          },
         ]}
         rows={vehiculos}
         selectedId={selected?.id}
         onRowSelect={setSelected}
       />
 
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Ficha técnica" subtitle={selected ? `${selected.marca} ${selected.modelo}` : ''}>
-        <p className="technical-value">{selected?.placa} · {selected?.chasis}</p><p className="mt-5 text-sm">Propietario: {selected?.propietario}</p><p className="mt-3 text-sm">Refrigerante: {selected?.refrigerante}</p><p className="mt-8 border-t border-border pt-4 text-sm text-muted-foreground">Historial cronológico, diagnósticos, materiales y facturación aparecerán aquí al conectar datos.</p>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Ficha técnica"
+        subtitle={selected ? `${selected.marca} ${selected.modelo}` : ''}
+      >
+        <p className="technical-value">
+          {selected?.placa} · {selected?.chasis}
+        </p>
+        <p className="mt-5 text-sm">Propietario: {selected?.propietario}</p>
+        <p className="mt-3 text-sm">Refrigerante: {selected?.refrigerante}</p>
+        <p className="mt-8 border-t border-border pt-4 text-sm text-muted-foreground">
+          Historial cronológico, diagnósticos, materiales y facturación aparecerán aquí al conectar
+          datos.
+        </p>
       </DetailPanel>
-      {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="text-sm font-medium text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader>

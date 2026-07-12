@@ -1,10 +1,4 @@
-import {
-  Calendar,
-  ClipboardList,
-  DollarSign,
-  Package,
-  Truck,
-} from 'lucide-react'
+import { Calendar, ClipboardList, DollarSign, Package, Truck } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
 import StatCard from '@/components/common/StatCard'
 import DataTable from '@/components/common/DataTable'
@@ -75,8 +69,21 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <BarChart title="Órdenes por estado" description="Estado actual de la sucursal" data={[{ label: 'Abiertas', value: 6 }, { label: 'Diagnóstico', value: 5 }, { label: 'Reparación', value: 3 }, { label: 'Facturadas', value: 4 }]} />
-        <LineChart title="Ingresos del período" description="Últimos siete días · DOP" data={[21000, 28000, 18500, 42500, 31500, 48500, 39000]} />
+        <BarChart
+          title="Órdenes por estado"
+          description="Estado actual de la sucursal"
+          data={[
+            { label: 'Abiertas', value: 6 },
+            { label: 'Diagnóstico', value: 5 },
+            { label: 'Reparación', value: 3 },
+            { label: 'Facturadas', value: 4 },
+          ]}
+        />
+        <LineChart
+          title="Ingresos del período"
+          description="Últimos siete días · DOP"
+          data={[21000, 28000, 18500, 42500, 31500, 48500, 39000]}
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -87,7 +94,11 @@ function Dashboard() {
               { key: 'numero', label: 'Orden' },
               { key: 'vehiculo', label: 'Vehículo' },
               { key: 'cliente', label: 'Cliente' },
-              { key: 'estado', label: 'Estado', render: (row) => <StatusBadge status={row.estado} /> },
+              {
+                key: 'estado',
+                label: 'Estado',
+                render: (row) => <StatusBadge status={row.estado} />,
+              },
             ]}
             rows={recentOrdenes}
           />

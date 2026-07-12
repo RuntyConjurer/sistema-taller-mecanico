@@ -1,11 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import {
-  Bell,
-  Menu,
-  Search,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { Bell, Menu, Search, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { brand } from '@/constants/brand'
 import { menuItems } from '@/constants/menuItems'
@@ -49,16 +43,18 @@ const iconMap = {
 }
 
 function buildMenuGroups(items) {
-  return ['Operación', 'Clientes', 'Inventario', 'Administración'].map((label) => ({
-    label,
-    items: items
-    .filter((item) => item.group === label)
-    .map((item) => ({
-      ...item,
-      icon: iconMap[item.path] || LayoutDashboard,
-      end: item.path === '/app',
-    })),
-  })).filter((group) => group.items.length)
+  return ['Operación', 'Clientes', 'Inventario', 'Administración']
+    .map((label) => ({
+      label,
+      items: items
+        .filter((item) => item.group === label)
+        .map((item) => ({
+          ...item,
+          icon: iconMap[item.path] || LayoutDashboard,
+          end: item.path === '/app',
+        })),
+    }))
+    .filter((group) => group.items.length)
 }
 
 function resolveBreadcrumbs(pathname) {
@@ -71,10 +67,16 @@ function resolveBreadcrumbs(pathname) {
 
 function SidebarNav({ groups, onNavigate }) {
   return (
-    <nav id="navegacion-admin" className="flex-1 space-y-6 overflow-y-auto p-4" aria-label="Módulos del sistema">
+    <nav
+      id="navegacion-admin"
+      className="flex-1 space-y-6 overflow-y-auto p-4"
+      aria-label="Módulos del sistema"
+    >
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-slate-400">{group.label}</p>
+          <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+            {group.label}
+          </p>
           <div className="space-y-1">
             {group.items.map((item) => (
               <NavLink
@@ -112,10 +114,13 @@ function DashboardLayout() {
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
   const sucursalActiva = sucursales.find((item) => item.id === sucursal)
-  const isAllowed = location.pathname === '/app' || visibleItems.some((item) => item.path === location.pathname)
+  const isAllowed =
+    location.pathname === '/app' || visibleItems.some((item) => item.path === location.pathname)
 
   useEffect(() => {
-    function closeOnEscape(event) { if (event.key === 'Escape') setMobileOpen(false) }
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setMobileOpen(false)
+    }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [])
@@ -175,13 +180,19 @@ function DashboardLayout() {
                 </button>
                 <div>
                   <p className="font-semibold">{brand.name}</p>
-                  <p className="text-sm text-muted-foreground">Taller de refrigeración automotriz</p>
+                  <p className="text-sm text-muted-foreground">
+                    Taller de refrigeración automotriz
+                  </p>
                 </div>
               </div>
               <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center lg:max-w-3xl lg:justify-end">
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input className="pl-9" placeholder="Buscar cliente, placa u orden..." aria-label="Búsqueda global" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar cliente, placa u orden..."
+                    aria-label="Búsqueda global"
+                  />
                 </div>
                 <select
                   className="h-10 rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -212,11 +223,25 @@ function DashboardLayout() {
         </header>
 
         <main id="contenido-admin" className="flex-1 p-4 lg:p-6">
-          {isAllowed ? <Outlet /> : <section className="border border-border bg-card p-6"><p className="eyebrow">Acceso restringido</p><h1 className="mt-2 text-2xl font-bold">Este módulo no corresponde a tu rol de demostración</h1><p className="mt-3 max-w-xl text-muted-foreground">Inicia sesión con Administración o el rol operativo adecuado. Esta restricción es solo visual; el backend debe validar permisos reales.</p></section>}
+          {isAllowed ? (
+            <Outlet />
+          ) : (
+            <section className="border border-border bg-card p-6">
+              <p className="eyebrow">Acceso restringido</p>
+              <h1 className="mt-2 text-2xl font-bold">
+                Este módulo no corresponde a tu rol de demostración
+              </h1>
+              <p className="mt-3 max-w-xl text-muted-foreground">
+                Inicia sesión con Administración o el rol operativo adecuado. Esta restricción es
+                solo visual; el backend debe validar permisos reales.
+              </p>
+            </section>
+          )}
         </main>
 
         <footer className="border-t border-border px-4 py-3 text-xs text-muted-foreground lg:px-6">
-          {brand.shortName} · v0.1 prototipo · {activeRole.label} demo · Sucursal {sucursalActiva?.codigo}
+          {brand.shortName} · v0.1 prototipo · {activeRole.label} demo · Sucursal{' '}
+          {sucursalActiva?.codigo}
         </footer>
       </div>
     </div>

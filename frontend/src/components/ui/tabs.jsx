@@ -32,7 +32,10 @@ function TabsTrigger({ className, ...props }) {
 function TabsContent({ className, ...props }) {
   return (
     <TabsPrimitive.Content
-      className={cn('focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', className)}
+      className={cn(
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        className,
+      )}
       {...props}
     />
   )

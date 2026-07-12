@@ -23,22 +23,46 @@ function Login() {
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="space-y-2">
         <Label htmlFor="usuario">Usuario o correo</Label>
-        <Input id="usuario" name="usuario" autoComplete="username" placeholder="recepcion@climaauto.rd" required />
+        <Input
+          id="usuario"
+          name="usuario"
+          autoComplete="username"
+          placeholder="recepcion@climaauto.rd"
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="rol-demo">Rol de demostración</Label>
-        <select id="rol-demo" value={role} onChange={(event) => setRole(event.target.value)} className="h-10 w-full rounded border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          {Object.entries(demoRoles).map(([code, item]) => <option key={code} value={code}>{item.label}</option>)}
+        <select
+          id="rol-demo"
+          value={role}
+          onChange={(event) => setRole(event.target.value)}
+          className="h-10 w-full rounded border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {Object.entries(demoRoles).map(([code, item]) => (
+            <option key={code} value={code}>
+              {item.label}
+            </option>
+          ))}
         </select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar al panel'}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">Ingresarás como {demoRoles[role].label}. Prototipo académico sin autenticación ni permisos reales.</p>
+      <p className="text-center text-xs text-muted-foreground">
+        Ingresarás como {demoRoles[role].label}. Prototipo académico sin autenticación ni permisos
+        reales.
+      </p>
     </form>
   )
 }

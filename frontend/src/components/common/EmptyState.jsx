@@ -8,7 +8,9 @@ function EmptyState({ title = 'Sin resultados', description, actionLabel, onActi
         <Inbox className="h-6 w-6" aria-hidden="true" />
       </div>
       <h3 className="text-lg font-semibold">{title}</h3>
-      {description ? <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p> : null}
+      {description ? (
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">{description}</p>
+      ) : null}
       {actionLabel ? (
         <Button className="mt-6" onClick={onAction}>
           {actionLabel}

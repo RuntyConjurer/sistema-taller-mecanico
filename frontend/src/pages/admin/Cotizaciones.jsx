@@ -33,15 +33,35 @@ function Cotizaciones() {
           { key: 'cliente', label: 'Cliente' },
           { key: 'vehiculo', label: 'Vehículo' },
           { key: 'total', label: 'Total', render: (row) => formatCurrency(row.total) },
-          { key: 'estado', label: 'Estado', render: (row) => <Badge variant={estadoVariant[row.estado] || 'muted'}>{row.estado}</Badge> },
+          {
+            key: 'estado',
+            label: 'Estado',
+            render: (row) => (
+              <Badge variant={estadoVariant[row.estado] || 'muted'}>{row.estado}</Badge>
+            ),
+          },
           { key: 'vigencia', label: 'Vigencia' },
         ]}
         rows={cotizaciones}
         selectedId={selected?.id}
         onRowSelect={setSelected}
       />
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Cotización" subtitle={selected?.numero}>
-        <p className="text-sm">{selected?.cliente} · {selected?.vehiculo}</p><p className="mt-5 technical-value text-lg">{selected ? formatCurrency(selected.total) : ''}</p><p className="mt-3 text-sm text-muted-foreground">Estado: {selected?.estado}</p><p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">Editor y conversión a OT son demostrativos.</p>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Cotización"
+        subtitle={selected?.numero}
+      >
+        <p className="text-sm">
+          {selected?.cliente} · {selected?.vehiculo}
+        </p>
+        <p className="mt-5 technical-value text-lg">
+          {selected ? formatCurrency(selected.total) : ''}
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">Estado: {selected?.estado}</p>
+        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+          Editor y conversión a OT son demostrativos.
+        </p>
       </DetailPanel>
 
       <Card>
@@ -62,7 +82,9 @@ function Cotizaciones() {
             </div>
             <div className="rounded-lg border border-border p-4 text-sm">
               <p className="font-medium">Totales estimados</p>
-              <p className="text-muted-foreground">Subtotal {formatCurrency(11000)} · ITBIS incluido · Total {formatCurrency(12500)}</p>
+              <p className="text-muted-foreground">
+                Subtotal {formatCurrency(11000)} · ITBIS incluido · Total {formatCurrency(12500)}
+              </p>
             </div>
           </div>
           <DataTable
@@ -73,9 +95,27 @@ function Cotizaciones() {
               { key: 'total', label: 'Total' },
             ]}
             rows={[
-              { id: 1, linea: 'Diagnóstico HVAC', cantidad: 1, precio: formatCurrency(2500), total: formatCurrency(2500) },
-              { id: 2, linea: 'Recarga R-134a', cantidad: 1, precio: formatCurrency(4500), total: formatCurrency(4500) },
-              { id: 3, linea: 'Reparación fuga menor', cantidad: 1, precio: formatCurrency(4000), total: formatCurrency(4000) },
+              {
+                id: 1,
+                linea: 'Diagnóstico HVAC',
+                cantidad: 1,
+                precio: formatCurrency(2500),
+                total: formatCurrency(2500),
+              },
+              {
+                id: 2,
+                linea: 'Recarga R-134a',
+                cantidad: 1,
+                precio: formatCurrency(4500),
+                total: formatCurrency(4500),
+              },
+              {
+                id: 3,
+                linea: 'Reparación fuga menor',
+                cantidad: 1,
+                precio: formatCurrency(4000),
+                total: formatCurrency(4000),
+              },
             ]}
           />
         </CardContent>

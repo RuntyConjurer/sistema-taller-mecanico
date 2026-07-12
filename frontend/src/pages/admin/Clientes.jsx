@@ -15,7 +15,15 @@ function Clientes() {
   const [selected, setSelected] = useState(null)
   const [clientes, setClientes] = useState([])
   const [error, setError] = useState('')
-  useEffect(() => { void Promise.resolve().then(async () => { try { setClientes(await listarClientes()) } catch (loadError) { setError(loadError.message || 'No fue posible cargar los clientes.') } }) }, [])
+  useEffect(() => {
+    void Promise.resolve().then(async () => {
+      try {
+        setClientes(await listarClientes())
+      } catch (loadError) {
+        setError(loadError.message || 'No fue posible cargar los clientes.')
+      }
+    })
+  }, [])
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
     if (!term) return clientes
@@ -34,7 +42,10 @@ function Clientes() {
         title="Clientes"
         description="Registro, consulta y ficha de clientes del taller."
         action={
-          <Button type="button" onClick={() => window.alert('Formulario visual — sin persistencia.')}>
+          <Button
+            type="button"
+            onClick={() => window.alert('Formulario visual — sin persistencia.')}
+          >
             Nuevo cliente
           </Button>
         }
@@ -44,7 +55,9 @@ function Clientes() {
         <CardHeader className="gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <CardTitle className="text-base">Listado de clientes</CardTitle>
-            <p className="text-sm text-muted-foreground">Busca por nombre, identificación o teléfono.</p>
+            <p className="text-sm text-muted-foreground">
+              Busca por nombre, identificación o teléfono.
+            </p>
           </div>
           <div className="w-full space-y-2 sm:max-w-xs">
             <Label htmlFor="buscar-cliente">Buscar</Label>
@@ -63,7 +76,11 @@ function Clientes() {
               { key: 'identificacion', label: 'Identificación' },
               { key: 'telefono', label: 'Teléfono' },
               { key: 'vehiculos', label: 'Vehículos' },
-              { key: 'estado', label: 'Estado', render: (row) => <Badge variant="success">{row.estado}</Badge> },
+              {
+                key: 'estado',
+                label: 'Estado',
+                render: (row) => <Badge variant="success">{row.estado}</Badge>,
+              },
             ]}
             rows={filtered}
             selectedId={selected?.id}
@@ -72,10 +89,26 @@ function Clientes() {
           />
         </CardContent>
       </Card>
-      {error ? <p className="text-sm font-medium text-destructive" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="text-sm font-medium text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
 
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Ficha de cliente" subtitle={selected?.nombre}>
-        <p className="technical-value">{selected?.identificacion}</p><p className="mt-4 text-sm">{selected?.telefono}</p><div className="mt-8 border-y border-border py-4 text-sm"><b>Vehículos vinculados</b><p className="mt-2 text-muted-foreground">Consulta el historial técnico y las órdenes desde el vehículo seleccionado.</p></div>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Ficha de cliente"
+        subtitle={selected?.nombre}
+      >
+        <p className="technical-value">{selected?.identificacion}</p>
+        <p className="mt-4 text-sm">{selected?.telefono}</p>
+        <div className="mt-8 border-y border-border py-4 text-sm">
+          <b>Vehículos vinculados</b>
+          <p className="mt-2 text-muted-foreground">
+            Consulta el historial técnico y las órdenes desde el vehículo seleccionado.
+          </p>
+        </div>
       </DetailPanel>
 
       <Card>
@@ -90,16 +123,28 @@ function Clientes() {
               <TabsTrigger value="ordenes">Órdenes</TabsTrigger>
               <TabsTrigger value="facturas">Facturas</TabsTrigger>
             </TabsList>
-            <TabsContent value="datos" className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            <TabsContent
+              value="datos"
+              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
+            >
               Información de contacto, identificación y notas del cliente seleccionado.
             </TabsContent>
-            <TabsContent value="vehiculos" className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            <TabsContent
+              value="vehiculos"
+              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
+            >
               Vehículos asociados con placa, refrigerante recomendado y acceso al historial.
             </TabsContent>
-            <TabsContent value="ordenes" className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            <TabsContent
+              value="ordenes"
+              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
+            >
               Órdenes de trabajo vinculadas al cliente con estados y fechas.
             </TabsContent>
-            <TabsContent value="facturas" className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
+            <TabsContent
+              value="facturas"
+              className="rounded-lg border border-border p-4 text-sm text-muted-foreground"
+            >
               Facturas emitidas, pagos aplicados y balances pendientes.
             </TabsContent>
           </Tabs>

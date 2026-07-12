@@ -29,7 +29,10 @@ function PublicNavbar() {
               to={link.to}
               end={link.to === '/'}
               className={({ isActive }) =>
-                cn('text-sm font-medium transition-colors hover:text-primary', isActive ? 'text-primary' : 'text-muted-foreground')
+                cn(
+                  'text-sm font-medium transition-colors hover:text-primary',
+                  isActive ? 'text-primary' : 'text-muted-foreground',
+                )
               }
             >
               {link.label}
@@ -112,7 +115,10 @@ function PublicFooter() {
 function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
-      <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-white">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-white"
+      >
         Saltar al contenido
       </a>
       <PublicNavbar />

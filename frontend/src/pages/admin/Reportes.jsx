@@ -38,8 +38,21 @@ function Reportes() {
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <BarChart title="Órdenes por estado" description="Distribución para el período seleccionado" data={[{ label: 'Abiertas', value: 18 }, { label: 'Diagnóstico', value: 11 }, { label: 'Reparación', value: 9 }, { label: 'Facturadas', value: 14 }]} />
-        <LineChart title="Ingresos por período" description="Últimos siete días · DOP" data={[22000, 34000, 27500, 41000, 49500, 43000, 58000]} />
+        <BarChart
+          title="Órdenes por estado"
+          description="Distribución para el período seleccionado"
+          data={[
+            { label: 'Abiertas', value: 18 },
+            { label: 'Diagnóstico', value: 11 },
+            { label: 'Reparación', value: 9 },
+            { label: 'Facturadas', value: 14 },
+          ]}
+        />
+        <LineChart
+          title="Ingresos por período"
+          description="Últimos siete días · DOP"
+          data={[22000, 34000, 27500, 41000, 49500, 43000, 58000]}
+        />
       </div>
 
       <div className="flex gap-2">

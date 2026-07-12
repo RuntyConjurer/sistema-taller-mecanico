@@ -72,7 +72,11 @@ function Inventario() {
                 label: 'Estado',
                 render: (row) => {
                   const low = parseFloat(row.existencia) < parseFloat(row.minimo)
-                  return <Badge variant={low ? 'warning' : 'success'}>{low ? 'Bajo mínimo' : 'OK'}</Badge>
+                  return (
+                    <Badge variant={low ? 'warning' : 'success'}>
+                      {low ? 'Bajo mínimo' : 'OK'}
+                    </Badge>
+                  )
                 },
               },
             ]}
@@ -80,8 +84,18 @@ function Inventario() {
           />
         </TabsContent>
       </Tabs>
-      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Detalle de existencias" subtitle={selected?.nombre}>
-        <p className="technical-value">{selected?.codigo}</p><p className="mt-5 text-sm">Existencia: {selected?.existencia}</p><p className="mt-2 text-sm">Mínimo: {selected?.minimo}</p><p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">Los ajustes de stock requieren integración con el backend.</p>
+      <DetailPanel
+        open={Boolean(selected)}
+        onClose={() => setSelected(null)}
+        title="Detalle de existencias"
+        subtitle={selected?.nombre}
+      >
+        <p className="technical-value">{selected?.codigo}</p>
+        <p className="mt-5 text-sm">Existencia: {selected?.existencia}</p>
+        <p className="mt-2 text-sm">Mínimo: {selected?.minimo}</p>
+        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+          Los ajustes de stock requieren integración con el backend.
+        </p>
       </DetailPanel>
     </div>
   )
