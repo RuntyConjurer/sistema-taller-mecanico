@@ -1,53 +1,91 @@
 'use strict';
 
 const models = require('../infrastructure/models');
-const { BaseRepository } = require('../repositories/BaseRepository');
-const { WorkshopRepository } = require('../repositories/WorkshopRepository');
-const { AuthRepository } = require('../repositories/AuthRepository');
-const { ResourceUseCase } = require('../domain/ResourceUseCase');
-const { WorkshopUseCase } = require('../domain/WorkshopUseCase');
-const { AuthUseCase } = require('../domain/AuthUseCase');
-const { UserUseCase } = require('../domain/UserUseCase');
-const { QuoteUseCase } = require('../domain/QuoteUseCase');
-const { JwtService } = require('../services/JwtService');
-const { createResourceController } = require('../controllers/createResourceController');
-const { AuthController } = require('../controllers/AuthController');
-const { WorkshopController } = require('../controllers/WorkshopController');
-const { WhatsAppRepository } = require('../repositories/WhatsAppRepository');
-const { WhatsAppUseCase } = require('../domain/WhatsAppUseCase');
-const { WhatsAppCloudService } = require('../services/WhatsAppCloudService');
-const { WhatsAppController } = require('../controllers/WhatsAppController');
-const { STATES } = require('../constants/domainStates');
 const { env } = require('../config/env');
+const { createResources } = require('./createResources');
+const { createResourceController } = require('../controllers/createResourceController');
 
-function resource(model, config = {}, repoOptions = {}) {
-  const repository = new BaseRepository(model, repoOptions);
-  const useCase = new ResourceUseCase(repository, config);
-  return { repository, useCase, controller: createResourceController(useCase) };
-}
+const { AuthRepository } = require('../repositories/AuthRepository');
+const { AppointmentRepository } = require('../repositories/AppointmentRepository');
+const { WorkOrderRepository } = require('../repositories/WorkOrderRepository');
+const { BillingRepository } = require('../repositories/BillingRepository');
+const { InventoryRepository } = require('../repositories/InventoryRepository');
+const { ReportRepository } = require('../repositories/ReportRepository');
+const { QuoteRepository } = require('../repositories/QuoteRepository');
+const { UserRepository } = require('../repositories/UserRepository');
+const { WhatsAppRepository } = require('../repositories/WhatsAppRepository');
+
+const { AuthUseCase } = require('../domain/AuthUseCase');
+const { AppointmentUseCase } = require('../domain/AppointmentUseCase');
+const { WorkOrderUseCase } = require('../domain/WorkOrderUseCase');
+const { BillingUseCase } = require('../domain/BillingUseCase');
+const { InventoryUseCase } = require('../domain/InventoryUseCase');
+const { ReportUseCase } = require('../domain/ReportUseCase');
+const { QuoteUseCase } = require('../domain/QuoteUseCase');
+const { UserUseCase } = require('../domain/UserUseCase');
+const { WhatsAppUseCase } = require('../domain/WhatsAppUseCase');
+
+const { AuthController } = require('../controllers/AuthController');
+const { AppointmentController } = require('../controllers/AppointmentController');
+const { WorkOrderController } = require('../controllers/WorkOrderController');
+const { BillingController } = require('../controllers/BillingController');
+const { InventoryController } = require('../controllers/InventoryController');
+const { ReportController } = require('../controllers/ReportController');
+const { WhatsAppController } = require('../controllers/WhatsAppController');
+
+const { JwtService } = require('../services/JwtService');
+const { WhatsAppCloudService } = require('../services/WhatsAppCloudService');
 
 function buildContainer() {
-  const resources = {
-    sucursales: resource(models.Sucursal, { fields: ['nombre', 'direccion', 'telefono', 'email', 'activa'], required: ['nombre', 'direccion'] }),
-    clientes: resource(models.Cliente, { fields: ['tipoCliente', 'tipoIdentificacion', 'identificacion', 'nombre', 'telefono', 'direccion', 'email', 'activo'], required: ['tipoCliente', 'tipoIdentificacion', 'identificacion', 'nombre'] }, { include: [{ model: models.Vehiculo, as: 'vehiculos' }] }),
-    vehiculos: resource(models.Vehiculo, { fields: ['clienteId', 'chasis', 'marca', 'modelo', 'placa', 'color', 'anio', 'tipoRefrigerante', 'activo'], required: ['clienteId', 'chasis', 'marca', 'modelo'] }, { include: [{ model: models.Cliente, as: 'cliente' }] }),
-    servicios: resource(models.Servicio, { fields: ['nombre', 'descripcion', 'precioBase', 'porcentajeImpuesto', 'activo'], required: ['nombre', 'precioBase'] }),
-    citas: resource(models.Cita, { fields: ['clienteId', 'vehiculoId', 'sucursalId', 'servicioId', 'fechaCita', 'motivo', 'observaciones'], required: ['clienteId', 'vehiculoId', 'fechaCita'], states: STATES.appointment, branchScoped: true }, { branchScoped: true, include: [{ model: models.Cliente, as: 'cliente' }, { model: models.Vehiculo, as: 'vehiculo' }, { model: models.Servicio, as: 'servicio' }, { model: models.Sucursal, as: 'sucursal' }] }),
-    ordenes: resource(models.OrdenTrabajo, { fields: ['vehiculoId', 'tecnicoId', 'sucursalId', 'descripcionProblema', 'observaciones'], required: ['vehiculoId'], states: ['ABIERTA', 'EN_DIAGNOSTICO', 'EN_REPARACION', 'CANCELADA'], branchScoped: true }, { branchScoped: true, include: [{ model: models.Vehiculo, as: 'vehiculo', include: [{ model: models.Cliente, as: 'cliente' }] }, { model: models.Usuario, as: 'tecnico', attributes: ['id', 'nombre'] }, { model: models.Diagnostico, as: 'diagnostico' }, { model: models.OrdenServicio, as: 'servicios', include: [{ model: models.Servicio, as: 'servicio' }] }, { model: models.OrdenMaterial, as: 'materiales', include: [{ model: models.Material, as: 'material' }] }, { model: models.Factura, as: 'facturas', through: { attributes: [] } }] }),
-    materiales: resource(models.Material, { fields: ['nombre', 'descripcion', 'categoria', 'unidadMedida', 'stockActual', 'stockMinimo', 'costoUnitario', 'precioVenta', 'activo'], required: ['nombre', 'categoria', 'unidadMedida'] }),
-    movimientos: resource(models.InventarioMovimiento, { fields: ['materialId', 'tipoMovimiento', 'cantidad', 'costoUnitario', 'motivo', 'usuarioId'], required: ['materialId', 'tipoMovimiento', 'cantidad'] }),
-    facturas: resource(models.Factura, { fields: ['estado', 'observaciones'], states: STATES.invoice }, { include: [{ model: models.FacturaDetalle, as: 'detalles' }, { model: models.PagoFactura, as: 'aplicacionesPago' }] }),
-    pagos: resource(models.Pago, {}, { include: [{ model: models.PagoFactura, as: 'aplicaciones', include: [{ model: models.Factura, as: 'factura' }] }] }),
-    historial: resource(models.Historial),
-  };
+  const resources = createResources(models);
   const jwtService = new JwtService();
-  const authController = new AuthController(new AuthUseCase(new AuthRepository(), jwtService));
-  const workshopController = new WorkshopController(new WorkshopUseCase(new WorkshopRepository(), resources));
+
+  const authController = new AuthController(
+    new AuthUseCase(new AuthRepository(), jwtService),
+  );
+  const appointmentController = new AppointmentController(
+    new AppointmentUseCase(new AppointmentRepository(models), resources.citas.repository),
+  );
+  const workOrderController = new WorkOrderController(
+    new WorkOrderUseCase(new WorkOrderRepository(models)),
+  );
+  const billingController = new BillingController(
+    new BillingUseCase(new BillingRepository(models)),
+  );
+  const inventoryController = new InventoryController(
+    new InventoryUseCase(new InventoryRepository(models)),
+  );
+  const reportController = new ReportController(
+    new ReportUseCase(new ReportRepository(models, resources.ordenes.repository, resources.historial.repository)),
+  );
+
   const whatsappCloudService = new WhatsAppCloudService(env.whatsapp);
-  const whatsappController = new WhatsAppController(new WhatsAppUseCase(new WhatsAppRepository(models), whatsappCloudService));
-  resources.usuarios = { useCase: new UserUseCase() }; resources.usuarios.controller = createResourceController(resources.usuarios.useCase);
-  resources.cotizaciones = { useCase: new QuoteUseCase() }; resources.cotizaciones.controller = createResourceController(resources.cotizaciones.useCase);
-  return { resources, authController, workshopController, whatsappController, jwtService, models };
+  const whatsappController = new WhatsAppController(
+    new WhatsAppUseCase(new WhatsAppRepository(models), whatsappCloudService),
+  );
+
+  resources.usuarios = {
+    useCase: new UserUseCase(new UserRepository(models)),
+  };
+  resources.usuarios.controller = createResourceController(resources.usuarios.useCase);
+
+  resources.cotizaciones = {
+    useCase: new QuoteUseCase(new QuoteRepository(models)),
+  };
+  resources.cotizaciones.controller = createResourceController(resources.cotizaciones.useCase);
+
+  return {
+    resources,
+    authController,
+    appointmentController,
+    workOrderController,
+    billingController,
+    inventoryController,
+    reportController,
+    whatsappController,
+    jwtService,
+    models,
+  };
 }
 
 module.exports = { buildContainer };

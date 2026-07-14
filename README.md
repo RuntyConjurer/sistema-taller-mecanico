@@ -103,6 +103,20 @@ El backend mantiene una estructura deliberadamente sencilla:
 Route → Controller → UseCase → Repository → Sequelize → PostgreSQL
 ```
 
+Cada dominio operativo mantiene esas mismas cuatro piezas. No son aplicaciones separadas: comparten Express, la sesión y una sola conexión a PostgreSQL.
+
+```text
+backend/src/
+├── routes/          URLs, autenticación y permisos
+├── controllers/     Traducción entre HTTP y casos de uso
+├── domain/          Validaciones y reglas de aplicación
+├── repositories/    Consultas y transacciones Sequelize
+├── infrastructure/  Modelos agrupados y conexión a PostgreSQL
+└── di/              Construcción y conexión de dependencias
+```
+
+Los módulos principales son agenda/cotizaciones, órdenes de trabajo, inventario, facturación, reportes y WhatsApp. `routes/index.js` solo los registra; `di/container.js` solo conecta sus dependencias. Así se puede explicar o probar un flujo sin recorrer un archivo general de cientos de líneas.
+
 - `frontend/`: sitio público y panel del personal.
 - `backend/`: API, autenticación, reglas de aplicación y acceso a datos.
 - `database/migrations/`: esquema y reglas de integridad en orden numérico.
@@ -141,6 +155,8 @@ Agenda → Cita → OT → Diagnóstico → Consumo → Factura → Pago → Cie
 ```
 
 PostgreSQL impide cerrar una OT sin diagnóstico o factura pagada y evita consumos superiores al stock. El frontend orienta al usuario; la API coordina transacciones; la base impone la integridad.
+
+Cada `push` y pull request hacia `main` o `development` ejecuta estas comprobaciones en GitHub Actions. El segundo job crea una base PostgreSQL vacía, construye API y frontend, levanta Nginx y recorre el flujo completo antes de aceptar la entrega.
 
 ## Documentación
 
