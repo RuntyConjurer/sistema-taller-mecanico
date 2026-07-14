@@ -4,6 +4,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import {
+  aniosVehiculo,
+  coloresVehiculo,
+  marcasVehiculo,
+  modelosPorMarca,
+  OPCION_OTRA,
+} from '@/constants/catalogoVehiculos'
+import {
   normalizarVehiculo,
   validarVehiculo,
 } from '@/lib/validacionesVehiculo'
@@ -13,8 +20,11 @@ const valoresIniciales = {
   chasis: '',
   placa: '',
   marca: '',
+  marcaPersonalizada: '',
   modelo: '',
+  modeloPersonalizado: '',
   color: '',
+  colorPersonalizado: '',
   anio: '',
   tipoRefrigerante: '',
   activo: true,
@@ -40,24 +50,80 @@ function VehiculoForm({
   const [valores, setValores] = useState(valoresIniciales)
   const [errores, setErrores] = useState({})
 
+  const modelosDisponibles =
+    valores.marca && valores.marca !== OPCION_OTRA
+      ? modelosPorMarca[valores.marca] ?? []
+      : []
+
   function handleChange(event) {
     const { name, value, type, checked } = event.target
+    const nuevoValor = type === 'checkbox' ? checked : value
 
-    setValores((valoresActuales) => ({
-      ...valoresActuales,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setValores((valoresActuales) => {
+      const nuevosValores = {
+        ...valoresActuales,
+        [name]: nuevoValor,
+      }
 
-    setErrores((erroresActuales) => ({
-      ...erroresActuales,
-      [name]: '',
-    }))
+      if (name === 'marca') {
+        nuevosValores.modelo =
+          value === OPCION_OTRA ? OPCION_OTRA : ''
+        nuevosValores.marcaPersonalizada = ''
+        nuevosValores.modeloPersonalizado = ''
+      }
+
+      if (name === 'modelo' && value !== OPCION_OTRA) {
+        nuevosValores.modeloPersonalizado = ''
+      }
+
+      if (name === 'color' && value !== OPCION_OTRA) {
+        nuevosValores.colorPersonalizado = ''
+      }
+
+      return nuevosValores
+    })
+
+    const campoError =
+      {
+        marcaPersonalizada: 'marca',
+        modeloPersonalizado: 'modelo',
+        colorPersonalizado: 'color',
+      }[name] ?? name
+
+    setErrores((erroresActuales) => {
+      const nuevosErrores = {
+        ...erroresActuales,
+        [campoError]: '',
+      }
+
+      if (name === 'marca') {
+        nuevosErrores.modelo = ''
+      }
+
+      return nuevosErrores
+    })
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const vehiculoNormalizado = normalizarVehiculo(valores)
+    const valoresResueltos = {
+      ...valores,
+      marca:
+        valores.marca === OPCION_OTRA
+          ? valores.marcaPersonalizada
+          : valores.marca,
+      modelo:
+        valores.modelo === OPCION_OTRA
+          ? valores.modeloPersonalizado
+          : valores.modelo,
+      color:
+        valores.color === OPCION_OTRA
+          ? valores.colorPersonalizado
+          : valores.color,
+    }
+
+    const vehiculoNormalizado = normalizarVehiculo(valoresResueltos)
 
     const nuevosErrores = validarVehiculo(
       vehiculoNormalizado,
@@ -169,19 +235,39 @@ function VehiculoForm({
         <div className="space-y-2">
           <Label htmlFor="marca">Marca</Label>
 
-          <Input
+          <Select
             id="marca"
             name="marca"
             value={valores.marca}
             onChange={handleChange}
-            placeholder="Ej. Toyota"
-            maxLength={80}
             aria-invalid={Boolean(errores.marca)}
             aria-describedby={
               errores.marca ? 'error-marca' : undefined
             }
             required
-          />
+          >
+            <option value="">Selecciona una marca</option>
+
+            {marcasVehiculo.map((marca) => (
+              <option key={marca} value={marca}>
+                {marca}
+              </option>
+            ))}
+
+            <option value={OPCION_OTRA}>Otra marca</option>
+          </Select>
+
+          {valores.marca === OPCION_OTRA ? (
+            <Input
+              id="marcaPersonalizada"
+              name="marcaPersonalizada"
+              value={valores.marcaPersonalizada}
+              onChange={handleChange}
+              placeholder="Escribe la marca"
+              maxLength={80}
+              aria-invalid={Boolean(errores.marca)}
+            />
+          ) : null}
 
           <FieldError
             id="error-marca"
@@ -192,19 +278,62 @@ function VehiculoForm({
         <div className="space-y-2">
           <Label htmlFor="modelo">Modelo</Label>
 
-          <Input
-            id="modelo"
-            name="modelo"
-            value={valores.modelo}
-            onChange={handleChange}
-            placeholder="Ej. Corolla"
-            maxLength={80}
-            aria-invalid={Boolean(errores.modelo)}
-            aria-describedby={
-              errores.modelo ? 'error-modelo' : undefined
-            }
-            required
-          />
+          {valores.marca === OPCION_OTRA ? (
+            <Input
+              id="modeloPersonalizado"
+              name="modeloPersonalizado"
+              value={valores.modeloPersonalizado}
+              onChange={handleChange}
+              placeholder="Escribe el modelo"
+              maxLength={80}
+              aria-invalid={Boolean(errores.modelo)}
+              aria-describedby={
+                errores.modelo ? 'error-modelo' : undefined
+              }
+            />
+          ) : (
+            <Select
+              id="modelo"
+              name="modelo"
+              value={valores.modelo}
+              onChange={handleChange}
+              disabled={!valores.marca}
+              aria-invalid={Boolean(errores.modelo)}
+              aria-describedby={
+                errores.modelo ? 'error-modelo' : undefined
+              }
+              required
+            >
+              <option value="">
+                {valores.marca
+                  ? 'Selecciona un modelo'
+                  : 'Selecciona primero una marca'}
+              </option>
+
+              {modelosDisponibles.map((modelo) => (
+                <option key={modelo} value={modelo}>
+                  {modelo}
+                </option>
+              ))}
+
+              {valores.marca ? (
+                <option value={OPCION_OTRA}>Otro modelo</option>
+              ) : null}
+            </Select>
+          )}
+
+          {valores.marca !== OPCION_OTRA &&
+          valores.modelo === OPCION_OTRA ? (
+            <Input
+              id="modeloPersonalizado"
+              name="modeloPersonalizado"
+              value={valores.modeloPersonalizado}
+              onChange={handleChange}
+              placeholder="Escribe el modelo"
+              maxLength={80}
+              aria-invalid={Boolean(errores.modelo)}
+            />
+          ) : null}
 
           <FieldError
             id="error-modelo"
@@ -217,20 +346,24 @@ function VehiculoForm({
         <div className="space-y-2">
           <Label htmlFor="anio">Año</Label>
 
-          <Input
+          <Select
             id="anio"
             name="anio"
-            type="number"
             value={valores.anio}
             onChange={handleChange}
-            min="1980"
-            max="2100"
-            placeholder="Ej. 2022"
             aria-invalid={Boolean(errores.anio)}
             aria-describedby={
               errores.anio ? 'error-anio' : undefined
             }
-          />
+          >
+            <option value="">No especificado</option>
+
+            {aniosVehiculo.map((anio) => (
+              <option key={anio} value={anio}>
+                {anio}
+              </option>
+            ))}
+          </Select>
 
           <FieldError
             id="error-anio"
@@ -241,14 +374,33 @@ function VehiculoForm({
         <div className="space-y-2">
           <Label htmlFor="color">Color</Label>
 
-          <Input
+          <Select
             id="color"
             name="color"
             value={valores.color}
             onChange={handleChange}
-            placeholder="Ej. Gris"
-            maxLength={50}
-          />
+          >
+            <option value="">No especificado</option>
+
+            {coloresVehiculo.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+
+            <option value={OPCION_OTRA}>Otro color</option>
+          </Select>
+
+          {valores.color === OPCION_OTRA ? (
+            <Input
+              id="colorPersonalizado"
+              name="colorPersonalizado"
+              value={valores.colorPersonalizado}
+              onChange={handleChange}
+              placeholder="Escribe el color"
+              maxLength={50}
+            />
+          ) : null}
         </div>
       </div>
 
