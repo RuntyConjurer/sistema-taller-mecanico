@@ -1,6 +1,9 @@
-// Interruptor central de datos. Si VITE_DATA_SOURCE=api, los services llaman al
-// backend; en cualquier otro caso usan datos mock para que el frontend funcione solo.
-// Las pruebas unitarias siempre usan mocks y no dependen de un servidor externo.
-const requestedSource = import.meta.env.MODE === 'test' ? 'mock' : import.meta.env.VITE_DATA_SOURCE
-export const dataSource = requestedSource === 'api' ? 'api' : 'mock'
+// La aplicación usa la API salvo que se solicite explícitamente el modo mock.
+// Las pruebas unitarias mantienen mocks para no depender de servicios externos.
+export function resolveDataSource(mode, configuredSource) {
+  if (mode === 'test') return 'mock'
+  return configuredSource === 'mock' ? 'mock' : 'api'
+}
+
+export const dataSource = resolveDataSource(import.meta.env.MODE, import.meta.env.VITE_DATA_SOURCE)
 export const usingMocks = dataSource === 'mock'

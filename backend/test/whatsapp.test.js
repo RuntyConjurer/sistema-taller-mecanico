@@ -17,6 +17,7 @@ function config(overrides = {}) {
     wabaId: '2245119546238685',
     businessNumber: '15556552000',
     testRecipient: '18297559416',
+    testMode: true,
     verifyToken: 'verify-de-prueba',
     graphVersion: 'v23.0',
     defaultTemplate: 'hello_world',
@@ -69,12 +70,60 @@ test('envía hello_world solamente al host fijo de Meta y devuelve wamid', async
   assert.equal(result.messageId, 'wamid.test');
 });
 
+test('comprueba número, plantilla y suscripción sin exponer credenciales', async () => {
+  const fakeFetch = async (url) => {
+    if (url.includes('message_templates')) {
+      return { ok: true, json: async () => ({ data: [{ name: 'hello_world', language: 'en_US', status: 'APPROVED' }] }) };
+    }
+    if (url.includes('subscribed_apps')) {
+      return { ok: true, json: async () => ({ data: [{ id: '123456' }] }) };
+    }
+    return { ok: true, json: async () => ({ display_phone_number: '+1 555-655-2000', verified_name: 'SGTRA', quality_rating: 'GREEN' }) };
+  };
+  const status = await new WhatsAppCloudService(config(), fakeFetch).getPublicStatus();
+  assert.equal(status.connected, true);
+  assert.equal(status.templateReady, true);
+  assert.equal(status.webhookSubscribed, true);
+  assert.equal('accessToken' in status, false);
+  assert.equal('phoneNumberId' in status, false);
+});
+
+test('informa token inválido sin devolver el mensaje interno de Meta', async () => {
+  const fakeFetch = async () => ({
+    ok: false,
+    json: async () => ({ error: { code: 190, message: 'token secreto expirado' } }),
+  });
+  const status = await new WhatsAppCloudService(config(), fakeFetch).getPublicStatus();
+  assert.equal(status.connected, false);
+  assert.equal(status.connectionError, 'WHATSAPP_TOKEN_INVALID');
+  assert.equal(JSON.stringify(status).includes('token secreto'), false);
+});
+
+test('la prueba solo permite el destinatario configurado', async () => {
+  const useCase = new WhatsAppUseCase({}, new WhatsAppCloudService(config()));
+  await assert.rejects(
+    () => useCase.sendTest({ telefono: '18295550000' }, { id: 1 }),
+    (error) => error.code === 'WHATSAPP_TEST_RECIPIENT_FORBIDDEN',
+  );
+});
+
 test('la cita no se notifica sin consentimiento', async () => {
   const repository = {
     getAppointment: async () => ({ cliente: { whatsappOptIn: false, telefono: '18297559416' } }),
   };
   const useCase = new WhatsAppUseCase(repository, new WhatsAppCloudService(config()));
   await assert.rejects(() => useCase.sendAppointment(1, {}, { id: 1, roles: ['ADMINISTRADOR'] }), (error) => error.code === 'WHATSAPP_CONSENT_REQUIRED');
+});
+
+test('el modo de prueba bloquea citas dirigidas a números no aprobados', async () => {
+  const repository = {
+    getAppointment: async () => ({ cliente: { whatsappOptIn: true, telefono: '18095550000' } }),
+  };
+  const useCase = new WhatsAppUseCase(repository, new WhatsAppCloudService(config()));
+  await assert.rejects(
+    () => useCase.sendAppointment(1, {}, { id: 1, roles: ['ADMINISTRADOR'] }),
+    (error) => error.code === 'WHATSAPP_TEST_RECIPIENT_ONLY',
+  );
 });
 
 test('un webhook repetido o fuera de orden no degrada el estado del mensaje', () => {
@@ -99,4 +148,40 @@ test('un mensaje entrante duplicado conserva un solo wamid', async () => {
   await repository.recordInbound(event, {});
   await repository.recordInbound(event, {});
   assert.equal(stored.size, 1);
+});
+
+test('reconcilia un estado anticipado con el mensaje saliente sin degradarlo', async () => {
+  let originalDestroyed = false;
+  const existing = {
+    id: 2,
+    estado: 'ENTREGADO',
+    update: async (values) => Object.assign(existing, values),
+  };
+  const outbound = {
+    id: 1,
+    clienteId: 3,
+    citaId: 4,
+    usuarioId: 5,
+    tipo: 'PLANTILLA',
+    plantilla: 'hello_world',
+    idioma: 'en_US',
+    update: async () => {
+      const error = new Error('duplicado');
+      error.name = 'SequelizeUniqueConstraintError';
+      throw error;
+    },
+    destroy: async () => { originalDestroyed = true; },
+  };
+  const repository = new WhatsAppRepository({
+    WhatsAppMessage: { findOne: async () => existing },
+  });
+  const result = await repository.markSent(outbound, {
+    messageId: 'wamid.temprano',
+    contactId: '18297559416',
+    phone: '18297559416',
+  });
+  assert.equal(result.id, 2);
+  assert.equal(result.estado, 'ENTREGADO');
+  assert.equal(result.citaId, 4);
+  assert.equal(originalDestroyed, true);
 });

@@ -1,30 +1,78 @@
 # SGTRA - Sistema de Gestión de Taller de Refrigeración Automotriz
 
-Aplicación académica para administrar el flujo completo de un taller HVAC automotriz: cliente, vehículo, cita, cotización, orden de trabajo, diagnóstico, consumo de materiales, factura, pago e historial técnico.
+Aplicación académica para administrar cliente, vehículo, cita, cotización, orden de trabajo, diagnóstico, materiales, factura, pago e historial técnico.
 
-## Ejecutar el sistema completo
+## Requisitos
 
-Requisitos: Docker Desktop con Docker Compose.
+- Node.js 20.19 o superior.
+- PostgreSQL 16 en ejecución.
+- npm 10 o superior.
+- Nginx es opcional para presentar frontend y API en un solo puerto.
 
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
+## Primera instalación
+
+### 1. Crear usuario y base de datos
+
+Ejecute desde pgAdmin o `psql` con un usuario administrador:
+
+```sql
+CREATE ROLE sgtra LOGIN PASSWORD 'sgtra_local_password';
+CREATE DATABASE sgtra OWNER sgtra;
 ```
 
-Abra [http://localhost:8080](http://localhost:8080). Nginx es el único punto público: sirve React y redirige `/api/v1/*` al backend. PostgreSQL y Node.js permanecen en la red interna de Docker.
+El puerto `5432` debe pertenecer a la instancia PostgreSQL que usará SGTRA. Si otra aplicación ocupa ese puerto, deténgala o configure PostgreSQL en otro puerto y actualice `DATABASE_URL`.
 
-Para detener el sistema:
+### 2. Preparar variables locales
 
-```powershell
-docker compose down
-```
-
-La base se inicializa solo cuando el volumen está vacío. Para reconstruir todos los datos de demostración desde cero, elimine también el volumen (esta acción borra la base local):
+En PowerShell:
 
 ```powershell
-docker compose down -v
-docker compose up --build
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env.local
 ```
+
+La conexión principal queda así:
+
+```dotenv
+DATABASE_URL=postgres://sgtra:sgtra_local_password@localhost:5432/sgtra
+```
+
+Si durante la creación eligió otra contraseña, servidor o puerto, cámbielos solamente en `backend/.env`. Estos archivos locales están ignorados por Git.
+
+### 3. Instalar e inicializar
+
+Desde la raíz del repositorio:
+
+```powershell
+npm run setup
+```
+
+`setup` instala frontend y backend, luego aplica migraciones, vistas y datos iniciales sobre una base vacía. Nunca elimina una base previamente inicializada.
+
+## Iniciar el proyecto
+
+```powershell
+npm run dev
+```
+
+Este comando inicia ambos procesos:
+
+- Frontend React/Vite: [http://localhost:5180](http://localhost:5180)
+- Backend Express: [http://localhost:3100/api/v1/ready](http://localhost:3100/api/v1/ready)
+
+Vite envía automáticamente `/api/*` al backend en el puerto `3100`. El origen de datos predeterminado es `api`; los registros se escriben en PostgreSQL.
+
+## Nginx opcional
+
+La plantilla [nginx/sgtra.local.conf](nginx/sgtra.local.conf) expone todo en [http://localhost:8080](http://localhost:8080):
+
+```text
+Navegador :8080
+├── /api/* → Express :3100 → PostgreSQL
+└── /*      → Vite :5180
+```
+
+Copie esa configuración en el directorio de sitios de Nginx y recargue el servicio después de iniciar `npm run dev`.
 
 ## Cuentas de demostración
 
@@ -37,110 +85,69 @@ Todas usan la contraseña `password123`.
 | Técnico | `tecnico@sgtra.demo` |
 | Cajero | `caja@sgtra.demo` |
 
-Estas credenciales son exclusivas de la presentación. Cambie `POSTGRES_PASSWORD` y `JWT_SECRET` en entornos compartidos.
+## Persistencia
 
-## Ejecutar sin Docker
-
-Requisitos: Node.js 20.19 o superior y PostgreSQL 16. Cree una base vacía y un usuario desde pgAdmin o `psql`:
-
-```sql
-CREATE ROLE sgtra LOGIN PASSWORD 'sgtra_local_password';
-CREATE DATABASE sgtra OWNER sgtra;
-```
-
-Prepare los entornos e instale dependencias:
-
-```powershell
-Copy-Item backend/.env.example backend/.env
-Copy-Item frontend/.env.example frontend/.env.local
-npm --prefix backend ci
-npm --prefix frontend ci
-```
-
-En `backend/.env`, ajuste `DATABASE_URL`. En `frontend/.env.local`, use:
-
-```dotenv
-VITE_DATA_SOURCE=api
-VITE_API_BASE_URL=
-VITE_DEV_API_URL=http://localhost:3000
-```
-
-Inicialice una base vacía y levante ambos procesos:
-
-```powershell
-npm --prefix backend run db:init
-npm --prefix backend run dev
-```
-
-En otra terminal:
-
-```powershell
-npm --prefix frontend run dev
-```
-
-Abra [http://localhost:5173](http://localhost:5173). Vite redirige `/api` a Express en `3000`. El inicializador es multiplataforma y se detiene si detecta una base previamente creada; nunca elimina tablas ni datos.
-
-## Arquitectura
+El recorrido de datos es:
 
 ```text
-Navegador
-   │
-   ▼
-Nginx :8080 ── / ───────► React estático
-   │
-   └────────── /api/v1 ─► Express
-                               │
-                               ▼
-                     Use cases y repositories
-                               │
-                               ▼
-                         PostgreSQL 16
+React → service → /api/v1 → controller → use case → repository → Sequelize → PostgreSQL
 ```
 
-El backend mantiene una estructura deliberadamente sencilla:
+Para comprobarlo:
+
+1. Cree una cita desde `/agendar-cita`.
+2. Consulte la cita desde el panel administrativo.
+3. Detenga el proyecto con `Ctrl+C`.
+4. Ejecute de nuevo `npm run dev`.
+5. La cita debe continuar disponible porque vive en PostgreSQL, no en memoria.
+
+El modo sin persistencia solo se activa deliberadamente con:
+
+```dotenv
+VITE_DATA_SOURCE=mock
+```
+
+No use ese valor durante la presentación integrada.
+
+## Arquitectura del backend
 
 ```text
 Route → Controller → UseCase → Repository → Sequelize → PostgreSQL
 ```
 
-- `frontend/`: sitio público y panel del personal.
-- `backend/`: API, autenticación, reglas de aplicación y acceso a datos.
-- `database/migrations/`: esquema y reglas de integridad en orden numérico.
-- `database/views/`: consultas consolidadas para operación y reportes.
-- `database/seeds/`: datos académicos reproducibles.
-- `docker/`: imágenes, proxy Nginx e inicialización de PostgreSQL.
+```text
+backend/src/
+├── routes/          rutas, autenticación y permisos
+├── controllers/     entrada y respuesta HTTP
+├── domain/          validaciones y reglas de aplicación
+├── repositories/    consultas y transacciones
+├── infrastructure/  conexión y modelos Sequelize
+└── di/              composición de dependencias
+```
 
-## Variables principales
-
-Copie `.env.example` como `.env`. `APP_PORT` cambia el puerto público y las variables `POSTGRES_*` configuran la base. `JWT_SECRET` firma las sesiones de ocho horas. El frontend compilado usa la API del mismo origen, por lo que no necesita conocer un puerto interno.
+Los módulos principales son agenda/cotizaciones, órdenes de trabajo, inventario, facturación, reportes, usuarios y WhatsApp.
 
 ## Comprobaciones
 
 ```powershell
-npm --prefix backend test
-npm --prefix backend run smoke
-npm --prefix frontend run lint
-npm --prefix frontend test
-npm --prefix frontend run build
-docker compose config --quiet
+npm run check
+npm run smoke
 ```
 
-`smoke` ejecuta el recorrido completo contra `http://127.0.0.1:8080/api/v1` y agrega datos de prueba. Use `SMOKE_BASE_URL` si Nginx está publicado en otro puerto.
-
-Con el stack activo, las reglas críticas de PostgreSQL se prueban sin conservar datos:
-
-```powershell
-Get-Content -Raw database/tests/001_reglas_negocio.sql |
-  docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-```
-
-El recorrido esperado es:
+`check` ejecuta sintaxis y pruebas del backend, lint, pruebas y build del frontend. `smoke` requiere Express y PostgreSQL activos y recorre:
 
 ```text
 Agenda → Cita → OT → Diagnóstico → Consumo → Factura → Pago → Cierre → Historial
 ```
 
-PostgreSQL impide cerrar una OT sin diagnóstico o factura pagada y evita consumos superiores al stock. El frontend orienta al usuario; la API coordina transacciones; la base impone la integridad.
+Las reglas SQL se pueden comprobar con:
+
+```powershell
+$env:PGPASSWORD='sgtra_local_password'
+psql -h localhost -U sgtra -d sgtra -v ON_ERROR_STOP=1 -f database/tests/001_reglas_negocio.sql
+```
+
+GitHub Actions instala una instancia PostgreSQL limpia, inicia frontend y backend con npm, configura Nginx y repite el flujo integral en cada pull request.
 
 ## Documentación
 
@@ -149,4 +156,4 @@ PostgreSQL impide cerrar una OT sin diagnóstico o factura pagada y evita consum
 - [Configuración de WhatsApp Cloud API](docs/integracion-whatsapp.md)
 - [Guion de presentación](docs/presentacion-frontend.md)
 
-WhatsApp Cloud API está integrada de forma opcional y permanece desactivada hasta configurar las credenciales privadas en `.env`. La facturación electrónica permanece fuera de esta entrega.
+WhatsApp permanece desactivado hasta configurar credenciales privadas en `backend/.env`. La facturación electrónica no forma parte de esta entrega.

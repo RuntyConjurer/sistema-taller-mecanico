@@ -8,7 +8,7 @@ class WhatsAppController {
     this.useCase = useCase;
   }
 
-  status = async (req, res) => res.json({ data: toApi(this.useCase.status()) });
+  status = async (req, res) => res.json({ data: toApi(await this.useCase.status()) });
 
   verifyWebhook = async (req, res) => {
     const challenge = this.useCase.verifyWebhook(req.query);

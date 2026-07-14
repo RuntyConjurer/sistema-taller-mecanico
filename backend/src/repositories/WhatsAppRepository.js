@@ -58,8 +58,8 @@ class WhatsAppRepository {
     });
   }
 
-  markSent(message, result) {
-    return message.update({
+  async markSent(message, result) {
+    const values = {
       wamid: result.messageId,
       telefonoDestino: result.contactId || result.phone,
       estado: 'ENVIADO',
@@ -67,7 +67,30 @@ class WhatsAppRepository {
       actualizadoEn: new Date(),
       errorCodigo: null,
       errorMensaje: null,
-    });
+    };
+    try {
+      return await message.update(values);
+    } catch (error) {
+      if (!isUniqueConstraint(error)) throw error;
+      const existing = await this.db.WhatsAppMessage.findOne({ where: { wamid: result.messageId } });
+      if (!existing || Number(existing.id) === Number(message.id)) throw error;
+
+      const state = shouldAdvanceStatus('ENVIADO', existing.estado) ? existing.estado : 'ENVIADO';
+      await existing.update({
+        clienteId: message.clienteId || existing.clienteId,
+        citaId: message.citaId || existing.citaId,
+        usuarioId: message.usuarioId || existing.usuarioId,
+        telefonoDestino: values.telefonoDestino,
+        direccion: 'SALIENTE',
+        tipo: message.tipo || 'PLANTILLA',
+        plantilla: message.plantilla || existing.plantilla,
+        idioma: message.idioma || existing.idioma,
+        estado: state,
+        actualizadoEn: new Date(),
+      });
+      await message.destroy();
+      return existing;
+    }
   }
 
   markFailed(message, error) {
@@ -189,4 +212,8 @@ function shouldAdvanceStatus(current, incoming) {
   return incomingRank > currentRank;
 }
 
-module.exports = { WhatsAppRepository, META_STATUS, shouldAdvanceStatus };
+function isUniqueConstraint(error) {
+  return error?.name === 'SequelizeUniqueConstraintError' || error?.original?.code === '23505';
+}
+
+module.exports = { WhatsAppRepository, META_STATUS, shouldAdvanceStatus, isUniqueConstraint };

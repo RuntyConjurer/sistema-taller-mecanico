@@ -1,6 +1,6 @@
 'use strict';
 
-const baseUrl = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8080/api/v1';
+const baseUrl = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3100/api/v1';
 const timings = [];
 
 async function request(path, { method = 'GET', token, body } = {}) {

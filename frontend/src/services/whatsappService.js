@@ -1,5 +1,5 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
-import { apiRequest } from './api'
+import { apiRequest, withQuery } from './api'
 import { dataSource } from './dataSource'
 
 const mockConfiguration = {
@@ -15,6 +15,12 @@ export async function obtenerEstadoWhatsApp() {
   return apiRequest(apiEndpoints.whatsappStatus)
 }
 
+export async function listarMensajesCita(citaId) {
+  if (!citaId) return []
+  if (dataSource === 'mock') return []
+  return apiRequest(withQuery(apiEndpoints.whatsappMessages, { citaId }))
+}
+
 export async function enviarNotificacionCita(citaId, options = {}) {
   if (!citaId) throw new Error('Selecciona una cita antes de enviar la notificación.')
 
@@ -22,6 +28,7 @@ export async function enviarNotificacionCita(citaId, options = {}) {
     Object.entries({
       templateName: options.templateName,
       languageCode: options.languageCode,
+      parameters: Array.isArray(options.parameters) ? options.parameters : undefined,
     }).filter(([, value]) => Boolean(value)),
   )
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { enviarNotificacionCita, obtenerEstadoWhatsApp } from './whatsappService'
+import { enviarNotificacionCita, listarMensajesCita, obtenerEstadoWhatsApp } from './whatsappService'
 
 describe('servicio de WhatsApp en modo demostración', () => {
   it('informa que Meta no está conectado en modo mock', async () => {
@@ -20,5 +20,9 @@ describe('servicio de WhatsApp en modo demostración', () => {
 
   it('requiere una cita antes de enviar', async () => {
     await expect(enviarNotificacionCita()).rejects.toThrow('Selecciona una cita')
+  })
+
+  it('no inventa un historial persistido en modo demostración', async () => {
+    await expect(listarMensajesCita(7)).resolves.toEqual([])
   })
 })

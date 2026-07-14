@@ -17,12 +17,12 @@ function whatsappTemplates(value) {
 
 const env = Object.freeze({
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT || 3000),
+  port: Number(process.env.PORT || 3100),
   databaseUrl: required('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/sgtra'),
   jwtSecret: required('JWT_SECRET', 'solo-desarrollo-cambiar-esta-clave'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '8h',
   databaseSsl: process.env.DATABASE_SSL === 'true',
-  corsOrigins: (process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173')).split(',').map((value) => value.trim()).filter(Boolean),
+  corsOrigins: (process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5180')).split(',').map((value) => value.trim()).filter(Boolean),
   whatsapp: Object.freeze({
     enabled: process.env.WHATSAPP_ENABLED === 'true',
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || '',
@@ -32,6 +32,7 @@ const env = Object.freeze({
     wabaId: process.env.WHATSAPP_WABA_ID || '',
     businessNumber: process.env.WHATSAPP_BUSINESS_NUMBER || '',
     testRecipient: process.env.WHATSAPP_TEST_RECIPIENT || '',
+    testMode: process.env.WHATSAPP_TEST_MODE !== 'false',
     verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || '',
     graphVersion: process.env.WHATSAPP_GRAPH_VERSION || 'v23.0',
     defaultTemplate: process.env.WHATSAPP_TEMPLATE_NAME || 'hello_world',
