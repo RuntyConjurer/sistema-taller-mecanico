@@ -1,64 +1,58 @@
--- =============================================================================
--- Seed: 001_seed_configuracion_base.sql
--- Descripción: Puebla las tablas maestras de infraestructura, seguridad y 
---              personal interno (sucursales, roles, usuarios y asignaciones).
--- Motor: PostgreSQL
--- =============================================================================
+-- Configuración mínima para ejecutar y presentar SGTRA.
+-- Todas las cuentas de demostración usan la contraseña: password123
 
--- =============================================================================
--- 1. SUCURSALES
--- =============================================================================
-INSERT INTO sucursales (nombre, direccion, telefono, email) 
+INSERT INTO sucursales (nombre, direccion, telefono, email)
 VALUES
-    ('Sucursal Central', 'Av. 27 de Febrero #150, Distrito Nacional', '809-555-0100', 'central@refrigeracion.com'),
-    ('Sucursal Norte', 'Av. Monumental #45, Los Girasoles', '809-555-0101', 'norte@refrigeracion.com');
+    ('Sucursal Central', 'Av. 27 de Febrero #150, Distrito Nacional', '809-555-0100', 'central@sgtra.demo'),
+    ('Sucursal Norte', 'Av. Monumental #45, Los Girasoles', '809-555-0101', 'norte@sgtra.demo');
 
--- =============================================================================
--- 2. ROLES
--- =============================================================================
-INSERT INTO roles (nombre, descripcion) 
+INSERT INTO roles (nombre, descripcion)
 VALUES
-    ('ADMINISTRADOR', 'Acceso total al sistema, configuraciones y reportes financieros.'),
-    ('TECNICO', 'Registro de diagnósticos, uso de materiales e historial de vehículos.'),
-    ('CAJERO', 'Módulo de facturación, emisión de comprobantes y cobros.'),
-    ('RECEPCIONISTA', 'Creación de citas, recepción de clientes y apertura de órdenes.');
+    ('ADMINISTRADOR', 'Acceso completo y consulta de todas las sucursales.'),
+    ('RECEPCIONISTA', 'Gestiona clientes, vehículos, citas, cotizaciones y apertura de OT.'),
+    ('TECNICO', 'Registra diagnósticos, servicios, materiales e historial técnico.'),
+    ('CAJERO', 'Emite facturas y registra pagos.');
 
--- =============================================================================
--- 3. USUARIOS
--- (Nota: El password_hash es 'password123' encriptado con Bcrypt para pruebas)
--- =============================================================================
-INSERT INTO usuarios (id_sucursal, tipo_identificacion, identificacion, nombre, email, password_hash, telefono) 
+-- Hash bcrypt válido, costo 10. La contraseña es solo para el entorno académico.
+INSERT INTO usuarios (
+    id_sucursal,
+    tipo_identificacion,
+    identificacion,
+    nombre,
+    email,
+    password_hash,
+    telefono
+)
 VALUES
     (
-        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'), 
-        'CEDULA', '001-0000001-1', 'Admin Principal', 'admin@refrigeracion.com', 
-        '$2b$10$wN3H0m5oHqD3H6V3f/5n6u7iH8m8H8m8H8m8H8m8H8m8H8m8H8m8m', '809-555-1001'
+        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'),
+        'CEDULA', '001-0000001-1', 'Bari Báez', 'admin@sgtra.demo',
+        '$2b$10$KjSduvugXvGdef37CFo.JeXHfXRsoQyY.W6JZlUWVTGcTQkmYN//y', '809-555-1001'
     ),
     (
-        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'), 
-        'CEDULA', '402-0000002-2', 'Carlos Técnico', 'carlos.tecnico@refrigeracion.com', 
-        '$2b$10$wN3H0m5oHqD3H6V3f/5n6u7iH8m8H8m8H8m8H8m8H8m8H8m8H8m8m', '809-555-1002'
+        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'),
+        'CEDULA', '001-0000002-2', 'Ángelo Recepción', 'recepcion@sgtra.demo',
+        '$2b$10$KjSduvugXvGdef37CFo.JeXHfXRsoQyY.W6JZlUWVTGcTQkmYN//y', '809-555-1002'
     ),
     (
-        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'), 
-        'PASAPORTE', 'RD123456', 'María Cajera', 'maria.caja@refrigeracion.com', 
-        '$2b$10$wN3H0m5oHqD3H6V3f/5n6u7iH8m8H8m8H8m8H8m8H8m8H8m8H8m8m', '809-555-1003'
+        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'),
+        'CEDULA', '001-0000003-3', 'Carlos Técnico', 'tecnico@sgtra.demo',
+        '$2b$10$KjSduvugXvGdef37CFo.JeXHfXRsoQyY.W6JZlUWVTGcTQkmYN//y', '809-555-1003'
+    ),
+    (
+        (SELECT id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central'),
+        'PASAPORTE', 'RD000004', 'María Caja', 'caja@sgtra.demo',
+        '$2b$10$KjSduvugXvGdef37CFo.JeXHfXRsoQyY.W6JZlUWVTGcTQkmYN//y', '809-555-1004'
     );
 
--- =============================================================================
--- 4. ASIGNACIÓN DE ROLES (USUARIO_ROLES)
--- =============================================================================
-INSERT INTO usuario_roles (id_usuario, id_rol) 
-VALUES
-    (
-        (SELECT id_usuario FROM usuarios WHERE email = 'admin@refrigeracion.com'), 
-        (SELECT id_rol FROM roles WHERE nombre = 'ADMINISTRADOR')
-    ),
-    (
-        (SELECT id_usuario FROM usuarios WHERE email = 'carlos.tecnico@refrigeracion.com'), 
-        (SELECT id_rol FROM roles WHERE nombre = 'TECNICO')
-    ),
-    (
-        (SELECT id_usuario FROM usuarios WHERE email = 'maria.caja@refrigeracion.com'), 
-        (SELECT id_rol FROM roles WHERE nombre = 'CAJERO')
-    );
+INSERT INTO usuario_roles (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM (
+    VALUES
+        ('admin@sgtra.demo', 'ADMINISTRADOR'),
+        ('recepcion@sgtra.demo', 'RECEPCIONISTA'),
+        ('tecnico@sgtra.demo', 'TECNICO'),
+        ('caja@sgtra.demo', 'CAJERO')
+) AS asignacion(email, rol)
+INNER JOIN usuarios u ON u.email = asignacion.email
+INNER JOIN roles r ON r.nombre = asignacion.rol;

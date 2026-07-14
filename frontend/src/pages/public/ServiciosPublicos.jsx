@@ -10,6 +10,8 @@ import { formatCurrency } from '@/utils/formatters'
 function ServiciosPublicos() {
   const [query, setQuery] = useState('')
   const { data: servicios } = useAsyncData(() => listarServicios(), [])
+  // useMemo evita recalcular el filtro en cada render si no cambia la busqueda ni
+  // cambia la lista de servicios.
   const filtered = useMemo(
     () =>
       (servicios || []).filter((service) =>
@@ -49,6 +51,8 @@ function ServiciosPublicos() {
           </label>
           <div className="mt-10 divide-y divide-border border-y border-border">
             {filtered.map((service, index) => (
+              // Cada resultado conserva el mismo formato visual: numero, descripcion
+              // y accion hacia el detalle individual.
               <article key={service.id} className="grid gap-5 py-7 md:grid-cols-[70px_1fr_auto]">
                 <span className="technical-value text-primary">0{index + 1}</span>
                 <div>

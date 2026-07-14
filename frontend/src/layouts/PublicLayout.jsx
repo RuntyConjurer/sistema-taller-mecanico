@@ -24,6 +24,8 @@ function PublicNavbar() {
 
         <nav className="hidden items-center gap-6 md:flex" aria-label="Navegación principal">
           {navLinks.map((link) => (
+            // NavLink entrega isActive; cn combina clases para pintar el enlace
+            // activo sin repetir logica en cada item del menu.
             <NavLink
               key={link.to}
               to={link.to}
@@ -61,6 +63,8 @@ function PublicNavbar() {
         </button>
       </div>
 
+      {/* En movil, el mismo arreglo navLinks alimenta el menu desplegable para no
+          mantener dos listas de navegacion diferentes. */}
       {open ? (
         <div id="navegacion-movil" className="border-t border-border bg-card px-4 py-4 md:hidden">
           <nav className="flex flex-col gap-3" aria-label="Navegación móvil">
@@ -115,6 +119,8 @@ function PublicFooter() {
 function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Enlace de accesibilidad: aparece al recibir foco y permite saltar directo
+          al contenido, sin recorrer todos los enlaces del menu. */}
       <a
         href="#contenido"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-white"
@@ -122,6 +128,8 @@ function PublicLayout() {
         Saltar al contenido
       </a>
       <PublicNavbar />
+      {/* Outlet es el espacio donde React Router inserta Home, Servicios, Contacto,
+          etc., manteniendo la misma estructura visual alrededor. */}
       <main id="contenido" className="flex-1">
         <Outlet />
       </main>

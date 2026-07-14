@@ -23,6 +23,8 @@ const statIcons = {
 }
 
 function Dashboard() {
+  // DashboardLayout envia sucursalId por Outlet context; aqui se usa para pedir
+  // solo el resumen operativo de la sucursal activa.
   const { sucursalId } = useOutletContext()
   const {
     data: resumen,
@@ -43,6 +45,8 @@ function Dashboard() {
 
       <div className="grid gap-px border-y border-border sm:grid-cols-2 xl:grid-cols-3">
         {resumen.stats.map((stat) => (
+          // Cada stat trae una key; esa key selecciona el icono y mantiene los datos
+          // separados de la presentacion visual.
           <StatCard
             key={stat.key}
             title={stat.title}
@@ -58,17 +62,12 @@ function Dashboard() {
         <BarChart
           title="Órdenes por estado"
           description="Estado actual de la sucursal"
-          data={[
-            { label: 'Abiertas', value: 6 },
-            { label: 'Diagnóstico', value: 5 },
-            { label: 'Reparación', value: 3 },
-            { label: 'Facturadas', value: 4 },
-          ]}
+          data={resumen.ordenesPorEstado}
         />
         <LineChart
           title="Ingresos del período"
           description="Últimos siete días · DOP"
-          data={[21000, 28000, 18500, 42500, 31500, 48500, 39000]}
+          data={resumen.ingresosPeriodo}
         />
       </div>
 

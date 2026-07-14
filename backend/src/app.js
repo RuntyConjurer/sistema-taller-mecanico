@@ -1,13 +1,37 @@
+'use strict';
+
 const express = require('express');
 const cors = require('cors');
+const { buildContainer } = require('./di/container');
+const { createApiRouter } = require('./routes');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
+const { env } = require('./config/env');
 
-const app = express();
+function createApp(options = {}) {
+  const app = express();
+  const container = options.container || buildContainer();
 
-app.use(cors());
-app.use(express.json());
+  app.disable('x-powered-by');
+  app.set('trust proxy', 1);
+  app.use(cors({
+    credentials: false,
+    origin(origin, callback) {
+      if (!origin || env.corsOrigins.includes(origin)) return callback(null, true);
+      return callback(null, false);
+    },
+  }));
+  app.use(express.json({
+    limit: '1mb',
+    verify(req, res, buffer) {
+      // Meta firma los bytes originales; JSON.parse no puede reconstruirlos exactamente.
+      if (req.originalUrl.startsWith('/api/v1/webhooks/whatsapp')) req.rawBody = Buffer.from(buffer);
+    },
+  }));
+  app.use('/api/v1', createApiRouter(container));
+  app.use(notFound);
+  app.use(errorHandler);
 
-app.get('/', (req, res)=> {
-    res.json({mensaje: 'Backend funcionando'});
-});
+  return app;
+}
 
-module.exports = app;
+module.exports = { createApp };

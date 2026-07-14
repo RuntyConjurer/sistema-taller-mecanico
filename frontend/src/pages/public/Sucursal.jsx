@@ -6,6 +6,7 @@ import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { obtenerSucursal } from '@/services/catalogoService'
+import { buildWhatsAppUrl } from '@/utils/whatsapp'
 
 function Sucursal() {
   const { branchId } = useParams()
@@ -68,9 +69,12 @@ function Sucursal() {
               </a>
               <a
                 className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
-                href="https://wa.me/18095550142"
+                href={buildWhatsAppUrl(
+                  `Hola, quiero consultar disponibilidad en ${sucursal.nombre} de SGTRA.`,
+                )}
                 target="_blank"
                 rel="noreferrer"
+                aria-label={`Consultar disponibilidad en ${sucursal.nombre} por WhatsApp`}
               >
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp

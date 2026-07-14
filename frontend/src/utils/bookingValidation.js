@@ -2,10 +2,14 @@ export const bookingSteps = [
   ['marca', 'modelo', 'anio', 'placa', 'chasis'],
   ['servicio'],
   ['sucursal', 'fecha', 'hora'],
-  ['nombre', 'documento', 'telefono'],
+  ['tipoCliente', 'tipoIdentificacion', 'nombre', 'documento', 'telefono'],
 ]
 
+// Forma completa del formulario. Tener todas las llaves desde el inicio evita
+// inputs "sin controlar" en React y facilita guardar/restaurar el borrador.
 export const bookingInitialForm = {
+  tipoCliente: 'PERSONA',
+  tipoIdentificacion: 'CEDULA',
   marca: '',
   modelo: '',
   anio: '',
@@ -20,6 +24,7 @@ export const bookingInitialForm = {
   documento: '',
   telefono: '',
   email: '',
+  whatsappOptIn: false,
 }
 
 /** Reglas de interfaz alineadas con los datos requeridos por cliente, vehículo y cita. */
@@ -45,6 +50,8 @@ export function validateBookingField(name, value) {
 
 export function loadBookingDraft() {
   try {
+    // El borrador vive en sessionStorage: se conserva al navegar dentro de la
+    // pestana, pero se limpia al cerrar la sesion del navegador.
     const saved = window.sessionStorage.getItem('sgtra-booking-draft')
     return saved ? { ...bookingInitialForm, ...JSON.parse(saved) } : bookingInitialForm
   } catch {

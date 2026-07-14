@@ -32,6 +32,7 @@ import Vehiculos from '../pages/admin/Vehiculos'
 function AppRoutes() {
   return (
     <Routes>
+      {/* Rutas publicas: comparten barra superior y pie mediante PublicLayout. */}
       <Route element={<PublicLayout />}>
         <Route index element={<Home />} />
         <Route path="servicios" element={<ServiciosPublicos />} />
@@ -43,10 +44,13 @@ function AppRoutes() {
         <Route path="contacto" element={<Contacto />} />
       </Route>
 
+      {/* Rutas de autenticacion: usan un layout visual distinto al sitio publico. */}
       <Route element={<AuthLayout />}>
         <Route path="login" element={<Login />} />
       </Route>
 
+      {/* Panel interno: RequireSession protege la entrada y DashboardLayout mantiene
+          sidebar, header, sucursal activa y contenido del modulo seleccionado. */}
       <Route
         path="app"
         element={
@@ -72,6 +76,7 @@ function AppRoutes() {
         <Route path="reportes" element={<Reportes />} />
       </Route>
 
+      {/* Cualquier URL no declarada cae en la pantalla 404 publica. */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

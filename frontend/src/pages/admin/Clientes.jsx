@@ -20,6 +20,8 @@ function Clientes() {
   const [selected, setSelected] = useState(null)
   const { data: clientes, isLoading, error } = useAsyncData(() => listarClientes(), [])
 
+  // Filtro local para busqueda rapida. Cuando exista paginacion real, este criterio
+  // puede moverse al backend sin cambiar la tabla.
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
     const lista = clientes ?? []

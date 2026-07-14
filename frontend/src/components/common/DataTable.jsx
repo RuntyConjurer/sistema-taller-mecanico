@@ -7,6 +7,8 @@ function DataTable({
   onRowSelect,
   selectedId,
 }) {
+  // Componente generico de tablas: la pantalla decide las columnas y, si una
+  // columna necesita formato especial, envia un render(row) para controlar la celda.
   if (!rows?.length)
     return (
       <div className="border border-border bg-card p-8 text-center text-sm text-muted-foreground">
@@ -33,6 +35,8 @@ function DataTable({
         </thead>
         <tbody>
           {rows.map((row) => (
+            // selectedId permite marcar visualmente una fila desde el estado de la
+            // pantalla padre, por ejemplo cuando se abre un panel de detalle.
             <tr
               key={row.id}
               data-selected={selectedId === row.id}
@@ -43,6 +47,8 @@ function DataTable({
             >
               {columns.map((column) => (
                 <td key={column.key} data-label={column.label} className="px-4 py-3">
+                  {/* Si no hay render personalizado, se imprime el valor directo
+                      usando la llave de la columna. */}
                   {column.render ? column.render(row) : row[column.key]}
                 </td>
               ))}

@@ -1,0 +1,98 @@
+name: sgtra
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sgtra}
+      POSTGRES_USER: ${POSTGRES_USER:-sgtra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sgtra_local_password}
+      TZ: ${TZ:-America/Santo_Domingo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/database:ro
+      - ./docker/postgres/init-database.sh:/docker-entrypoint-initdb.d/001-init-database.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - internal
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-sgtra}:${POSTGRES_PASSWORD:-sgtra_local_password}@db:5432/${POSTGRES_DB:-sgtra}
+      DATABASE_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET:-cambiar-este-secreto-en-entornos-compartidos}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
+      WHATSAPP_APP_ID: ${WHATSAPP_APP_ID:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_WABA_ID: ${WHATSAPP_WABA_ID:-}
+      WHATSAPP_BUSINESS_NUMBER: ${WHATSAPP_BUSINESS_NUMBER:-}
+      WHATSAPP_TEST_RECIPIENT: ${WHATSAPP_TEST_RECIPIENT:-}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN:-}
+      WHATSAPP_GRAPH_VERSION: ${WHATSAPP_GRAPH_VERSION:-v23.0}
+      WHATSAPP_TEMPLATE_NAME: ${WHATSAPP_TEMPLATE_NAME:-hello_world}
+      WHATSAPP_TEMPLATE_LANGUAGE: ${WHATSAPP_TEMPLATE_LANGUAGE:-en_US}
+      WHATSAPP_ALLOWED_TEMPLATES: ${WHATSAPP_ALLOWED_TEMPLATES:-hello_world:en_US}
+      WHATSAPP_TIMEOUT_MS: ${WHATSAPP_TIMEOUT_MS:-8000}
+      TZ: ${TZ:-America/Santo_Domingo}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    networks:
+      - internal
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        VITE_DATA_SOURCE: api
+        VITE_API_BASE_URL: ""
+        VITE_WHATSAPP_NUMBER: ${WHATSAPP_BUSINESS_NUMBER:-15556552000}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:

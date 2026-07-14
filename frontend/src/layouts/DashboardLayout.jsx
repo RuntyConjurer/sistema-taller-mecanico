@@ -9,9 +9,17 @@ import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import AppLogo from '@/components/brand/AppLogo'
 import { demoRoles } from '@/constants/demoRoles'
-import { endSession, getBranchId, getRole, setBranchId } from '@/services/sessionStore'
+import {
+  endSession,
+  getBranchId,
+  getCurrentUser,
+  getRole,
+  isApiSession,
+  setBranchId,
+} from '@/services/sessionStore'
 import { listarSucursales } from '@/services/catalogoService'
 import { useAsyncData } from '@/hooks/useAsyncData'
+import { usingMocks } from '@/services/dataSource'
 import {
   BarChart3,
   Calendar,
@@ -45,6 +53,8 @@ const iconMap = {
 }
 
 function buildMenuGroups(items) {
+  // Recibe los modulos permitidos por rol y los organiza en secciones visuales del
+  // sidebar; tambien asigna el icono que corresponde a cada ruta.
   return ['Operación', 'Clientes', 'Inventario', 'Administración']
     .map((label) => ({
       label,
@@ -60,6 +70,8 @@ function buildMenuGroups(items) {
 }
 
 function resolveBreadcrumbs(pathname) {
+  // Traduce la URL actual a migas de pan simples para orientar al usuario dentro
+  // del panel interno.
   if (pathname === '/app' || pathname === '/app/') {
     return [{ label: 'Dashboard' }]
   }
@@ -118,6 +130,10 @@ function DashboardLayout() {
   const navigate = useNavigate()
   const role = getRole() || 'RECEPCIONISTA'
   const activeRole = demoRoles[role] || demoRoles.RECEPCIONISTA
+  const currentUser = getCurrentUser()
+  const canChangeBranch = !isApiSession() || role === 'ADMINISTRADOR'
+  // El rol no solo cambia el texto del usuario: tambien decide que modulos se
+  // dibujan en el menu y si la URL actual esta permitida.
   const visibleItems = useMemo(() => menuItems.filter((item) => item.roles.includes(role)), [role])
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
@@ -128,6 +144,9 @@ function DashboardLayout() {
   visibleItems.some((item) => item.path === location.pathname)
 
   function cambiarSucursal(id) {
+    if (!canChangeBranch) return
+    // Se actualiza el estado de React y tambien la sesion local, para conservar
+    // la sucursal activa aunque el usuario navegue o recargue la pagina.
     setSucursalId(id)
     setBranchId(id)
   }
@@ -138,12 +157,22 @@ function DashboardLayout() {
   }
 
   useEffect(() => {
+    // Cerrar el sidebar con Escape mejora la navegacion por teclado en pantallas
+    // pequenas y limpia el listener al desmontar el layout.
     function closeOnEscape(event) {
       if (event.key === 'Escape') setMobileOpen(false)
     }
     document.addEventListener('keydown', closeOnEscape)
     return () => document.removeEventListener('keydown', closeOnEscape)
   }, [])
+
+  useEffect(() => {
+    function handleExpiredSession() {
+      navigate('/login', { replace: true, state: { from: location.pathname, expired: true } })
+    }
+    window.addEventListener('sgtra:session-expired', handleExpiredSession)
+    return () => window.removeEventListener('sgtra:session-expired', handleExpiredSession)
+  }, [location.pathname, navigate])
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -212,6 +241,7 @@ function DashboardLayout() {
                   value={sucursalId}
                   onChange={(event) => cambiarSucursal(Number(event.target.value))}
                   aria-label="Sucursal activa"
+                  disabled={!canChangeBranch}
                 >
                   {(sucursales || []).map((item) => (
                     <option key={item.id} value={item.id}>
@@ -222,13 +252,13 @@ function DashboardLayout() {
                 <Link
                   to="/app/perfil"
                   className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"
-                  aria-label={`Abrir perfil de ${activeRole.name}`}
+                  aria-label={`Abrir perfil de ${currentUser?.nombre || activeRole.name}`}
 >
                   <UserRound
                     className="h-4 w-4 text-primary"
                     aria-hidden="true"
                   />
-                  <span>{activeRole.name}</span>
+                  <span>{currentUser?.nombre || activeRole.name}</span>
                   </Link>
                 <Button variant="outline" size="sm" type="button" onClick={salir}>
                   Salir
@@ -248,18 +278,17 @@ function DashboardLayout() {
             <section className="border border-border bg-card p-6">
               <p className="eyebrow">Acceso restringido</p>
               <h1 className="mt-2 text-2xl font-bold">
-                Este módulo no corresponde a tu rol de demostración
+                Este módulo no corresponde a tu rol
               </h1>
               <p className="mt-3 max-w-xl text-muted-foreground">
-                Inicia sesión con Administración o el rol operativo adecuado. Esta restricción es
-                solo visual; el backend debe validar permisos reales.
+                Inicia sesión con Administración o solicita el permiso operativo adecuado.
               </p>
             </section>
           )}
         </main>
 
         <footer className="border-t border-border px-4 py-3 text-xs text-muted-foreground lg:px-6">
-          {brand.shortName} · prototipo académico · Rol {activeRole.label} ·{' '}
+          {brand.shortName} · {usingMocks ? 'modo demostración' : 'sesión protegida'} · Rol {activeRole.label} ·{' '}
           {sucursalActiva?.nombre}
         </footer>
       </div>

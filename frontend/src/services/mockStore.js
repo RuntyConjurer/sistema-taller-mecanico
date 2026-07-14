@@ -9,6 +9,8 @@ import { facturas as initialInvoices } from '@/data/mocks/facturas.mock'
 const clone = (value) => JSON.parse(JSON.stringify(value))
 const round = (value) => Number(value.toFixed(2))
 
+// Estado mutable solo para la sesion actual del navegador. Permite demostrar
+// acciones como pagar, cerrar OT o consumir refrigerante sin tocar una base real.
 let appointments = clone(initialAppointments)
 let workOrders = clone(initialWorkOrders).map((order) => ({
   ...order,
@@ -21,6 +23,8 @@ let invoices = clone(initialInvoices)
 export const mockStore = {
   appointments: () => clone(appointments),
   updateAppointment(id, changes) {
+    // Las actualizaciones devuelven una copia nueva para evitar que una pantalla
+    // modifique accidentalmente el estado interno del mockStore.
     appointments = appointments.map((item) => (item.id === id ? { ...item, ...changes } : item))
     return clone(appointments.find((item) => item.id === id))
   },
@@ -82,6 +86,8 @@ export const mockStore = {
   },
   invoices: () => clone(invoices),
   applyPayment(id, amount) {
+    // Simula la regla de negocio de facturacion: el pago no puede superar el
+    // balance pendiente y cambia a PAGADA cuando el balance llega a cero.
     const invoice = invoices.find((item) => item.id === id)
     if (!invoice) throw new Error('Factura no encontrada.')
     if (amount <= 0) throw new Error('Indica un pago mayor que cero.')

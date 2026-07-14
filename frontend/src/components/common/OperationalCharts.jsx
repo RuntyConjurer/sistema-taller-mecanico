@@ -1,12 +1,14 @@
 function BarChart({ title, data, description }) {
-  const max = Math.max(...data.map((item) => item.value))
+  // Se usa el valor maximo como referencia para convertir cada dato en porcentaje
+  // de ancho; no depende de una libreria externa de graficos.
+  const max = Math.max(1, ...data.map((item) => item.value))
   return (
     <section className="chart-surface" aria-labelledby={title.replaceAll(' ', '-')}>
       <header>
         <h2 id={title.replaceAll(' ', '-')}>{title}</h2>
         {description ? <p>{description}</p> : null}
       </header>
-      <div
+      {data.length ? <div
         className="mt-5 space-y-3"
         role="img"
         aria-label={`${title}: ${data.map((item) => `${item.label} ${item.value}`).join(', ')}`}
@@ -26,7 +28,7 @@ function BarChart({ title, data, description }) {
             <b className="technical-value text-right">{item.value}</b>
           </div>
         ))}
-      </div>
+      </div> : <p className="mt-5 text-sm text-muted-foreground">No hay datos para el período.</p>}
       <p className="sr-only">{data.map((item) => `${item.label}: ${item.value}`).join('. ')}</p>
     </section>
   )
@@ -38,12 +40,14 @@ function LineChart({
   description,
   labels = data.map((_, index) => `Día ${index + 1}`),
 }) {
+  // Los puntos SVG se calculan en un viewBox 0-100. Asi la grafica escala con el
+  // contenedor sin recalcular pixeles reales.
   const max = Math.max(...data)
   const min = Math.min(...data)
   const points = data
     .map(
       (value, index) =>
-        `${(index / (data.length - 1)) * 100},${92 - ((value - min) / Math.max(max - min, 1)) * 75}`,
+        `${(index / Math.max(data.length - 1, 1)) * 100},${92 - ((value - min) / Math.max(max - min, 1)) * 75}`,
     )
     .join(' ')
   return (
@@ -52,7 +56,7 @@ function LineChart({
         <h2 id={title.replaceAll(' ', '-')}>{title}</h2>
         {description ? <p>{description}</p> : null}
       </header>
-      <svg
+      {data.length ? <><svg
         className="mt-5 h-36 w-full"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
@@ -81,7 +85,7 @@ function LineChart({
             ))}
           </tr>
         </tbody>
-      </table>
+      </table></> : <p className="mt-5 text-sm text-muted-foreground">No hay datos para el período.</p>}
     </section>
   )
 }

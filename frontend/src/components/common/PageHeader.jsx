@@ -14,6 +14,8 @@ function PageHeader({
 }) {
   return (
     <header className="border-b border-border pb-6">
+      {/* breadcrumbs es opcional: si llega vacio, el encabezado queda limpio para
+          paginas simples; si llega con items, se muestra jerarquia navegable. */}
       {breadcrumbs.length > 0 && (
         <nav
           aria-label="Breadcrumb"
@@ -47,6 +49,8 @@ function PageHeader({
         </div>
         {action || actionTo ? (
           <div className="shrink-0">
+            {/* action acepta un nodo React completo; actionTo/actionLabel cubre el
+                caso comun de un boton que navega a otra ruta. */}
             {action || (
               <Button asChild>
                 <Link to={actionTo}>{actionLabel}</Link>

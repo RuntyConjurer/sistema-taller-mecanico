@@ -1,5 +1,6 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
 import { apiRequest } from './api'
+import { mapAppointment, mapList, mapWorkOrder } from './apiMappers'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
@@ -10,16 +11,16 @@ export async function listarCitas(sucursalId) {
     return sucursalId ? citas.filter((item) => item.idSucursal === sucursalId) : citas
   }
   const query = sucursalId ? `?sucursalId=${sucursalId}` : ''
-  return apiRequest(`${apiEndpoints.appointments}${query}`)
+  return mapList(await apiRequest(`${apiEndpoints.appointments}${query}`), mapAppointment)
 }
 
 export async function actualizarEstadoCita(id, estado) {
   return dataSource === 'mock'
     ? mockStore.updateAppointment(id, { estado })
-    : apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/estado`, {
+    : mapAppointment(await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/estado`, {
         method: 'PATCH',
         body: JSON.stringify({ estado }),
-      })
+      }))
 }
 
 export async function convertirCitaEnOrden(id) {
@@ -30,5 +31,11 @@ export async function convertirCitaEnOrden(id) {
       workOrder: { id: Date.now(), numero: `OT-DEMO-${id}`, estado: 'ABIERTA' },
     }
   }
-  return apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/ordenes`, { method: 'POST' })
+  const result = await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/orden`, { method: 'POST' })
+  return {
+    appointment: result.appointment || result.cita
+      ? mapAppointment(result.appointment || result.cita)
+      : undefined,
+    workOrder: mapWorkOrder(result.workOrder || result.orden || result),
+  }
 }

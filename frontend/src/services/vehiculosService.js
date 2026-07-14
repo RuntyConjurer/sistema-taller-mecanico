@@ -1,6 +1,7 @@
 import { apiEndpoints } from '@/constants/apiEndpoints'
 import { vehiculos as vehiculosIniciales } from '@/data/mocks/clientes.mock'
 import { apiRequest } from './api'
+import { mapList, mapVehicle } from './apiMappers'
 import { dataSource } from './dataSource'
 
 let vehiculosMock = [...vehiculosIniciales]
@@ -10,7 +11,7 @@ export async function listarVehiculos() {
     return [...vehiculosMock]
   }
 
-  return apiRequest(apiEndpoints.vehicles)
+  return mapList(await apiRequest(apiEndpoints.vehicles), mapVehicle)
 }
 
 export async function crearVehiculo(datosVehiculo) {
@@ -30,8 +31,13 @@ export async function crearVehiculo(datosVehiculo) {
     return nuevoVehiculo
   }
 
-  return apiRequest(apiEndpoints.vehicles, {
+  const payload = {
+    ...datosVehiculo,
+    clienteId: Number(datosVehiculo.clienteId ?? datosVehiculo.idCliente),
+  }
+  delete payload.idCliente
+  return mapVehicle(await apiRequest(apiEndpoints.vehicles, {
     method: 'POST',
-    body: JSON.stringify(datosVehiculo),
-  })
+    body: JSON.stringify(payload),
+  }))
 }

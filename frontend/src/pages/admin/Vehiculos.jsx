@@ -4,7 +4,7 @@ import DataTable from '@/components/common/DataTable'
 import DetailPanel from '@/components/common/DetailPanel'
 import ErrorState from '@/components/common/ErrorState'
 import LoadingSkeleton from '@/components/common/LoadingSkeleton'
-import VehiculoForms from '@/components/vehiculos/VehiculoForms'
+import VehiculoForm from '@/components/vehiculos/VehiculoForms'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {

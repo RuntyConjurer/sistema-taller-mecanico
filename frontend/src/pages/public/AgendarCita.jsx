@@ -22,6 +22,7 @@ import {
   loadBookingDraft,
   validateBookingField,
 } from '@/utils/bookingValidation'
+import { buildWhatsAppUrl } from '@/utils/whatsapp'
 
 const steps = [
   { title: 'Vehículo', summary: 'Identifica la unidad' },
@@ -29,6 +30,23 @@ const steps = [
   { title: 'Sucursal y fecha', summary: 'Cuándo atenderte' },
   { title: 'Contacto', summary: 'Cómo confirmarte' },
 ]
+
+const bookingApiFields = {
+  tipoCliente: 'tipoCliente',
+  tipoIdentificacion: 'tipoIdentificacion',
+  identificacion: 'documento',
+  nombre: 'nombre',
+  telefono: 'telefono',
+  email: 'email',
+  chasis: 'chasis',
+  marca: 'marca',
+  modelo: 'modelo',
+  placa: 'placa',
+  anio: 'anio',
+  sucursalId: 'sucursal',
+  fechaCita: 'fecha',
+  servicioId: 'servicio',
+}
 
 function BookingField({ id, label, error, children }) {
   return (
@@ -47,6 +65,8 @@ function BookingField({ id, label, error, children }) {
 function AgendarCita() {
   const [params] = useSearchParams()
   const [step, setStep] = useState(0)
+  // El formulario mezcla valores iniciales, borrador guardado y un posible
+  // servicio recibido por query string: /agendar-cita?servicio=slug.
   const [form, setForm] = useState(() => ({
     ...bookingInitialForm,
     ...loadBookingDraft(),
@@ -62,12 +82,18 @@ function AgendarCita() {
   const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
 
   useEffect(() => {
+    // Cada cambio del formulario se persiste como borrador para no perder avance
+    // si el usuario navega dentro de la app antes de terminar.
     window.sessionStorage.setItem('sgtra-booking-draft', JSON.stringify(form))
   }, [form])
   useEffect(() => {
+    // Al cambiar de paso, el titulo recibe foco para orientar a usuarios de teclado
+    // o lectores de pantalla.
     headingRef.current?.focus()
   }, [step, submitted])
 
+  // Resumen lateral derivado del formulario. No se guarda aparte porque siempre se
+  // puede calcular desde form y catalogos.
   const summary = useMemo(
     () => [
       form.marca ? `${form.marca} ${form.modelo}` : 'Pendiente',
@@ -86,10 +112,20 @@ function AgendarCita() {
 
   function handleChange(event) {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
+    setForm((current) => {
+      const next = { ...current, [name]: value }
+      if (name === 'tipoCliente' && value === 'EMPRESA') next.tipoIdentificacion = 'RNC'
+      if (name === 'tipoCliente' && value === 'PERSONA' && next.tipoIdentificacion === 'RNC') {
+        next.tipoIdentificacion = 'CEDULA'
+      }
+      if (name === 'tipoIdentificacion' && value === 'RNC') next.tipoCliente = 'EMPRESA'
+      return next
+    })
   }
 
   function inputProps(name) {
+    // Centraliza las props comunes de todos los inputs: valor, cambio, validacion
+    // al salir del campo y atributos ARIA para errores.
     return {
       id: name,
       name,
@@ -102,20 +138,36 @@ function AgendarCita() {
   }
 
   function next() {
+    // Cada paso valida solo sus campos antes de permitir avanzar.
     const valid = bookingSteps[step].every((field) => validate(field))
     if (valid) setStep((current) => current + 1)
   }
 
   async function submit(event) {
     event.preventDefault()
+    // En el envio final se valida todo el formulario, no solo el paso visible.
     if (!bookingSteps.flat().every((field) => validate(field))) return
     setIsSubmitting(true)
     try {
-      const appointment = await crearSolicitudCita(form)
+      const selectedService = (servicios || []).find((item) => item.slug === form.servicio)
+      const appointment = await crearSolicitudCita({
+        ...form,
+        servicioId: selectedService?.id,
+        servicioNombre: selectedService?.nombre,
+      })
       window.sessionStorage.removeItem('sgtra-booking-draft')
       setSubmitted(appointment)
     } catch (error) {
-      setErrors({ form: error.message || 'No fue posible preparar la solicitud.' })
+      const fieldErrors = Object.entries(error.fieldErrors || {}).reduce((result, [key, value]) => {
+        const simpleKey = key.split('.').at(-1)
+        const field = bookingApiFields[simpleKey]
+        if (field) result[field] = value
+        return result
+      }, {})
+      setErrors({
+        ...fieldErrors,
+        form: error.message || 'No fue posible preparar la solicitud.',
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -138,9 +190,12 @@ function AgendarCita() {
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <a
               className="inline-flex min-h-11 items-center gap-2 bg-accent px-5 font-semibold"
-              href="https://wa.me/18095550142"
+              href={buildWhatsAppUrl(
+                `Hola, soy ${form.nombre}. Preparé una solicitud de cita en SGTRA para mi ${form.marca} ${form.modelo}. Quiero confirmar la disponibilidad.`,
+              )}
               target="_blank"
               rel="noreferrer"
+              aria-label="Confirmar solicitud de cita con SGTRA por WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
               Confirmar por WhatsApp
@@ -206,7 +261,16 @@ function AgendarCita() {
             {step === 2 && (
               <ScheduleStep errors={errors} inputProps={inputProps} sucursales={sucursales || []} />
             )}
-            {step === 3 && <ContactStep errors={errors} inputProps={inputProps} />}
+            {step === 3 && (
+              <ContactStep
+                errors={errors}
+                inputProps={inputProps}
+                whatsappOptIn={form.whatsappOptIn}
+                onWhatsAppOptInChange={(checked) =>
+                  setForm((current) => ({ ...current, whatsappOptIn: checked }))
+                }
+              />
+            )}
             {errors.form ? (
               <p className="mt-5 text-sm font-medium text-destructive" role="alert">
                 {errors.form}
@@ -329,9 +393,26 @@ function ScheduleStep({ errors, inputProps, sucursales }) {
   )
 }
 
-function ContactStep({ errors, inputProps }) {
+function ContactStep({ errors, inputProps, whatsappOptIn, onWhatsAppOptInChange }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
+      <BookingField id="tipoCliente" label="Tipo de cliente" error={errors.tipoCliente}>
+        <Select {...inputProps('tipoCliente')}>
+          <option value="PERSONA">Persona</option>
+          <option value="EMPRESA">Empresa</option>
+        </Select>
+      </BookingField>
+      <BookingField
+        id="tipoIdentificacion"
+        label="Tipo de identificación"
+        error={errors.tipoIdentificacion}
+      >
+        <Select {...inputProps('tipoIdentificacion')}>
+          <option value="CEDULA">Cédula</option>
+          <option value="PASAPORTE">Pasaporte</option>
+          <option value="RNC">RNC</option>
+        </Select>
+      </BookingField>
       <BookingField id="nombre" label="Nombre completo" error={errors.nombre}>
         <Input {...inputProps('nombre')} autoComplete="name" />
       </BookingField>
@@ -349,6 +430,20 @@ function ContactStep({ errors, inputProps }) {
       <BookingField id="email" label="Correo (opcional)" error={errors.email}>
         <Input {...inputProps('email')} type="email" autoComplete="email" />
       </BookingField>
+      <label className="flex min-h-11 items-start gap-3 border-t border-border pt-4 sm:col-span-2">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+          checked={whatsappOptIn}
+          onChange={(event) => onWhatsAppOptInChange(event.target.checked)}
+        />
+        <span className="text-sm">
+          Acepto que SGTRA me contacte por WhatsApp únicamente sobre esta solicitud de cita.
+          <span className="mt-1 block text-xs text-muted-foreground">
+            Opcional. Puedo retirar esta autorización cuando lo solicite.
+          </span>
+        </span>
+      </label>
     </div>
   )
 }

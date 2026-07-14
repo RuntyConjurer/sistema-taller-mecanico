@@ -1,0 +1,17 @@
+'use strict';
+
+const STATES = Object.freeze({
+  appointment: ['PROGRAMADA', 'CONFIRMADA', 'CANCELADA', 'COMPLETADA', 'NO_ASISTIO'],
+  workOrder: ['ABIERTA', 'EN_DIAGNOSTICO', 'EN_REPARACION', 'FACTURADA', 'CERRADA', 'CANCELADA'],
+  invoice: ['PENDIENTE', 'PAGADA', 'ANULADA'],
+  quote: ['BORRADOR', 'ENVIADA', 'APROBADA', 'RECHAZADA', 'VENCIDA'],
+});
+
+const ROLES = Object.freeze({
+  ADMINISTRADOR: 'ADMINISTRADOR',
+  RECEPCIONISTA: 'RECEPCIONISTA',
+  TECNICO: 'TECNICO',
+  CAJERO: 'CAJERO',
+});
+
+module.exports = { STATES, ROLES };

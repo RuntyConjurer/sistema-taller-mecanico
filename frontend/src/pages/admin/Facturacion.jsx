@@ -1,103 +1,97 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
-import { formatCurrency } from '@/utils/formatters'
+import DetailPanel from '@/components/common/DetailPanel'
+import ErrorState from '@/components/common/ErrorState'
+import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import DetailPanel from '@/components/common/DetailPanel'
-import ErrorState from '@/components/common/ErrorState'
-import LoadingSkeleton from '@/components/common/LoadingSkeleton'
 import { Select } from '@/components/ui/select'
 import { getStateMeta } from '@/constants/domainStates'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import { listarFacturas, registrarPago } from '@/services/facturacionService'
+import { emitirFactura, listarFacturas, registrarPago } from '@/services/facturacionService'
 import { listarOrdenesTrabajo } from '@/services/ordenesService'
-import { listarServicios } from '@/services/catalogoService'
 import { usingMocks } from '@/services/dataSource'
+import { formatCurrency } from '@/utils/formatters'
 
 function Facturacion() {
   const [selected, setSelected] = useState(null)
-  const [draft, setDraft] = useState({ ordenId: '', items: [] })
-  const [payment, setPayment] = useState({ facturaId: '', monto: '' })
+  const [draft, setDraft] = useState({ ordenTrabajoId: '', descuento: '', observaciones: '' })
+  const [payment, setPayment] = useState({
+    facturaId: '',
+    monto: '',
+    formaPago: 'EFECTIVO',
+    referencia: '',
+  })
   const [feedback, setFeedback] = useState('')
-  const [error, setError] = useState('')
-
-  // reload() vuelve a leer las facturas tras aplicar un pago, para reflejar el balance.
-  const {
-    data,
-    isLoading,
-    error: loadError,
-    reload,
-  } = useAsyncData(async () => {
-    // El detalle facturable sale del catálogo de servicios, no de una lista fija.
-    const [facturas, ordenes, servicios] = await Promise.all([
-      listarFacturas(),
-      listarOrdenesTrabajo(),
-      listarServicios(),
-    ])
-    return { facturas, ordenes, servicios }
+  const [actionError, setActionError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const { data, isLoading, error, reload } = useAsyncData(async () => {
+    const [facturas, ordenes] = await Promise.all([listarFacturas(), listarOrdenesTrabajo()])
+    return { facturas, ordenes }
   }, [])
 
   const facturas = data?.facturas ?? []
   const ordenes = data?.ordenes ?? []
-  const servicios = data?.servicios ?? []
-
-  const draftTotal = useMemo(
-    () =>
-      (data?.servicios ?? [])
-        .filter((item) => draft.items.includes(item.id))
-        .reduce((sum, item) => sum + item.precioBase, 0),
-    [draft.items, data],
+  const ordenesSinFactura = ordenes.filter(
+    (order) => !facturas.some((invoice) => invoice.ordenId === order.id),
   )
 
-  function toggleItem(id) {
-    setDraft((current) => ({
-      ...current,
-      items: current.items.includes(id)
-        ? current.items.filter((item) => item !== id)
-        : [...current.items, id],
-    }))
-  }
-
-  function prepareInvoice(event) {
+  async function issueInvoice(event) {
     event.preventDefault()
     setFeedback('')
-    setError('')
-    if (!draft.ordenId || !draft.items.length) {
-      setError('Selecciona una OT y al menos un servicio o material.')
+    setActionError('')
+    if (!draft.ordenTrabajoId) {
+      setActionError('Selecciona una orden de trabajo.')
       return
     }
-    setFeedback(
-      `${usingMocks ? 'Vista previa demo: ' : ''}factura para la OT seleccionada por ${formatCurrency(draftTotal)}. Su emisión real requiere API.`,
-    )
+    if (usingMocks) {
+      setFeedback('Vista previa preparada. En modo demostración no se emitió una factura.')
+      return
+    }
+    setBusy(true)
+    try {
+      const invoice = await emitirFactura(draft)
+      setFeedback(`Factura ${invoice.numero} emitida correctamente.`)
+      setDraft({ ordenTrabajoId: '', descuento: '', observaciones: '' })
+      reload()
+    } catch (requestError) {
+      setActionError(requestError.message || 'No fue posible emitir la factura.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function applyPayment(event) {
     event.preventDefault()
     setFeedback('')
-    setError('')
+    setActionError('')
     if (!payment.facturaId || !payment.monto) {
-      setError('Selecciona una factura e indica el monto recibido.')
+      setActionError('Selecciona una factura e indica el monto recibido.')
       return
     }
+    setBusy(true)
     try {
-      const updated = await registrarPago(Number(payment.facturaId), Number(payment.monto))
-      reload()
-      setPayment({ facturaId: updated.id, monto: '' })
-      setFeedback(
-        usingMocks
-          ? 'Pago aplicado solo en la demostración actual.'
-          : 'Pago enviado para registrar.',
+      const invoice = await registrarPago(
+        Number(payment.facturaId),
+        Number(payment.monto),
+        payment.formaPago,
+        payment.referencia,
       )
-    } catch (paymentError) {
-      setError(paymentError.message || 'No fue posible aplicar el pago.')
+      setPayment((current) => ({ ...current, facturaId: invoice.id, monto: '', referencia: '' }))
+      setFeedback(usingMocks ? 'Pago aplicado solo en la demostración.' : 'Pago registrado correctamente.')
+      reload()
+    } catch (requestError) {
+      setActionError(requestError.message || 'No fue posible registrar el pago.')
+    } finally {
+      setBusy(false)
     }
   }
 
-  if (loadError) return <ErrorState description={loadError} />
+  if (error) return <ErrorState description={error} />
   if (isLoading) return <LoadingSkeleton rows={5} />
 
   return (
@@ -105,7 +99,7 @@ function Facturacion() {
       <PageHeader
         eyebrow="Caja"
         title="Facturación"
-        description="Emisión de facturas, registro de pagos y control de balances pendientes."
+        description="Emisión de facturas, pagos y balances pendientes."
       />
       <DataTable
         columns={[
@@ -129,67 +123,46 @@ function Facturacion() {
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Preparar factura</CardTitle>
+            <CardTitle className="text-base">Emitir factura</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Relaciona una OT con servicios y materiales. La emisión real se habilita cuando el
-              backend exponga el endpoint.
+              El servidor calcula servicios, materiales, ITBIS y total desde la OT.
             </p>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4" onSubmit={prepareInvoice}>
+            <form className="space-y-4" onSubmit={issueInvoice}>
               <div className="space-y-2">
                 <Label htmlFor="orden-factura">Orden de trabajo</Label>
                 <Select
                   id="orden-factura"
-                  value={draft.ordenId}
-                  onChange={(event) =>
-                    setDraft((current) => ({ ...current, ordenId: event.target.value }))
-                  }
+                  value={draft.ordenTrabajoId}
+                  onChange={(event) => setDraft((current) => ({ ...current, ordenTrabajoId: event.target.value }))}
                 >
-                  <option value="">Selecciona una OT</option>
-                  {ordenes.map((order) => (
-                    <option key={order.id} value={order.id}>
-                      {order.numero} · {order.cliente}
-                    </option>
+                  <option value="">Selecciona una OT sin factura</option>
+                  {ordenesSinFactura.map((order) => (
+                    <option key={order.id} value={order.id}>{order.numero} · {order.cliente}</option>
                   ))}
                 </Select>
               </div>
-              <fieldset>
-                <legend className="mb-2 text-sm font-semibold">Detalle facturable</legend>
-                <div className="space-y-2">
-                  {servicios.map((item) => (
-                    <label
-                      key={item.id}
-                      className="flex min-h-11 items-center justify-between border border-border px-3 text-sm"
-                    >
-                      <span>
-                        <input
-                          type="checkbox"
-                          className="mr-3"
-                          checked={draft.items.includes(item.id)}
-                          onChange={() => toggleItem(item.id)}
-                        />
-                        {item.nombre}
-                      </span>
-                      <span className="technical-value">{formatCurrency(item.precioBase)}</span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              <div className="flex items-center justify-between border-t border-border pt-4">
-                <span className="font-semibold">Total estimado</span>
-                <span className="technical-value text-lg">{formatCurrency(draftTotal)}</span>
+              <div className="space-y-2">
+                <Label htmlFor="descuento-factura">Descuento (DOP)</Label>
+                <Input
+                  id="descuento-factura"
+                  type="number"
+                  min="0"
+                  value={draft.descuento}
+                  onChange={(event) => setDraft((current) => ({ ...current, descuento: event.target.value }))}
+                />
               </div>
-              <Button type="submit">Preparar factura demo</Button>
+              <Button type="submit" disabled={busy}>
+                {usingMocks ? 'Preparar vista previa' : 'Emitir factura'}
+              </Button>
             </form>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Registrar pago</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Un saldo en cero cambia la factura a pagada en la demostración.
-            </p>
+            <p className="text-sm text-muted-foreground">Aplica el monto a una factura pendiente.</p>
           </CardHeader>
           <CardContent>
             <form className="grid gap-4" onSubmit={applyPayment}>
@@ -198,61 +171,45 @@ function Facturacion() {
                 <Select
                   id="factura-pago"
                   value={payment.facturaId}
-                  onChange={(event) =>
-                    setPayment((current) => ({ ...current, facturaId: event.target.value }))
-                  }
+                  onChange={(event) => setPayment((current) => ({ ...current, facturaId: event.target.value }))}
                 >
                   <option value="">Selecciona una factura</option>
-                  {facturas
-                    .filter((item) => item.balance > 0)
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.numero} · Balance {formatCurrency(item.balance)}
-                      </option>
-                    ))}
+                  {facturas.filter((item) => item.balance > 0).map((item) => (
+                    <option key={item.id} value={item.id}>{item.numero} · {formatCurrency(item.balance)}</option>
+                  ))}
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="monto-pago">Monto recibido (DOP)</Label>
-                <Input
-                  id="monto-pago"
-                  type="number"
-                  min="1"
-                  value={payment.monto}
-                  onChange={(event) =>
-                    setPayment((current) => ({ ...current, monto: event.target.value }))
-                  }
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="monto-pago">Monto recibido</Label>
+                  <Input id="monto-pago" type="number" min="1" value={payment.monto} onChange={(event) => setPayment((current) => ({ ...current, monto: event.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="forma-pago">Forma de pago</Label>
+                  <Select id="forma-pago" value={payment.formaPago} onChange={(event) => setPayment((current) => ({ ...current, formaPago: event.target.value }))}>
+                    <option value="EFECTIVO">Efectivo</option>
+                    <option value="TARJETA">Tarjeta</option>
+                    <option value="TRANSFERENCIA">Transferencia</option>
+                  </Select>
+                </div>
               </div>
-              <Button type="submit">Aplicar pago demo</Button>
+              {payment.formaPago !== 'EFECTIVO' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="referencia-pago">Referencia</Label>
+                  <Input id="referencia-pago" value={payment.referencia} onChange={(event) => setPayment((current) => ({ ...current, referencia: event.target.value }))} required />
+                </div>
+              ) : null}
+              <Button type="submit" disabled={busy}>Registrar pago</Button>
             </form>
           </CardContent>
         </Card>
       </div>
-      {error ? (
-        <p className="text-sm font-medium text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {feedback ? (
-        <p className="text-sm font-medium text-success" role="status">
-          {feedback}
-        </p>
-      ) : null}
-      <DetailPanel
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        title="Detalle de factura"
-        subtitle={selected?.numero}
-      >
+      {actionError ? <p className="text-sm font-medium text-destructive" role="alert">{actionError}</p> : null}
+      {feedback ? <p className="text-sm font-medium text-success" role="status">{feedback}</p> : null}
+      <DetailPanel open={Boolean(selected)} onClose={() => setSelected(null)} title="Detalle de factura" subtitle={selected?.numero}>
         <p className="text-sm">{selected?.cliente}</p>
-        <p className="mt-5 technical-value text-lg">
-          {selected ? formatCurrency(selected.total) : ''}
-        </p>
+        <p className="mt-5 technical-value text-lg">{selected ? formatCurrency(selected.total) : ''}</p>
         <p className="mt-2 text-sm">Balance: {selected ? formatCurrency(selected.balance) : ''}</p>
-        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
-          Los cambios se conservan solo mientras dure esta demostración.
-        </p>
       </DetailPanel>
     </div>
   )

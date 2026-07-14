@@ -1,0 +1,13 @@
+.git
+.claude
+.cursor
+.env
+**/.env
+**/.env.*
+.vs
+**/.vs
+**/node_modules
+**/dist
+database
+docs
+README.md
