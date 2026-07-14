@@ -26,6 +26,7 @@ import Refrigerantes from '../pages/admin/Refrigerantes'
 import Reportes from '../pages/admin/Reportes'
 import Servicios from '../pages/admin/Servicios'
 import Usuarios from '../pages/admin/Usuarios'
+import Perfil from '../pages/admin/Perfil'
 import Vehiculos from '../pages/admin/Vehiculos'
 
 function AppRoutes() {
@@ -55,6 +56,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
+        <Route path="perfil" element={<Perfil />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="vehiculos" element={<Vehiculos />} />
         <Route path="ordenes-trabajo" element={<OrdenesTrabajo />} />

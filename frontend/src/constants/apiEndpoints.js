@@ -20,6 +20,7 @@ export const apiEndpoints = {
   inventoryMovements: '/api/v1/inventario-movimientos',
   invoices: '/api/v1/facturas',
   users: '/api/v1/usuarios',
+  profile: '/api/v1/perfil',
   branches: '/api/v1/sucursales',
   dashboard: '/api/v1/dashboard',
   // Pendiente: requiere las tablas cotizaciones y cotizacion_detalles, solicitadas

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, UserRound, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { brand } from '@/constants/brand'
@@ -63,6 +63,9 @@ function resolveBreadcrumbs(pathname) {
   if (pathname === '/app' || pathname === '/app/') {
     return [{ label: 'Dashboard' }]
   }
+    if (pathname === '/app/perfil') {
+    return [{ label: 'Cuenta' }, { label: 'Mi perfil' }]
+  }
   const current = menuItems.find((item) => item.path === pathname)
   return current ? [{ label: current.group }, { label: current.label }] : [{ label: 'Panel' }]
 }
@@ -120,7 +123,9 @@ function DashboardLayout() {
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
   const sucursalActiva = (sucursales || []).find((item) => item.id === sucursalId)
   const isAllowed =
-    location.pathname === '/app' || visibleItems.some((item) => item.path === location.pathname)
+  location.pathname === '/app' ||
+  location.pathname === '/app/perfil' ||
+  visibleItems.some((item) => item.path === location.pathname)
 
   function cambiarSucursal(id) {
     setSucursalId(id)
@@ -214,10 +219,17 @@ function DashboardLayout() {
                     </option>
                   ))}
                 </Select>
-                <div className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-                  <UserRound className="h-4 w-4 text-primary" aria-hidden="true" />
+                <Link
+                  to="/app/perfil"
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted"
+                  aria-label={`Abrir perfil de ${activeRole.name}`}
+>
+                  <UserRound
+                    className="h-4 w-4 text-primary"
+                    aria-hidden="true"
+                  />
                   <span>{activeRole.name}</span>
-                </div>
+                  </Link>
                 <Button variant="outline" size="sm" type="button" onClick={salir}>
                   Salir
                 </Button>
