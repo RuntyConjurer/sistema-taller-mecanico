@@ -1,0 +1,103 @@
+// `roles` usa los códigos de la tabla `roles` de PostgreSQL. Mientras no exista
+// autenticación real, el rol sale del selector del login y solo decide qué módulos
+// se muestran: el backend deberá volver a comprobar los permisos en cada petición.
+export const menuItems = [
+  {
+    label: 'Dashboard',
+    path: '/app',
+    description: 'Resumen operativo',
+    group: 'Operación',
+    roles: ['RECEPCIONISTA', 'TECNICO', 'CAJERO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Citas',
+    path: '/app/citas',
+    description: 'Agenda del taller',
+    group: 'Operación',
+    roles: ['RECEPCIONISTA', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Cotizaciones',
+    path: '/app/cotizaciones',
+    description: 'Propuestas comerciales',
+    group: 'Operación',
+    roles: ['RECEPCIONISTA', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Órdenes de Trabajo',
+    path: '/app/ordenes-trabajo',
+    description: 'Seguimiento de reparaciones',
+    group: 'Operación',
+    roles: ['RECEPCIONISTA', 'TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Diagnósticos',
+    path: '/app/diagnosticos',
+    description: 'Evaluaciones de refrigeración',
+    group: 'Operación',
+    roles: ['TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Clientes',
+    path: '/app/clientes',
+    description: 'Registro y consulta de clientes',
+    group: 'Clientes',
+    roles: ['RECEPCIONISTA', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Vehículos',
+    path: '/app/vehiculos',
+    description: 'Vehículos asociados a clientes',
+    group: 'Clientes',
+    roles: ['RECEPCIONISTA', 'TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Historial Técnico',
+    path: '/app/historial-tecnico',
+    description: 'Servicios por vehículo',
+    group: 'Clientes',
+    roles: ['RECEPCIONISTA', 'TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Inventario',
+    path: '/app/inventario',
+    description: 'Piezas, insumos y existencias',
+    group: 'Inventario',
+    roles: ['TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Refrigerantes',
+    path: '/app/refrigerantes',
+    description: 'Control de recargas y consumo',
+    group: 'Inventario',
+    roles: ['TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Servicios',
+    path: '/app/servicios',
+    description: 'Catálogo base de servicios',
+    group: 'Inventario',
+    roles: ['RECEPCIONISTA', 'TECNICO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Facturación',
+    path: '/app/facturacion',
+    description: 'Facturas y pagos',
+    group: 'Administración',
+    roles: ['CAJERO', 'ADMINISTRADOR'],
+  },
+  {
+    label: 'Reportes',
+    path: '/app/reportes',
+    description: 'Indicadores y reportes',
+    group: 'Administración',
+    roles: ['ADMINISTRADOR'],
+  },
+  {
+    label: 'Usuarios',
+    path: '/app/usuarios',
+    description: 'Equipo y permisos',
+    group: 'Administración',
+    roles: ['ADMINISTRADOR'],
+  },
+]

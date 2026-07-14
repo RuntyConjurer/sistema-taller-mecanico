@@ -1,0 +1,38 @@
+export const citas = [
+  {
+    id: 1,
+    idSucursal: 1,
+    fecha: '2026-07-12 09:00',
+    cliente: 'Luis Ramírez',
+    vehiculo: 'Honda CR-V',
+    estado: 'CONFIRMADA',
+    motivo: 'Aire no enfría',
+  },
+  {
+    id: 2,
+    idSucursal: 2,
+    fecha: '2026-07-12 10:30',
+    cliente: 'Transporte del Caribe',
+    vehiculo: 'Ford Transit',
+    estado: 'PROGRAMADA',
+    motivo: 'Recarga refrigerante',
+  },
+  {
+    id: 3,
+    idSucursal: 1,
+    fecha: '2026-07-12 14:00',
+    cliente: 'Sofía Encarnación',
+    vehiculo: 'Mazda 3',
+    estado: 'CONFIRMADA',
+    motivo: 'Olor a humedad',
+  },
+  {
+    id: 4,
+    idSucursal: 2,
+    fecha: '2026-07-13 11:00',
+    cliente: 'Roberto Díaz',
+    vehiculo: 'Suzuki Vitara',
+    estado: 'PROGRAMADA',
+    motivo: 'Mantenimiento preventivo',
+  },
+]
