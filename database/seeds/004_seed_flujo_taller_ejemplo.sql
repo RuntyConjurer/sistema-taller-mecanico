@@ -13,7 +13,11 @@
 INSERT INTO servicios (nombre, descripcion, precio_base, porcentaje_impuesto)
 VALUES 
     ('Mantenimiento Preventivo A/C', 'Limpieza de evaporador, condensador y revisión de presiones', 2500.00, 18.00),
-    ('Detección de Fugas', 'Inyección de tinte UV y rastreo de microfugas', 1500.00, 18.00);
+    ('Diagnóstico HVAC', 'Lecturas de presión, temperatura y prueba de fuga antes de reparar', 2500.00, 18.00),
+    ('Carga de Gas Refrigerante', 'Vacío del sistema, carga precisa y comprobación final', 4500.00, 18.00),
+    ('Detección de Fugas', 'Inyección de tinte UV y rastreo de microfugas', 3200.00, 18.00),
+    ('Limpieza de Evaporador', 'Saneamiento de la cabina y recuperación del flujo de aire', 6800.00, 18.00),
+    ('Reparación de Sistema HVAC', 'Corrección técnica de fugas y componentes averiados', 4000.00, 18.00);
 
 -- =============================================================================
 -- 1. SIMULACIÓN DEL FLUJO COMPLETO (BLOQUE TRANSACCIONAL)
@@ -40,8 +44,8 @@ BEGIN
     SELECT id_cliente INTO v_id_cliente FROM clientes WHERE identificacion = '001-1234567-8'; -- Juan Pérez
     SELECT id_vehiculo INTO v_id_vehiculo FROM vehiculos WHERE placa = 'A000001'; -- Toyota Corolla
     SELECT id_sucursal INTO v_id_sucursal FROM sucursales WHERE nombre = 'Sucursal Central';
-    SELECT id_usuario INTO v_id_tecnico FROM usuarios WHERE email = 'carlos.tecnico@refrigeracion.com';
-    SELECT id_usuario INTO v_id_cajero FROM usuarios WHERE email = 'maria.caja@refrigeracion.com';
+    SELECT id_usuario INTO v_id_tecnico FROM usuarios WHERE email = 'tecnico@sgtra.demo';
+    SELECT id_usuario INTO v_id_cajero FROM usuarios WHERE email = 'caja@sgtra.demo';
     SELECT id_servicio INTO v_id_servicio FROM servicios WHERE nombre = 'Mantenimiento Preventivo A/C';
     SELECT id_material INTO v_id_refrigerante FROM materiales WHERE nombre = 'Gas Refrigerante R-134a';
 
