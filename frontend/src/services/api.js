@@ -1,6 +1,6 @@
 import { endSession, getAccessToken } from './sessionStore'
 
-// Una URL vacía usa el mismo origen. Es el comportamiento esperado detrás de Nginx.
+// Una URL vacía usa el mismo origen; Vite o Nginx enrutan /api hacia Express.
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 export async function apiRequest(path, options = {}) {

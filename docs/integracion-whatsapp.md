@@ -9,7 +9,7 @@ Meta  → HTTPS público → Nginx → /api/v1/webhooks/whatsapp
 
 ## 1. Configuración local
 
-Copie `.env.example` como `.env` y complete localmente:
+Copie `backend/.env.example` como `backend/.env` y complete localmente:
 
 ```dotenv
 WHATSAPP_ENABLED=true
@@ -29,10 +29,10 @@ WHATSAPP_ALLOWED_TEMPLATES=hello_world:en_US
 
 `WHATSAPP_VERIFY_TOKEN` lo define el equipo; no lo entrega Meta. Debe ser largo y distinto de la clave de la aplicación. `.env` está ignorado por Git y no debe compartirse.
 
-Reconstruya la API y el frontend para aplicar las variables:
+Reinicie la API y el frontend para aplicar las variables:
 
 ```powershell
-docker compose up -d --build
+npm run dev
 ```
 
 ## 2. URL HTTPS para el webhook

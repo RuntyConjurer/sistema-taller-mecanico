@@ -7,7 +7,7 @@ Pantalla React → service del dominio → /api/v1 → controller → use case
                → repository → Sequelize → PostgreSQL
 ```
 
-Las pantallas no conocen tablas ni construyen SQL. Los servicios centralizan URL, token y normalización de errores. En Docker, `VITE_API_BASE_URL` queda vacío para usar el mismo origen de Nginx.
+Las pantallas no conocen tablas ni construyen SQL. Los servicios centralizan URL, token y normalización de errores. En desarrollo, `VITE_API_BASE_URL` queda vacío y Vite dirige `/api` a Express en el puerto `3000`.
 
 ## Convenciones HTTP
 
