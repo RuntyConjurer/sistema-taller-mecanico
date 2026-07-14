@@ -2,6 +2,7 @@ const {DataTypes} = require('sequelize');
 const sequelize = require('./Database/db');
 
 
+
 const OrdenesTrabajo = sequelize.define('OrdenesTrabajo', {
     id_ot:{
         type: DataTypes.BIGINT,

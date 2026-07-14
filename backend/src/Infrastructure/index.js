@@ -1,7 +1,7 @@
 const Sucursales = require('./Sucursales');
 const Usuarios = require('./Usuarios');
 
-Sucursales.hasMany(Usuarios,{
+Sucursales.hasMany(Usuarios, {
     foreignKey: 'id_sucursal',
     as: 'usuarios',
 });
@@ -18,13 +18,12 @@ Clientes.hasMany(Vehiculos, {
     foreignKey: 'id_cliente',
     as: 'vehiculos',
 });
-Vehiculos.belongsTo(Clientes,{
+Vehiculos.belongsTo(Clientes, {
     foreignKey: 'id_cliente',
     as: 'cliente',
 });
 
 const Citas = require('./Citas');
-
 
 Clientes.hasMany(Citas, {
     foreignKey: 'id_cliente',
@@ -62,7 +61,7 @@ Vehiculos.hasMany(OrdenesTrabajo, {
     as: 'ordenes',
 });
 
-OrdenesTrabajo.belongsTo(Vehiculos,{
+OrdenesTrabajo.belongsTo(Vehiculos, {
     foreignKey: 'id_vehiculo',
     as: 'vehiculo',
 });
@@ -98,14 +97,25 @@ OrdenesTrabajo.belongsTo(Citas, {
 });
 
 const Diagnosticos = require('./Diagnosticos');
-OrdenesTrabajo.hasMany(Diagnosticos, {
+OrdenesTrabajo.hasOne(Diagnosticos, {
     foreignKey: 'id_ot',
-    as: 'diagnosticos',
+    as: 'diagnostico',
 });
 
 Diagnosticos.belongsTo(OrdenesTrabajo, {
     foreignKey: 'id_ot',
     as: 'orden',
+});
+
+// FK de auditoría: técnico que registró el diagnóstico
+Usuarios.hasMany(Diagnosticos, {
+    foreignKey: 'creado_por',
+    as: 'diagnosticos_creados',
+});
+
+Diagnosticos.belongsTo(Usuarios, {
+    foreignKey: 'creado_por',
+    as: 'creador',
 });
 
 const OrdenTrabajoServicios = require('./OrdenTrabajoServicios');
@@ -131,7 +141,13 @@ OrdenTrabajoServicios.belongsTo(Servicios, {
     as: 'servicio',
 });
 
-const Refrigerantes = require('./Refrigerantes');
+// =============================================================================
+// INVENTARIO (catálogo unificado: materiales, repuestos y refrigerantes
+// viven todos en la tabla `materiales`, distinguidos por `categoria`.
+// Ya NO existe un modelo/tabla `Refrigerantes` separado ni `id_refrigerante`
+// en `inventario_movimientos` / `orden_trabajo_materiales` — se eliminó
+// por completo aquí para reflejar la migración 005.)
+// =============================================================================
 const Materiales = require('./Materiales');
 const InventarioMovimientos = require('./InventarioMovimientos');
 
@@ -143,17 +159,6 @@ Materiales.hasMany(InventarioMovimientos, {
 InventarioMovimientos.belongsTo(Materiales, {
     foreignKey: 'id_material',
     as: 'material',
-});
-
-Refrigerantes.hasMany(InventarioMovimientos, {
-    foreignKey: 'id_refrigerante',
-    as: 'movimientos',
-
-});
-
-InventarioMovimientos.belongsTo(Refrigerantes, {
-    foreignKey: 'id_refrigerante',
-    as: 'refrigerante',
 });
 
 Usuarios.hasMany(InventarioMovimientos, {
@@ -187,15 +192,24 @@ OrdenTrabajoMateriales.belongsTo(Materiales, {
     as: 'material',
 });
 
-Refrigerantes.hasMany(OrdenTrabajoMateriales, {
-    foreignKey: 'id_refrigerante',
-    as: 'ordenes_refrigerantes',
-});
-OrdenTrabajoMateriales.belongsTo(Refrigerantes, {
-    foreignKey: 'id_refrigerante',
-    as: 'refrigerante',
+// FK de auditoría: quién registró el consumo del material en la OT
+Usuarios.hasMany(OrdenTrabajoMateriales, {
+    foreignKey: 'registrado_por',
+    as: 'materiales_registrados',
 });
 
+OrdenTrabajoMateriales.belongsTo(Usuarios, {
+    foreignKey: 'registrado_por',
+    as: 'registrador',
+});
+
+// =============================================================================
+// FACTURACIÓN
+// `facturas` NO tiene columna id_ot: la relación con OrdenesTrabajo es N:M
+// a través de la tabla puente `factura_ordenes_trabajo` (una OT solo puede
+// estar en una factura, por el UNIQUE(id_ot), pero sigue siendo N:M en el
+// modelo relacional / Sequelize).
+// =============================================================================
 const Facturas = require('./Facturas');
 Usuarios.hasMany(Facturas, {
     foreignKey: 'creado_por',
@@ -207,14 +221,41 @@ Facturas.belongsTo(Usuarios, {
     as: 'creador',
 });
 
-OrdenesTrabajo.hasOne(Facturas,{
-    foreignKey:'id_ot',
-    as:'factura'
+const FacturaOrdenesTrabajo = require('./FacturaOrdenesTrabajo');
+
+Facturas.belongsToMany(OrdenesTrabajo, {
+    through: FacturaOrdenesTrabajo,
+    foreignKey: 'id_factura',
+    otherKey: 'id_ot',
+    as: 'ordenes',
 });
 
-Facturas.belongsTo(OrdenesTrabajo,{
-    foreignKey:'id_ot',
-    as:'orden'
+OrdenesTrabajo.belongsToMany(Facturas, {
+    through: FacturaOrdenesTrabajo,
+    foreignKey: 'id_ot',
+    otherKey: 'id_factura',
+    as: 'facturas',
+});
+
+// Acceso directo a las filas de la tabla puente (útil para leer creado_en, etc.)
+Facturas.hasMany(FacturaOrdenesTrabajo, {
+    foreignKey: 'id_factura',
+    as: 'factura_ordenes',
+});
+
+OrdenesTrabajo.hasOne(FacturaOrdenesTrabajo, {
+    foreignKey: 'id_ot',
+    as: 'factura_orden',
+});
+
+FacturaOrdenesTrabajo.belongsTo(Facturas, {
+    foreignKey: 'id_factura',
+    as: 'factura',
+});
+
+FacturaOrdenesTrabajo.belongsTo(OrdenesTrabajo, {
+    foreignKey: 'id_ot',
+    as: 'orden',
 });
 
 const FacturaDetalles = require('./FacturaDetalles');
@@ -229,9 +270,77 @@ FacturaDetalles.belongsTo(Facturas, {
     as: 'factura',
 });
 
-const UsuarioRoles = require('./UsuarioRoles');
+// id_ot en factura_detalles es opcional (ON DELETE SET NULL): permite saber
+// a qué vehículo/OT pertenece cada línea dentro de una factura agrupada.
+OrdenesTrabajo.hasMany(FacturaDetalles, {
+    foreignKey: 'id_ot',
+    as: 'detalles_factura',
+});
 
+FacturaDetalles.belongsTo(OrdenesTrabajo, {
+    foreignKey: 'id_ot',
+    as: 'orden',
+});
+
+// =============================================================================
+// PAGOS
+// N:M entre pagos y facturas a través de `pago_facturas` (monto_aplicado
+// permite que un pago cubra varias facturas y que una factura reciba
+// varios pagos parciales).
+// =============================================================================
+const Pagos = require('./Pagos');
+
+Usuarios.hasMany(Pagos, {
+    foreignKey: 'recibido_por',
+    as: 'pagos',
+});
+Pagos.belongsTo(Usuarios, {
+    foreignKey: 'recibido_por',
+    as: 'usuariopago',
+});
+
+const PagoFacturas = require('./PagoFacturas');
+
+Pagos.belongsToMany(Facturas, {
+    through: PagoFacturas,
+    foreignKey: 'id_pago',
+    otherKey: 'id_factura',
+    as: 'facturas',
+});
+
+Facturas.belongsToMany(Pagos, {
+    through: PagoFacturas,
+    foreignKey: 'id_factura',
+    otherKey: 'id_pago',
+    as: 'pagos',
+});
+
+Pagos.hasMany(PagoFacturas, {
+    foreignKey: 'id_pago',
+    as: 'pago_facturas',
+});
+
+Facturas.hasMany(PagoFacturas, {
+    foreignKey: 'id_factura',
+    as: 'pago_facturas',
+});
+
+PagoFacturas.belongsTo(Pagos, {
+    foreignKey: 'id_pago',
+    as: 'pago',
+});
+
+PagoFacturas.belongsTo(Facturas, {
+    foreignKey: 'id_factura',
+    as: 'factura',
+});
+
+// =============================================================================
+// ROLES / USUARIO_ROLES
+// =============================================================================
+const UsuarioRoles = require('./UsuarioRoles');
 const Roles = require('./Roles');
+
 Usuarios.belongsToMany(Roles, {
     through: UsuarioRoles,
     foreignKey: 'id_usuario',
@@ -245,22 +354,20 @@ Roles.belongsToMany(Usuarios, {
     otherKey: 'id_usuario',
     as: 'usuarios',
 });
+
 Usuarios.hasMany(UsuarioRoles, {
     foreignKey: 'id_usuario',
     as: 'usuarioroles',
 });
 
-const Pagos = require('./Pagos');
-
-Usuarios.hasMany(Pagos, {
-    foreignKey: 'recibido_por',
-    as: 'pagos',
-});
-Pagos.belongsTo(Usuarios, {
-    foreignKey: 'recibido_por',
-    as: 'usuariopago',
+Roles.hasMany(UsuarioRoles, {
+    foreignKey: 'id_rol',
+    as: 'usuarioroles',
 });
 
+// =============================================================================
+// HISTORIAL TÉCNICO
+// =============================================================================
 const HistorialTecnico = require('./HistorialTecnico');
 
 Vehiculos.hasMany(HistorialTecnico, {
@@ -282,3 +389,13 @@ HistorialTecnico.belongsTo(OrdenesTrabajo, {
     as: 'ordentrabajo',
 });
 
+// FK de auditoría: técnico que registró el evento
+Usuarios.hasMany(HistorialTecnico, {
+    foreignKey: 'registrado_por',
+    as: 'historiales_registrados',
+});
+
+HistorialTecnico.belongsTo(Usuarios, {
+    foreignKey: 'registrado_por',
+    as: 'registrador',
+});
