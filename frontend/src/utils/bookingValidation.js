@@ -2,12 +2,14 @@ export const bookingSteps = [
   ['marca', 'modelo', 'anio', 'placa', 'chasis'],
   ['servicio'],
   ['sucursal', 'fecha', 'hora'],
-  ['nombre', 'documento', 'telefono'],
+  ['tipoCliente', 'tipoIdentificacion', 'nombre', 'documento', 'telefono'],
 ]
 
 // Forma completa del formulario. Tener todas las llaves desde el inicio evita
 // inputs "sin controlar" en React y facilita guardar/restaurar el borrador.
 export const bookingInitialForm = {
+  tipoCliente: 'PERSONA',
+  tipoIdentificacion: 'CEDULA',
   marca: '',
   modelo: '',
   anio: '',

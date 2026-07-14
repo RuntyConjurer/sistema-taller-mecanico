@@ -1,45 +1,55 @@
-// Cliente HTTP del proyecto. Toda petición al backend pasa por aquí.
-//
-// Contrato de los services: todos son `async`, así que devuelven siempre una promesa,
-// y un error de negocio siempre llega como promesa rechazada, tanto con datos de
-// prueba como contra la API. Antes no era así: en modo mock el error se lanzaba de
-// forma síncrona y en modo API se rechazaba, que es el mismo fallo con dos
-// comportamientos distintos.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+import { endSession, getAccessToken } from './sessionStore'
+
+// Una URL vacía usa el mismo origen. Es el comportamiento esperado detrás de Nginx.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
 export async function apiRequest(path, options = {}) {
-  if (!API_BASE_URL) {
-    throw new Error('VITE_API_BASE_URL no esta configurada.')
+  if (!path) throw new Error('Endpoint de API no configurado.')
+
+  const token = getAccessToken()
+  let response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    })
+  } catch (cause) {
+    const error = new Error('No se pudo conectar con el servidor. Revisa tu conexión e intenta otra vez.')
+    error.code = 'NETWORK_ERROR'
+    error.cause = cause
+    throw error
   }
 
-  if (!path) {
-    throw new Error('Endpoint de API no configurado.')
+  if (response.status === 401 && token) {
+    endSession()
+    window.dispatchEvent(new CustomEvent('sgtra:session-expired'))
   }
-
-  // fetch es la llamada HTTP nativa del navegador. Aqui se centralizan headers,
-  // URL base y opciones para que cada service no repita la misma configuracion.
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  })
 
   if (!response.ok) {
-    // El backend devuelve errores con estructura conocida; se copian al Error para
-    // que las pantallas puedan mostrar mensajes y errores por campo si aplica.
     const payload = await response.json().catch(() => null)
     const error = new Error(payload?.error?.message || `Error de API: ${response.status}`)
     error.code = payload?.error?.code || response.status
+    error.status = response.status
     error.fieldErrors = payload?.error?.fieldErrors || {}
     throw error
   }
 
-  // La API puede devolver { data: ... }; si no viene asi, se retorna el payload tal
-  // cual para mantener compatibilidad durante la integracion.
+  if (response.status === 204) return null
   const payload = await response.json().catch(() => null)
   return payload?.data ?? payload
+}
+
+export function withQuery(path, params = {}) {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, value)
+  })
+  const suffix = query.toString()
+  return suffix ? `${path}?${suffix}` : path
 }
 
 export { API_BASE_URL }

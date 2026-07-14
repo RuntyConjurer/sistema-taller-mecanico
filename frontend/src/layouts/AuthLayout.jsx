@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import WorkshopMedia from '@/components/common/WorkshopMedia'
 import AppLogo from '@/components/brand/AppLogo'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { usingMocks } from '@/services/dataSource'
 
 function AuthLayout() {
   return (
@@ -20,12 +21,14 @@ function AuthLayout() {
         <div className="w-full max-w-md space-y-8">
           <AppLogo />
           <p className="text-sm text-muted-foreground">
-            Acceso de demostración para operación interna.
+            {usingMocks ? 'Acceso de demostración para operación interna.' : 'Acceso para personal autorizado.'}
           </p>
           <Card>
             <CardHeader>
               <CardTitle>Acceso al sistema</CardTitle>
-              <CardDescription>Selecciona un rol de demostración para continuar.</CardDescription>
+              <CardDescription>
+                {usingMocks ? 'Selecciona un rol para continuar.' : 'Ingresa tus credenciales asignadas.'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Outlet />

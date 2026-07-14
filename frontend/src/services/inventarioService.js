@@ -1,25 +1,32 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
 import { movimientos } from '@/data/mocks/inventario.mock'
 import { apiRequest } from './api'
+import { mapInventoryMovement, mapList, mapMaterial, mapWorkOrder } from './apiMappers'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
 export async function listarMateriales() {
-  return dataSource === 'mock' ? mockStore.materials() : apiRequest(apiEndpoints.materials)
+  return dataSource === 'mock'
+    ? mockStore.materials().map(mapMaterial)
+    : mapList(await apiRequest(apiEndpoints.materials), mapMaterial)
 }
 
 export async function listarMovimientos() {
-  return dataSource === 'mock' ? movimientos : apiRequest(apiEndpoints.inventoryMovements)
+  return dataSource === 'mock'
+    ? movimientos.map(mapInventoryMovement)
+    : mapList(await apiRequest(apiEndpoints.inventoryMovements), mapInventoryMovement)
 }
 
 // Los refrigerantes son los materiales de categoría REFRIGERANTE, no una tabla aparte.
 export async function listarRefrigerantes() {
   if (dataSource === 'mock') return mockStore.refrigerants()
-  return apiRequest(`${apiEndpoints.materials}?categoria=REFRIGERANTE`)
+  return mapList(await apiRequest(apiEndpoints.refrigerants), mapMaterial)
 }
 
 export async function listarOrdenesParaConsumo() {
-  return dataSource === 'mock' ? mockStore.workOrders() : apiRequest(apiEndpoints.workOrders)
+  return dataSource === 'mock'
+    ? mockStore.workOrders().map(mapWorkOrder)
+    : mapList(await apiRequest(apiEndpoints.workOrders), mapWorkOrder)
 }
 
 // Insertar el consumo es lo único que hace el backend: el trigger de PostgreSQL valida

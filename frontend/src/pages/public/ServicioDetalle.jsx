@@ -7,6 +7,7 @@ import WorkshopMedia from '@/components/common/WorkshopMedia'
 import { formatCurrency } from '@/utils/formatters'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { obtenerServicio } from '@/services/catalogoService'
+import { usingMocks } from '@/services/dataSource'
 
 function ServicioDetalle() {
   const { serviceId } = useParams()
@@ -74,8 +75,7 @@ function ServicioDetalle() {
             <details className="border-b border-border py-5">
               <summary className="cursor-pointer font-semibold">¿El precio es definitivo?</summary>
               <p className="mt-3 text-muted-foreground">
-                El precio mostrado es una referencia demostrativa. Confirmamos el alcance después de
-                evaluar el vehículo.
+                El precio es una referencia inicial. Confirmamos el alcance después de evaluar el vehículo.
               </p>
             </details>
           </div>
@@ -99,7 +99,7 @@ function ServicioDetalle() {
             </a>
             <p className="mt-5 text-xs text-muted-foreground">
               <Check className="mr-1 inline h-3 w-3 text-success" />
-              Valores de demostración, sin pago ni reserva real.
+              {usingMocks ? 'Solicitud demostrativa, sin reserva real.' : 'La cita queda pendiente de confirmación.'}
             </p>
           </aside>
         </div>

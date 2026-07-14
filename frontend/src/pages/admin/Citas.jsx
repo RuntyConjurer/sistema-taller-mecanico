@@ -44,7 +44,7 @@ function Citas() {
       setFeedback(
         usingMocks
           ? `Cita marcada como ${getStateMeta('cita', estado).label.toLowerCase()} solo en la demostración.`
-          : 'Estado enviado para actualizar.',
+          : `Cita marcada como ${getStateMeta('cita', estado).label.toLowerCase()}.`,
       )
     } catch (actionError) {
       setError(actionError.message || 'No fue posible actualizar la cita.')
@@ -71,7 +71,7 @@ function Citas() {
       setFeedback(
         usingMocks
           ? `${result.workOrder.numero} creada solo para la demostración.`
-          : 'Conversión enviada para registrar.',
+          : `${result.workOrder.numero} creada correctamente.`,
       )
     } catch (actionError) {
       setError(actionError.message || 'No fue posible convertir la cita.')
@@ -141,9 +141,11 @@ function Citas() {
         <p className="technical-value">{selected?.fecha}</p>
         <p className="mt-4 text-sm">{selected?.vehiculo}</p>
         <p className="mt-3 text-sm text-muted-foreground">{selected?.motivo}</p>
-        <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
-          Acciones demostrativas: los cambios no se guardan fuera de esta sesión.
-        </p>
+        {usingMocks ? (
+          <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
+            Los cambios no se guardan fuera de esta sesión de demostración.
+          </p>
+        ) : null}
       </DetailPanel>
     </div>
   )

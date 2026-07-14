@@ -1,6 +1,7 @@
 import { apiEndpoints, endpointWithId } from '@/constants/apiEndpoints'
 import { ordenTimeline } from '@/data/mocks/ordenes.mock'
 import { apiRequest } from './api'
+import { mapList, mapWorkOrder } from './apiMappers'
 import { dataSource } from './dataSource'
 import { mockStore } from './mockStore'
 
@@ -12,20 +13,20 @@ export async function listarOrdenesTrabajo(sucursalId) {
     return sucursalId ? ordenes.filter((item) => item.idSucursal === sucursalId) : ordenes
   }
   const query = sucursalId ? `?sucursalId=${sucursalId}` : ''
-  return apiRequest(`${apiEndpoints.workOrders}${query}`)
+  return mapList(await apiRequest(`${apiEndpoints.workOrders}${query}`), mapWorkOrder)
 }
 
 // La línea de tiempo de la OT saldrá de los cambios de estado que registre el backend.
 // Con mocks se devuelve siempre la misma secuencia de ejemplo.
 export async function obtenerHistorialOrden(id) {
   if (dataSource === 'mock') return ordenTimeline
+  if (!id) return []
   return apiRequest(`${endpointWithId(apiEndpoints.workOrders, id)}/historial`)
 }
 
 export async function cerrarOrdenTrabajo(id) {
   if (dataSource === 'mock') return mockStore.closeWorkOrder(id)
-  return apiRequest(endpointWithId(apiEndpoints.workOrders, id), {
-    method: 'PATCH',
-    body: JSON.stringify({ estado: 'CERRADA' }),
-  })
+  return mapWorkOrder(await apiRequest(`${endpointWithId(apiEndpoints.workOrders, id)}/cerrar`, {
+    method: 'POST',
+  }))
 }

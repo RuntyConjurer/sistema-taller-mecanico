@@ -164,8 +164,9 @@ function Refrigerantes() {
             Registrar recarga
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            La demostración valida stock local; el backend y su trigger validarán el consumo
-            definitivo.
+            {usingMocks
+              ? 'El stock cambia solo durante esta demostración.'
+              : 'La base de datos valida la existencia y registra el movimiento automáticamente.'}
           </p>
         </CardHeader>
         <CardContent>
@@ -220,7 +221,7 @@ function Refrigerantes() {
             </div>
             <div className="flex items-end">
               <Button className="w-full" type="submit">
-                Registrar consumo demo
+                Registrar consumo
               </Button>
             </div>
           </form>

@@ -2,7 +2,9 @@ import { apiEndpoints } from '@/constants/apiEndpoints'
 import { demoRoles } from '@/constants/demoRoles'
 import { usuarios } from '@/data/mocks/usuarios.mock'
 import { apiRequest } from './api'
+import { mapUser } from './apiMappers'
 import { dataSource } from './dataSource'
+import { getCurrentUser } from './sessionStore'
 
 export async function obtenerPerfilActual(role) {
   if (dataSource === 'mock') {
@@ -28,5 +30,6 @@ export async function obtenerPerfilActual(role) {
     return { ...usuario }
   }
 
-  return apiRequest(apiEndpoints.profile)
+  const currentUser = getCurrentUser()
+  return currentUser ? mapUser(currentUser) : mapUser(await apiRequest(apiEndpoints.profile))
 }

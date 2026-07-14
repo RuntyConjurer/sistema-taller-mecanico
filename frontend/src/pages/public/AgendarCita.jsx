@@ -30,6 +30,23 @@ const steps = [
   { title: 'Contacto', summary: 'Cómo confirmarte' },
 ]
 
+const bookingApiFields = {
+  tipoCliente: 'tipoCliente',
+  tipoIdentificacion: 'tipoIdentificacion',
+  identificacion: 'documento',
+  nombre: 'nombre',
+  telefono: 'telefono',
+  email: 'email',
+  chasis: 'chasis',
+  marca: 'marca',
+  modelo: 'modelo',
+  placa: 'placa',
+  anio: 'anio',
+  sucursalId: 'sucursal',
+  fechaCita: 'fecha',
+  servicioId: 'servicio',
+}
+
 function BookingField({ id, label, error, children }) {
   return (
     <div className="space-y-2">
@@ -94,7 +111,15 @@ function AgendarCita() {
 
   function handleChange(event) {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
+    setForm((current) => {
+      const next = { ...current, [name]: value }
+      if (name === 'tipoCliente' && value === 'EMPRESA') next.tipoIdentificacion = 'RNC'
+      if (name === 'tipoCliente' && value === 'PERSONA' && next.tipoIdentificacion === 'RNC') {
+        next.tipoIdentificacion = 'CEDULA'
+      }
+      if (name === 'tipoIdentificacion' && value === 'RNC') next.tipoCliente = 'EMPRESA'
+      return next
+    })
   }
 
   function inputProps(name) {
@@ -123,11 +148,25 @@ function AgendarCita() {
     if (!bookingSteps.flat().every((field) => validate(field))) return
     setIsSubmitting(true)
     try {
-      const appointment = await crearSolicitudCita(form)
+      const selectedService = (servicios || []).find((item) => item.slug === form.servicio)
+      const appointment = await crearSolicitudCita({
+        ...form,
+        servicioId: selectedService?.id,
+        servicioNombre: selectedService?.nombre,
+      })
       window.sessionStorage.removeItem('sgtra-booking-draft')
       setSubmitted(appointment)
     } catch (error) {
-      setErrors({ form: error.message || 'No fue posible preparar la solicitud.' })
+      const fieldErrors = Object.entries(error.fieldErrors || {}).reduce((result, [key, value]) => {
+        const simpleKey = key.split('.').at(-1)
+        const field = bookingApiFields[simpleKey]
+        if (field) result[field] = value
+        return result
+      }, {})
+      setErrors({
+        ...fieldErrors,
+        form: error.message || 'No fue posible preparar la solicitud.',
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -344,6 +383,23 @@ function ScheduleStep({ errors, inputProps, sucursales }) {
 function ContactStep({ errors, inputProps }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
+      <BookingField id="tipoCliente" label="Tipo de cliente" error={errors.tipoCliente}>
+        <Select {...inputProps('tipoCliente')}>
+          <option value="PERSONA">Persona</option>
+          <option value="EMPRESA">Empresa</option>
+        </Select>
+      </BookingField>
+      <BookingField
+        id="tipoIdentificacion"
+        label="Tipo de identificación"
+        error={errors.tipoIdentificacion}
+      >
+        <Select {...inputProps('tipoIdentificacion')}>
+          <option value="CEDULA">Cédula</option>
+          <option value="PASAPORTE">Pasaporte</option>
+          <option value="RNC">RNC</option>
+        </Select>
+      </BookingField>
       <BookingField id="nombre" label="Nombre completo" error={errors.nombre}>
         <Input {...inputProps('nombre')} autoComplete="name" />
       </BookingField>
