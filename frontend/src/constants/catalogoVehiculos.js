@@ -47,7 +47,6 @@ export const modelosPorMarca = {
     'Altima',
     'Frontier',
     'Kicks',
-    'Murano',
     'Pathfinder',
     'Sentra',
     'Versa',
