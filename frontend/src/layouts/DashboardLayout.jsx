@@ -45,6 +45,8 @@ const iconMap = {
 }
 
 function buildMenuGroups(items) {
+  // Recibe los modulos permitidos por rol y los organiza en secciones visuales del
+  // sidebar; tambien asigna el icono que corresponde a cada ruta.
   return ['Operación', 'Clientes', 'Inventario', 'Administración']
     .map((label) => ({
       label,
@@ -60,6 +62,8 @@ function buildMenuGroups(items) {
 }
 
 function resolveBreadcrumbs(pathname) {
+  // Traduce la URL actual a migas de pan simples para orientar al usuario dentro
+  // del panel interno.
   if (pathname === '/app' || pathname === '/app/') {
     return [{ label: 'Dashboard' }]
   }
@@ -118,6 +122,8 @@ function DashboardLayout() {
   const navigate = useNavigate()
   const role = getRole() || 'RECEPCIONISTA'
   const activeRole = demoRoles[role] || demoRoles.RECEPCIONISTA
+  // El rol no solo cambia el texto del usuario: tambien decide que modulos se
+  // dibujan en el menu y si la URL actual esta permitida.
   const visibleItems = useMemo(() => menuItems.filter((item) => item.roles.includes(role)), [role])
   const menuGroups = useMemo(() => buildMenuGroups(visibleItems), [visibleItems])
   const breadcrumbs = useMemo(() => resolveBreadcrumbs(location.pathname), [location.pathname])
@@ -128,6 +134,8 @@ function DashboardLayout() {
   visibleItems.some((item) => item.path === location.pathname)
 
   function cambiarSucursal(id) {
+    // Se actualiza el estado de React y tambien la sesion local, para conservar
+    // la sucursal activa aunque el usuario navegue o recargue la pagina.
     setSucursalId(id)
     setBranchId(id)
   }
@@ -138,6 +146,8 @@ function DashboardLayout() {
   }
 
   useEffect(() => {
+    // Cerrar el sidebar con Escape mejora la navegacion por teclado en pantallas
+    // pequenas y limpia el listener al desmontar el layout.
     function closeOnEscape(event) {
       if (event.key === 'Escape') setMobileOpen(false)
     }

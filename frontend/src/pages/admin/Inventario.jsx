@@ -19,6 +19,8 @@ const categoriaLabels = {
 
 function Inventario() {
   const [selected, setSelected] = useState(null)
+  // Materiales y movimientos se piden en paralelo porque alimentan pestanas de la
+  // misma pantalla y no dependen uno del otro.
   const { data, isLoading, error } = useAsyncData(async () => {
     const [materiales, movimientos] = await Promise.all([listarMateriales(), listarMovimientos()])
     return { materiales, movimientos }
@@ -28,6 +30,8 @@ function Inventario() {
   const movimientos = data?.movimientos ?? []
 
   // Mismo cálculo que la vista vw_estado_inventario de PostgreSQL.
+  // Estas columnas se guardan como objetos para reutilizarlas en varias pestanas
+  // sin duplicar renderizadores ni etiquetas.
   const stockColumn = {
     key: 'estado',
     label: 'Estado',

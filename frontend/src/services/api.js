@@ -16,6 +16,8 @@ export async function apiRequest(path, options = {}) {
     throw new Error('Endpoint de API no configurado.')
   }
 
+  // fetch es la llamada HTTP nativa del navegador. Aqui se centralizan headers,
+  // URL base y opciones para que cada service no repita la misma configuracion.
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -25,6 +27,8 @@ export async function apiRequest(path, options = {}) {
   })
 
   if (!response.ok) {
+    // El backend devuelve errores con estructura conocida; se copian al Error para
+    // que las pantallas puedan mostrar mensajes y errores por campo si aplica.
     const payload = await response.json().catch(() => null)
     const error = new Error(payload?.error?.message || `Error de API: ${response.status}`)
     error.code = payload?.error?.code || response.status
@@ -32,6 +36,8 @@ export async function apiRequest(path, options = {}) {
     throw error
   }
 
+  // La API puede devolver { data: ... }; si no viene asi, se retorna el payload tal
+  // cual para mantener compatibilidad durante la integracion.
   const payload = await response.json().catch(() => null)
   return payload?.data ?? payload
 }

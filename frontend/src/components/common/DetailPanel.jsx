@@ -9,6 +9,8 @@ function DetailPanel({ title, subtitle, open, onClose, children }) {
 
   useEffect(() => {
     if (!open) return undefined
+    // Al abrir, se guarda el foco anterior, se enfoca el boton de cerrar y se
+    // atrapa Tab dentro del panel para que el usuario no "salte" al fondo.
     previousFocusRef.current = document.activeElement
     closeRef.current?.focus()
 
@@ -37,6 +39,7 @@ function DetailPanel({ title, subtitle, open, onClose, children }) {
     document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      // Al cerrar, el foco vuelve al elemento que estaba activo antes del panel.
       previousFocusRef.current?.focus?.()
     }
   }, [open, onClose])
@@ -45,6 +48,7 @@ function DetailPanel({ title, subtitle, open, onClose, children }) {
 
   return (
     <>
+      {/* Capa de fondo: oscurece la pantalla y permite cerrar haciendo clic fuera. */}
       <button
         type="button"
         className="fixed inset-0 z-50 cursor-default bg-foreground/35"
@@ -76,6 +80,7 @@ function DetailPanel({ title, subtitle, open, onClose, children }) {
             <X className="h-4 w-4" />
           </Button>
         </div>
+        {/* children permite que cada modulo coloque aqui su propio contenido de detalle. */}
         <div className="h-full overflow-y-auto p-5">{children}</div>
       </aside>
     </>

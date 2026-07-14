@@ -1,4 +1,6 @@
 function BarChart({ title, data, description }) {
+  // Se usa el valor maximo como referencia para convertir cada dato en porcentaje
+  // de ancho; no depende de una libreria externa de graficos.
   const max = Math.max(...data.map((item) => item.value))
   return (
     <section className="chart-surface" aria-labelledby={title.replaceAll(' ', '-')}>
@@ -38,6 +40,8 @@ function LineChart({
   description,
   labels = data.map((_, index) => `Día ${index + 1}`),
 }) {
+  // Los puntos SVG se calculan en un viewBox 0-100. Asi la grafica escala con el
+  // contenedor sin recalcular pixeles reales.
   const max = Math.max(...data)
   const min = Math.min(...data)
   const points = data

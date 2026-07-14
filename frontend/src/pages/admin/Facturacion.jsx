@@ -20,6 +20,8 @@ import { usingMocks } from '@/services/dataSource'
 
 function Facturacion() {
   const [selected, setSelected] = useState(null)
+  // draft guarda la factura que se esta preparando; payment guarda el formulario
+  // independiente de pago. Separarlos evita mezclar dos flujos distintos.
   const [draft, setDraft] = useState({ ordenId: '', items: [] })
   const [payment, setPayment] = useState({ facturaId: '', monto: '' })
   const [feedback, setFeedback] = useState('')
@@ -45,6 +47,8 @@ function Facturacion() {
   const ordenes = data?.ordenes ?? []
   const servicios = data?.servicios ?? []
 
+  // Total derivado de los servicios seleccionados. No se guarda como estado porque
+  // debe recalcularse automaticamente cuando cambia el detalle.
   const draftTotal = useMemo(
     () =>
       (data?.servicios ?? [])
@@ -54,6 +58,7 @@ function Facturacion() {
   )
 
   function toggleItem(id) {
+    // Alterna un servicio dentro del detalle facturable sin mutar el arreglo actual.
     setDraft((current) => ({
       ...current,
       items: current.items.includes(id)
@@ -64,6 +69,8 @@ function Facturacion() {
 
   function prepareInvoice(event) {
     event.preventDefault()
+    // En esta etapa solo se prepara la vista previa; emitir la factura real queda
+    // reservado al endpoint del backend.
     setFeedback('')
     setError('')
     if (!draft.ordenId || !draft.items.length) {
@@ -77,6 +84,8 @@ function Facturacion() {
 
   async function applyPayment(event) {
     event.preventDefault()
+    // registrarPago valida reglas de negocio en mockStore o delega la operacion a
+    // la API cuando se conecte el backend.
     setFeedback('')
     setError('')
     if (!payment.facturaId || !payment.monto) {

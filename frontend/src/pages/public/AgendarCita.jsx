@@ -47,6 +47,8 @@ function BookingField({ id, label, error, children }) {
 function AgendarCita() {
   const [params] = useSearchParams()
   const [step, setStep] = useState(0)
+  // El formulario mezcla valores iniciales, borrador guardado y un posible
+  // servicio recibido por query string: /agendar-cita?servicio=slug.
   const [form, setForm] = useState(() => ({
     ...bookingInitialForm,
     ...loadBookingDraft(),
@@ -62,12 +64,18 @@ function AgendarCita() {
   const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
 
   useEffect(() => {
+    // Cada cambio del formulario se persiste como borrador para no perder avance
+    // si el usuario navega dentro de la app antes de terminar.
     window.sessionStorage.setItem('sgtra-booking-draft', JSON.stringify(form))
   }, [form])
   useEffect(() => {
+    // Al cambiar de paso, el titulo recibe foco para orientar a usuarios de teclado
+    // o lectores de pantalla.
     headingRef.current?.focus()
   }, [step, submitted])
 
+  // Resumen lateral derivado del formulario. No se guarda aparte porque siempre se
+  // puede calcular desde form y catalogos.
   const summary = useMemo(
     () => [
       form.marca ? `${form.marca} ${form.modelo}` : 'Pendiente',
@@ -90,6 +98,8 @@ function AgendarCita() {
   }
 
   function inputProps(name) {
+    // Centraliza las props comunes de todos los inputs: valor, cambio, validacion
+    // al salir del campo y atributos ARIA para errores.
     return {
       id: name,
       name,
@@ -102,12 +112,14 @@ function AgendarCita() {
   }
 
   function next() {
+    // Cada paso valida solo sus campos antes de permitir avanzar.
     const valid = bookingSteps[step].every((field) => validate(field))
     if (valid) setStep((current) => current + 1)
   }
 
   async function submit(event) {
     event.preventDefault()
+    // En el envio final se valida todo el formulario, no solo el paso visible.
     if (!bookingSteps.flat().every((field) => validate(field))) return
     setIsSubmitting(true)
     try {

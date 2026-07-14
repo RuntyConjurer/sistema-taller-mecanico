@@ -14,6 +14,8 @@ import { usingMocks } from '@/services/dataSource'
 
 function Citas() {
   const { sucursalId } = useOutletContext()
+  // selected controla la fila marcada y el DetailPanel; feedback/error muestran el
+  // resultado de acciones del usuario sin mezclarlo con errores de carga.
   const [selected, setSelected] = useState(null)
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
@@ -27,6 +29,8 @@ function Citas() {
   } = useAsyncData(() => listarCitas(sucursalId), [sucursalId])
 
   async function changeStatus(estado) {
+    // Cambiar estado siempre pasa por el service; asi la pantalla no necesita saber
+    // si esta usando mockStore o API real.
     setFeedback('')
     setError('')
     if (!selected) {
@@ -48,6 +52,8 @@ function Citas() {
   }
 
   async function convertToWorkOrder() {
+    // Esta accion conecta el flujo de agenda con ordenes de trabajo: una cita valida
+    // puede transformarse en una OT.
     setFeedback('')
     setError('')
     if (!selected) {

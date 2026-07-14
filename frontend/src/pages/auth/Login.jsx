@@ -14,6 +14,8 @@ function Login() {
   const [role, setRole] = useState('RECEPCIONISTA')
 
   // Si el guard interceptó una ruta, se vuelve a ella tras entrar.
+  // Si RequireSession redirigio hacia login, location.state.from guarda la ruta
+  // original para devolver al usuario al modulo que intento abrir.
   const destino = location.state?.from || '/app'
 
   function handleSubmit(event) {
@@ -22,6 +24,8 @@ function Login() {
     // El retardo imita la espera de una petición real. Cuando exista el backend,
     // aquí se llamará a POST /api/v1/sesiones y se guardará el token que devuelva.
     window.setTimeout(() => {
+      // startSession guarda el rol en sessionStorage; DashboardLayout lo lee para
+      // mostrar u ocultar modulos segun permisos de demostracion.
       startSession(role)
       navigate(destino, { replace: true })
     }, 500)

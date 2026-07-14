@@ -10,6 +10,8 @@ import { sintomasFrecuentes } from '@/data/mocks/contenidoWeb.mock'
 const symptomIcons = [ThermometerSnowflake, Gauge, Wrench, ThermometerSnowflake]
 
 function Home() {
+  // La home reutiliza los mismos services que el panel interno. Asi el catalogo
+  // publico y el administrativo leen la misma fuente de datos.
   const { data: servicios } = useAsyncData(() => listarServicios(), [])
   const { data: sucursales } = useAsyncData(() => listarSucursales(), [])
 
@@ -51,6 +53,7 @@ function Home() {
           </div>
           <div className="mt-10 grid border-l border-t border-border sm:grid-cols-2 lg:grid-cols-4">
             {sintomasFrecuentes.map((symptom, index) => {
+              // Cada sintoma se convierte en una tarjeta enlazada al flujo de cita.
               const Icon = symptomIcons[index]
               return (
                 <Link
@@ -105,6 +108,7 @@ function Home() {
           </div>
           <div className="mt-10 divide-y divide-border border-y border-border">
             {(servicios || []).map((service, index) => (
+              // El slug es estable para la URL publica del detalle del servicio.
               <Link
                 key={service.id}
                 to={`/servicios/${service.slug}`}

@@ -54,6 +54,8 @@ function OrdenesTrabajo() {
   const facturas = data?.facturas ?? []
   const historial = data?.historial ?? []
 
+  // La lista filtrada es dato derivado: depende de las ordenes cargadas y del
+  // estado elegido en el select.
   const filtered = useMemo(() => {
     const ordenes = data?.ordenes ?? []
     if (estadoFiltro === 'TODOS') return ordenes
@@ -61,9 +63,13 @@ function OrdenesTrabajo() {
   }, [estadoFiltro, data])
   const orden = selected || filtered[0]
   const factura = facturas.find((item) => item.ordenId === orden?.id)
+  // Regla visual del SRS: solo se habilita cerrar cuando hay diagnostico y factura
+  // pagada. El backend debe repetir esta validacion.
   const canClose = Boolean(orden?.diagnosticoRegistrado && factura?.estado === 'PAGADA')
 
   async function closeOrder() {
+    // El cierre se delega al service para que la regla del mock y la API compartan
+    // el mismo punto de entrada desde la interfaz.
     if (!orden) return
     setError('')
     setFeedback('')

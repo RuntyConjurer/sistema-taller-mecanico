@@ -5,6 +5,8 @@ export const bookingSteps = [
   ['nombre', 'documento', 'telefono'],
 ]
 
+// Forma completa del formulario. Tener todas las llaves desde el inicio evita
+// inputs "sin controlar" en React y facilita guardar/restaurar el borrador.
 export const bookingInitialForm = {
   marca: '',
   modelo: '',
@@ -45,6 +47,8 @@ export function validateBookingField(name, value) {
 
 export function loadBookingDraft() {
   try {
+    // El borrador vive en sessionStorage: se conserva al navegar dentro de la
+    // pestana, pero se limpia al cerrar la sesion del navegador.
     const saved = window.sessionStorage.getItem('sgtra-booking-draft')
     return saved ? { ...bookingInitialForm, ...JSON.parse(saved) } : bookingInitialForm
   } catch {

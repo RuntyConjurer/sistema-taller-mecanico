@@ -27,6 +27,8 @@ function levelPercent(stockActual, stockMinimo) {
 }
 
 function Refrigerantes() {
+  // consumo representa el formulario de recarga: orden asociada, refrigerante y
+  // cantidad usada.
   const [consumo, setConsumo] = useState({ ordenId: '', refrigeranteId: '', cantidad: '' })
   const [feedback, setFeedback] = useState('')
   const [error, setError] = useState('')
@@ -50,6 +52,8 @@ function Refrigerantes() {
 
   async function submit(event) {
     event.preventDefault()
+    // La pantalla hace una validacion basica para dar respuesta inmediata; el
+    // trigger de inventario en backend debe validar el stock definitivo.
     setFeedback('')
     setError('')
     if (!consumo.ordenId || !consumo.refrigeranteId || !consumo.cantidad) {
@@ -82,6 +86,8 @@ function Refrigerantes() {
       />
       <div className="grid gap-4 md:grid-cols-2">
         {refrigerantes.map((item) => {
+          // Cada tarjeta calcula su estado desde stock actual y minimo, el mismo
+          // criterio usado por Inventario.
           const percent = levelPercent(item.stockActual, item.stockMinimo)
           const estado = getStockState(item.stockActual, item.stockMinimo)
           return (

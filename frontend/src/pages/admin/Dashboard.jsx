@@ -23,6 +23,8 @@ const statIcons = {
 }
 
 function Dashboard() {
+  // DashboardLayout envia sucursalId por Outlet context; aqui se usa para pedir
+  // solo el resumen operativo de la sucursal activa.
   const { sucursalId } = useOutletContext()
   const {
     data: resumen,
@@ -43,6 +45,8 @@ function Dashboard() {
 
       <div className="grid gap-px border-y border-border sm:grid-cols-2 xl:grid-cols-3">
         {resumen.stats.map((stat) => (
+          // Cada stat trae una key; esa key selecciona el icono y mantiene los datos
+          // separados de la presentacion visual.
           <StatCard
             key={stat.key}
             title={stat.title}
