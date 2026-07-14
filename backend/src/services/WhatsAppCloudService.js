@@ -12,10 +12,12 @@ class WhatsAppCloudService {
     this.config = config;
     this.fetch = fetchImpl;
     this.allowedTemplates = parseAllowedTemplates(config.allowedTemplates);
+    this.statusCache = { value: null, expiresAt: 0 };
   }
 
-  getPublicStatus() {
-    return {
+  async getPublicStatus() {
+    if (this.statusCache.expiresAt > Date.now()) return this.statusCache.value;
+    const status = {
       enabled: this.config.enabled,
       configured: this.isConfigured(),
       businessNumber: this.config.businessNumber || null,
@@ -23,10 +25,28 @@ class WhatsAppCloudService {
       defaultLanguage: this.config.defaultLanguage,
       allowedTemplates: [...this.allowedTemplates.entries()].map(([name, languages]) => ({ name, languages: [...languages] })),
     };
+    if (!status.configured) {
+      return this.cacheStatus({ ...status, connected: false, connectionError: 'WHATSAPP_NOT_CONFIGURED' });
+    }
+    try {
+      return this.cacheStatus({ ...status, ...(await this.verifyConnection()) });
+    } catch (error) {
+      return this.cacheStatus({
+        ...status,
+        connected: false,
+        connectionError: error.code || 'WHATSAPP_UNAVAILABLE',
+        checkedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  cacheStatus(value) {
+    this.statusCache = { value, expiresAt: Date.now() + 30_000 };
+    return value;
   }
 
   isConfigured() {
-    const required = ['accessToken', 'appSecret', 'phoneNumberId', 'verifyToken'];
+    const required = ['accessToken', 'appId', 'appSecret', 'phoneNumberId', 'wabaId', 'verifyToken'];
     return Boolean(this.config.enabled && required.every((field) => this.config[field]));
   }
 
@@ -48,6 +68,60 @@ class WhatsAppCloudService {
     const expected = crypto.createHmac('sha256', this.config.appSecret).update(rawBody).digest();
     const received = Buffer.from(match[1], 'hex');
     return received.length === expected.length && crypto.timingSafeEqual(received, expected);
+  }
+
+  normalizePhone(value) {
+    return normalizePhone(value);
+  }
+
+  async verifyConnection() {
+    this.assertConfigured();
+    const phoneNumberId = validateNumericId(this.config.phoneNumberId, 'WHATSAPP_PHONE_NUMBER_ID');
+    const wabaId = validateNumericId(this.config.wabaId, 'WHATSAPP_WABA_ID');
+    const phone = await this.graphGet(`${phoneNumberId}?fields=display_phone_number,verified_name,quality_rating`);
+    const [templatesResult, subscriptionsResult] = await Promise.allSettled([
+      this.graphGet(`${wabaId}/message_templates?fields=name,status,language&limit=100`),
+      this.graphGet(`${wabaId}/subscribed_apps`),
+    ]);
+    const templates = templatesResult.status === 'fulfilled' ? templatesResult.value.data || [] : null;
+    const subscriptions = subscriptionsResult.status === 'fulfilled' ? subscriptionsResult.value.data || [] : null;
+    const template = templates?.find((item) => (
+      item.name === this.config.defaultTemplate && item.language === this.config.defaultLanguage
+    ));
+    const subscribed = subscriptions?.some((item) => String(item.id) === String(this.config.appId));
+    return {
+      connected: true,
+      displayPhoneNumber: phone.display_phone_number || this.config.businessNumber || null,
+      verifiedName: phone.verified_name || null,
+      qualityRating: phone.quality_rating || null,
+      templateReady: templates ? template?.status === 'APPROVED' : null,
+      templateStatus: templates ? template?.status || 'NOT_FOUND' : 'UNKNOWN',
+      webhookSubscribed: subscriptions ? subscribed : null,
+      checkedAt: new Date().toISOString(),
+    };
+  }
+
+  async graphGet(path) {
+    const version = validateGraphVersion(this.config.graphVersion);
+    let response;
+    try {
+      response = await this.fetch(`${GRAPH_API_ORIGIN}/${version}/${path}`, {
+        method: 'GET',
+        redirect: 'error',
+        signal: AbortSignal.timeout(normalizeTimeout(this.config.timeoutMs)),
+        headers: { Authorization: `Bearer ${this.config.accessToken}` },
+      });
+    } catch (error) {
+      const timeout = error.name === 'TimeoutError' || error.name === 'AbortError';
+      throw new AppError(
+        timeout ? 504 : 502,
+        timeout ? 'WHATSAPP_TIMEOUT' : 'WHATSAPP_UNAVAILABLE',
+        timeout ? 'Meta no respondió dentro del tiempo esperado.' : 'No fue posible conectar con WhatsApp.',
+      );
+    }
+    const payload = await parseJson(response);
+    if (!response.ok) throw metaError(payload);
+    return payload;
   }
 
   async sendTemplate({ to, templateName, languageCode, parameters = [] }) {
@@ -93,13 +167,7 @@ class WhatsAppCloudService {
     }
 
     const payload = await parseJson(response);
-    if (!response.ok) {
-      const metaCode = payload?.error?.code ? String(payload.error.code) : 'UNKNOWN';
-      const message = payload?.error?.message || 'Meta rechazó la solicitud de WhatsApp.';
-      const error = new AppError(502, 'WHATSAPP_META_ERROR', message);
-      error.metaCode = metaCode;
-      throw error;
-    }
+    if (!response.ok) throw metaError(payload);
 
     const messageId = payload?.messages?.[0]?.id;
     if (!messageId) throw new AppError(502, 'WHATSAPP_INVALID_RESPONSE', 'Meta no devolvió el identificador del mensaje.');
@@ -185,6 +253,17 @@ function safeEqualText(received, expected) {
 
 async function parseJson(response) {
   try { return await response.json(); } catch { return {}; }
+}
+
+function metaError(payload) {
+  const metaCode = payload?.error?.code ? String(payload.error.code) : 'UNKNOWN';
+  const code = metaCode === '190' ? 'WHATSAPP_TOKEN_INVALID' : 'WHATSAPP_META_ERROR';
+  const message = metaCode === '190'
+    ? 'El token de acceso de WhatsApp no es válido o expiró.'
+    : payload?.error?.message || 'Meta rechazó la solicitud de WhatsApp.';
+  const error = new AppError(502, code, message);
+  error.metaCode = metaCode;
+  return error;
 }
 
 module.exports = {

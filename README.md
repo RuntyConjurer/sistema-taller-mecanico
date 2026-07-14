@@ -57,10 +57,10 @@ npm run dev
 
 Este comando inicia ambos procesos:
 
-- Frontend React/Vite: [http://localhost:5173](http://localhost:5173)
-- Backend Express: [http://localhost:3000/api/v1/ready](http://localhost:3000/api/v1/ready)
+- Frontend React/Vite: [http://localhost:5180](http://localhost:5180)
+- Backend Express: [http://localhost:3100/api/v1/ready](http://localhost:3100/api/v1/ready)
 
-Vite envía automáticamente `/api/*` al backend en el puerto `3000`. El origen de datos predeterminado es `api`; los registros se escriben en PostgreSQL.
+Vite envía automáticamente `/api/*` al backend en el puerto `3100`. El origen de datos predeterminado es `api`; los registros se escriben en PostgreSQL.
 
 ## Nginx opcional
 
@@ -68,8 +68,8 @@ La plantilla [nginx/sgtra.local.conf](nginx/sgtra.local.conf) expone todo en [ht
 
 ```text
 Navegador :8080
-├── /api/* → Express :3000 → PostgreSQL
-└── /*      → Vite :5173
+├── /api/* → Express :3100 → PostgreSQL
+└── /*      → Vite :5180
 ```
 
 Copie esa configuración en el directorio de sitios de Nginx y recargue el servicio después de iniciar `npm run dev`.

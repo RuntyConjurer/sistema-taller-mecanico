@@ -8,7 +8,7 @@ class WhatsAppUseCase {
     this.cloudService = cloudService;
   }
 
-  status() {
+  async status() {
     return this.cloudService.getPublicStatus();
   }
 
@@ -39,8 +39,14 @@ class WhatsAppUseCase {
   }
 
   async sendTest(input, user) {
-    const phone = input?.telefono || this.cloudService.config.testRecipient;
-    if (!phone) throw new AppError(422, 'WHATSAPP_TEST_RECIPIENT_REQUIRED', 'Configura o indica el destinatario de prueba.');
+    const configuredPhone = this.cloudService.config.testRecipient;
+    if (!configuredPhone) {
+      throw new AppError(422, 'WHATSAPP_TEST_RECIPIENT_REQUIRED', 'Configura el destinatario autorizado para pruebas.');
+    }
+    const phone = input?.telefono || configuredPhone;
+    if (this.cloudService.normalizePhone(phone) !== this.cloudService.normalizePhone(configuredPhone)) {
+      throw new AppError(403, 'WHATSAPP_TEST_RECIPIENT_FORBIDDEN', 'Las pruebas solo pueden enviarse al destinatario autorizado en el servidor.');
+    }
     return this.sendAndTrack({
       phone,
       templateName: input?.templateName,
@@ -57,6 +63,17 @@ class WhatsAppUseCase {
     }
     if (!appointment.cliente.telefono) {
       throw new AppError(422, 'WHATSAPP_PHONE_REQUIRED', 'El cliente no tiene un teléfono registrado.');
+    }
+    if (this.cloudService.config.testMode) {
+      if (!this.cloudService.config.testRecipient) {
+        throw new AppError(503, 'WHATSAPP_TEST_RECIPIENT_REQUIRED', 'Falta configurar el destinatario autorizado de Meta.');
+      }
+      if (
+        this.cloudService.normalizePhone(appointment.cliente.telefono) !==
+          this.cloudService.normalizePhone(this.cloudService.config.testRecipient)
+      ) {
+        throw new AppError(409, 'WHATSAPP_TEST_RECIPIENT_ONLY', 'En modo de prueba, Meta solo permite notificar al destinatario autorizado.');
+      }
     }
     return this.sendAndTrack({
       phone: appointment.cliente.telefono,

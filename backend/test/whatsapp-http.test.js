@@ -15,18 +15,26 @@ function appWithWhatsApp() {
   const repository = {
     processWebhook: async (payload) => ({ messages: payload.entry?.length || 0, statuses: 0 }),
   };
+  const fakeFetch = async (url) => {
+    if (url.includes('message_templates')) return { ok: true, json: async () => ({ data: [{ name: 'hello_world', language: 'en_US', status: 'APPROVED' }] }) };
+    if (url.includes('subscribed_apps')) return { ok: true, json: async () => ({ data: [{ id: '1108083291668139' }] }) };
+    return { ok: true, json: async () => ({ display_phone_number: '+1 555-655-2000', verified_name: 'SGTRA', quality_rating: 'GREEN' }) };
+  };
   const service = new WhatsAppCloudService({
     enabled: true,
     accessToken: 'token-de-prueba',
+    appId: '1108083291668139',
     appSecret: 'app-secret-de-prueba',
     phoneNumberId: '1148119201719935',
+    wabaId: '2245119546238685',
+    testRecipient: '18297559416',
     verifyToken: 'verify-token-de-prueba',
     graphVersion: 'v23.0',
     defaultTemplate: 'hello_world',
     defaultLanguage: 'en_US',
     allowedTemplates: ['hello_world:en_US'],
     timeoutMs: 8000,
-  });
+  }, fakeFetch);
   const container = buildContainer();
   container.whatsappController = new WhatsAppController(new WhatsAppUseCase(repository, service));
   return createApp({ container });

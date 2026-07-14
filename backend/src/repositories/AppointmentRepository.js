@@ -37,6 +37,13 @@ class AppointmentRepository {
           whatsappOptInSource: acceptsWhatsApp ? 'AGENDA_PUBLICA' : null,
         }, { transaction });
       } else if (acceptsWhatsApp && !cliente.whatsappOptIn) {
+        if (phoneDigits(cliente.telefono) !== phoneDigits(payload.cliente.telefono)) {
+          throw new AppError(
+            409,
+            'CLIENT_CONTACT_MISMATCH',
+            'El teléfono no coincide con el cliente registrado. El personal del taller debe verificar el consentimiento.',
+          );
+        }
         await cliente.update({
           whatsappOptIn: true,
           whatsappOptInAt: new Date(),
@@ -90,6 +97,11 @@ class AppointmentRepository {
       return order;
     });
   }
+}
+
+function phoneDigits(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  return /^(809|829|849)\d{7}$/.test(digits) ? `1${digits}` : digits;
 }
 
 module.exports = { AppointmentRepository };

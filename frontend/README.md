@@ -15,7 +15,8 @@ La configuración integrada es:
 ```dotenv
 VITE_DATA_SOURCE=api
 VITE_API_BASE_URL=
-VITE_DEV_API_URL=http://localhost:3000
+VITE_DEV_API_URL=http://localhost:3100
+VITE_DEV_PORT=5180
 ```
 
 Con la base vacía, las solicitudes usan `/api/*` y Vite las redirige a Express. El modo `mock` existe únicamente para trabajo aislado y no conserva cambios.

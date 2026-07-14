@@ -20,6 +20,7 @@ WHATSAPP_PHONE_NUMBER_ID=SU_PHONE_NUMBER_ID
 WHATSAPP_WABA_ID=SU_WABA_ID
 WHATSAPP_BUSINESS_NUMBER=15556552000
 WHATSAPP_TEST_RECIPIENT=18297559416
+WHATSAPP_TEST_MODE=true
 WHATSAPP_VERIFY_TOKEN=UN_VALOR_ALEATORIO_LARGO
 WHATSAPP_GRAPH_VERSION=v23.0
 WHATSAPP_TEMPLATE_NAME=hello_world
@@ -28,6 +29,8 @@ WHATSAPP_ALLOWED_TEMPLATES=hello_world:en_US
 ```
 
 `WHATSAPP_VERIFY_TOKEN` lo define el equipo; no lo entrega Meta. Debe ser largo y distinto de la clave de la aplicación. `.env` está ignorado por Git y no debe compartirse.
+
+Mientras `WHATSAPP_TEST_MODE=true`, la API rechaza cualquier salida que no vaya al destinatario aprobado en Meta. Cambie a `false` únicamente al registrar un número comercial y completar la configuración de producción.
 
 Reinicie la API y el frontend para aplicar las variables:
 
@@ -93,6 +96,8 @@ La agenda solicita autorización opcional y no preseleccionada. Sin ese consenti
 6. Verificar que el webhook actualiza `ENVIADO`, `ENTREGADO` o `LEIDO`.
 
 El entorno de prueba de Meta solo entrega mensajes a destinatarios previamente aprobados. Un `wamid` confirma aceptación por Meta, no entrega ni lectura; esos estados llegan después por webhook.
+
+`GET /api/v1/whatsapp/estado` distingue variables completas (`configured`) de token vigente (`connected`), plantilla aprobada (`templateReady`) y suscripción del webhook (`webhookSubscribed`). La comprobación se conserva durante 30 segundos para evitar llamadas innecesarias a Meta.
 
 ## 6. Seguridad
 

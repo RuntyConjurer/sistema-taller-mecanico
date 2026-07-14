@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, RefreshCw } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
 import DataTable from '@/components/common/DataTable'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,11 @@ import { getStateMeta } from '@/constants/domainStates'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { actualizarEstadoCita, convertirCitaEnOrden, listarCitas } from '@/services/citasService'
 import { usingMocks } from '@/services/dataSource'
-import { enviarNotificacionCita, obtenerEstadoWhatsApp } from '@/services/whatsappService'
+import {
+  enviarNotificacionCita,
+  listarMensajesCita,
+  obtenerEstadoWhatsApp,
+} from '@/services/whatsappService'
 
 function Citas() {
   const { sucursalId, role } = useOutletContext()
@@ -36,10 +40,24 @@ function Citas() {
     isLoading: isLoadingWhatsApp,
     error: whatsappConfigurationError,
   } = useAsyncData(() => obtenerEstadoWhatsApp(), [])
+  const {
+    data: whatsappMessages,
+    isLoading: isLoadingMessages,
+    error: whatsappMessagesError,
+    reload: reloadWhatsAppMessages,
+  } = useAsyncData(() => listarMensajesCita(selected?.id), [selected?.id])
 
   const canNotifyByWhatsApp = ['ADMINISTRADOR', 'RECEPCIONISTA'].includes(role)
-  const whatsappAvailable = usingMocks || Boolean(whatsappConfiguration?.configured)
+  const whatsappAvailable = usingMocks || Boolean(
+    whatsappConfiguration?.configured &&
+    whatsappConfiguration?.connected !== false &&
+    whatsappConfiguration?.templateReady !== false,
+  )
   const isTestTemplate = whatsappConfiguration?.defaultTemplate === 'hello_world'
+  const latestPersistedMessage = whatsappMessages?.[0]
+  const latestMessage = latestPersistedMessage || (
+    Number(whatsappDelivery?.citaId) === Number(selected?.id) ? whatsappDelivery : null
+  )
 
   async function changeStatus(estado) {
     // Cambiar estado siempre pasa por el service; asi la pantalla no necesita saber
@@ -111,11 +129,13 @@ function Citas() {
 
     setIsSendingWhatsApp(true)
     try {
-      const delivery = await enviarNotificacionCita(selected.id, {
+      const appointmentId = selected.id
+      const delivery = await enviarNotificacionCita(appointmentId, {
         templateName: whatsappConfiguration?.defaultTemplate,
         languageCode: whatsappConfiguration?.defaultLanguage,
       })
-      setWhatsappDelivery(delivery)
+      setWhatsappDelivery({ ...delivery, citaId: Number(delivery.citaId || appointmentId) })
+      reloadWhatsAppMessages()
       setFeedback(
         usingMocks
           ? 'Notificación simulada; no se envió ningún mensaje.'
@@ -200,7 +220,9 @@ function Citas() {
         >
           {whatsappConfigurationError
             ? 'No se pudo consultar la conexión con WhatsApp.'
-            : 'WhatsApp no está configurado.'}
+            : whatsappConfiguration?.connected === false
+              ? 'WhatsApp está configurado, pero Meta rechazó o no pudo validar la conexión.'
+              : 'WhatsApp no está configurado.'}
         </p>
       ) : null}
       {error ? (
@@ -227,19 +249,40 @@ function Citas() {
             <dt className="font-medium">WhatsApp</dt>
             <dd>{selected?.whatsappOptIn ? 'Autorizado' : 'Sin autorización'}</dd>
           </div>
-          {whatsappDelivery ? (
+          {latestMessage ? (
             <>
               <div className="flex items-center justify-between gap-4 py-3">
                 <dt className="font-medium">Estado del mensaje</dt>
-                <dd className="technical-value">{whatsappDelivery.estado}</dd>
+                <dd className="technical-value">{latestMessage.estado}</dd>
               </div>
               <div className="flex items-center justify-between gap-4 py-3">
                 <dt className="font-medium">Plantilla</dt>
-                <dd className="technical-value">{whatsappDelivery.plantilla}</dd>
+                <dd className="technical-value">{latestMessage.plantilla || 'Sin plantilla'}</dd>
               </div>
             </>
           ) : null}
         </dl>
+        {!usingMocks && selected ? (
+          <div className="mt-4">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={reloadWhatsAppMessages}
+              disabled={isLoadingMessages}
+              aria-busy={isLoadingMessages}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              {isLoadingMessages ? 'Consultando…' : 'Actualizar estado'}
+            </Button>
+            <p className="mt-3 text-xs text-muted-foreground" role="status" aria-live="polite">
+              {whatsappMessagesError
+                ? `No se pudo consultar el historial: ${whatsappMessagesError}`
+                : latestMessage
+                  ? `Último estado registrado: ${latestMessage.estado}.`
+                  : 'Aún no hay mensajes registrados para esta cita.'}
+            </p>
+          </div>
+        ) : null}
         {usingMocks ? (
           <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
             Los cambios no se guardan fuera de esta sesión de demostración.
