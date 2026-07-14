@@ -22,6 +22,7 @@ import {
   loadBookingDraft,
   validateBookingField,
 } from '@/utils/bookingValidation'
+import { buildWhatsAppUrl } from '@/utils/whatsapp'
 
 const steps = [
   { title: 'Vehículo', summary: 'Identifica la unidad' },
@@ -189,9 +190,12 @@ function AgendarCita() {
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <a
               className="inline-flex min-h-11 items-center gap-2 bg-accent px-5 font-semibold"
-              href="https://wa.me/18095550142"
+              href={buildWhatsAppUrl(
+                `Hola, soy ${form.nombre}. Preparé una solicitud de cita en SGTRA para mi ${form.marca} ${form.modelo}. Quiero confirmar la disponibilidad.`,
+              )}
               target="_blank"
               rel="noreferrer"
+              aria-label="Confirmar solicitud de cita con SGTRA por WhatsApp"
             >
               <MessageCircle className="h-4 w-4" />
               Confirmar por WhatsApp
@@ -257,7 +261,16 @@ function AgendarCita() {
             {step === 2 && (
               <ScheduleStep errors={errors} inputProps={inputProps} sucursales={sucursales || []} />
             )}
-            {step === 3 && <ContactStep errors={errors} inputProps={inputProps} />}
+            {step === 3 && (
+              <ContactStep
+                errors={errors}
+                inputProps={inputProps}
+                whatsappOptIn={form.whatsappOptIn}
+                onWhatsAppOptInChange={(checked) =>
+                  setForm((current) => ({ ...current, whatsappOptIn: checked }))
+                }
+              />
+            )}
             {errors.form ? (
               <p className="mt-5 text-sm font-medium text-destructive" role="alert">
                 {errors.form}
@@ -380,7 +393,7 @@ function ScheduleStep({ errors, inputProps, sucursales }) {
   )
 }
 
-function ContactStep({ errors, inputProps }) {
+function ContactStep({ errors, inputProps, whatsappOptIn, onWhatsAppOptInChange }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       <BookingField id="tipoCliente" label="Tipo de cliente" error={errors.tipoCliente}>
@@ -417,6 +430,20 @@ function ContactStep({ errors, inputProps }) {
       <BookingField id="email" label="Correo (opcional)" error={errors.email}>
         <Input {...inputProps('email')} type="email" autoComplete="email" />
       </BookingField>
+      <label className="flex min-h-11 items-start gap-3 border-t border-border pt-4 sm:col-span-2">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+          checked={whatsappOptIn}
+          onChange={(event) => onWhatsAppOptInChange(event.target.checked)}
+        />
+        <span className="text-sm">
+          Acepto que SGTRA me contacte por WhatsApp únicamente sobre esta solicitud de cita.
+          <span className="mt-1 block text-xs text-muted-foreground">
+            Opcional. Puedo retirar esta autorización cuando lo solicite.
+          </span>
+        </span>
+      </label>
     </div>
   )
 }

@@ -30,6 +30,7 @@ La API responde `{ "data": ... }` en éxito y `{ "error": { "code", "message", "
 | RF-11 Historial | Historial por vehículo | `/api/v1/vehiculos/:id/historial` | `historial_tecnico`, `vw_historial_clinico_vehiculo` |
 | RF-12 Reportes | Dashboard y reportes | `/api/v1/dashboard`, `/api/v1/reportes/ingresos` | vistas `vw_*` y consultas agregadas |
 | Función principal: Cotizaciones | Cotizaciones | `/api/v1/cotizaciones` | `cotizaciones`, `cotizacion_detalles` |
+| Extra: WhatsApp | Consentimiento, envío y estados | `/api/v1/citas/:id/notificaciones/whatsapp`, `/api/v1/webhooks/whatsapp` | `clientes`, `whatsapp_mensajes` |
 
 ## Reglas y autoridad
 
@@ -52,4 +53,4 @@ La API responde `{ "data": ... }` en éxito y `{ "error": { "code", "message", "
 
 ## Límites declarados
 
-Los datos seed y las cuentas son demostrativos. WhatsApp Business y facturación electrónica son opciones de puntuación adicional, no requisitos obligatorios, y permanecen fuera de esta versión.
+Los datos seed y las cuentas son demostrativos. WhatsApp Cloud API es opcional y solo queda activa cuando el entorno contiene credenciales válidas de Meta; la facturación electrónica permanece fuera de esta versión.

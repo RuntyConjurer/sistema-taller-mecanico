@@ -9,6 +9,7 @@
 5. Entrar como `CAJERO`, emitir la factura y registrar el pago.
 6. Cerrar la OT y mostrar el nuevo evento en el historial del vehículo.
 7. Cambiar de sucursal para demostrar el aislamiento operativo.
+8. Como recepcionista, enviar la plantilla de prueba por WhatsApp y mostrar el estado recibido por webhook.
 
 ## Qué explicar mientras se presenta
 
@@ -42,5 +43,8 @@ El use case lo comprueba y un índice único en PostgreSQL actúa como última d
 **¿Cómo se demuestra el requisito de menos de tres segundos?**  
 Con un smoke test sobre los datos seed. Healthchecks ayudan a recuperar servicios, pero no demuestran matemáticamente el 99% de disponibilidad.
 
+**¿Cómo se protege la integración de WhatsApp?**
+El token y la clave de la aplicación existen solo en el backend. Meta firma cada webhook y la API valida esa firma sobre el cuerpo original antes de registrar estados.
+
 **¿Qué queda fuera?**  
-WhatsApp Business y facturación electrónica, marcados como opcionales por el SRS.
+Plantillas definitivas SGTRA, automatización de recordatorios y facturación electrónica. `hello_world` demuestra la conexión técnica; no representa una confirmación comercial.

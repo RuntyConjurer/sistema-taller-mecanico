@@ -16,8 +16,20 @@ class WorkshopRepository {
         const service = await Servicio.findOne({ where: { id: payload.cita.servicioId, activo: true }, transaction });
         if (!service) throw new AppError(422, 'SERVICE_NOT_AVAILABLE', 'El servicio seleccionado no está disponible.');
       }
+      const acceptsWhatsApp = payload.cliente.whatsappOptIn === true;
+      const clientData = { ...payload.cliente };
+      delete clientData.whatsappOptIn;
       let cliente = await Cliente.findOne({ where: { identificacion: payload.cliente.identificacion }, transaction, lock: transaction.LOCK.UPDATE });
-      if (!cliente) cliente = await Cliente.create(payload.cliente, { transaction });
+      if (!cliente) {
+        cliente = await Cliente.create({
+          ...clientData,
+          whatsappOptIn: acceptsWhatsApp,
+          whatsappOptInAt: acceptsWhatsApp ? new Date() : null,
+          whatsappOptInSource: acceptsWhatsApp ? 'AGENDA_PUBLICA' : null,
+        }, { transaction });
+      } else if (acceptsWhatsApp && !cliente.whatsappOptIn) {
+        await cliente.update({ whatsappOptIn: true, whatsappOptInAt: new Date(), whatsappOptInSource: 'AGENDA_PUBLICA' }, { transaction });
+      }
 
       const identity = [{ chasis: payload.vehiculo.chasis }];
       if (payload.vehiculo.placa) identity.push({ placa: payload.vehiculo.placa });

@@ -13,7 +13,12 @@ const { JwtService } = require('../services/JwtService');
 const { createResourceController } = require('../controllers/createResourceController');
 const { AuthController } = require('../controllers/AuthController');
 const { WorkshopController } = require('../controllers/WorkshopController');
+const { WhatsAppRepository } = require('../repositories/WhatsAppRepository');
+const { WhatsAppUseCase } = require('../domain/WhatsAppUseCase');
+const { WhatsAppCloudService } = require('../services/WhatsAppCloudService');
+const { WhatsAppController } = require('../controllers/WhatsAppController');
 const { STATES } = require('../constants/domainStates');
+const { env } = require('../config/env');
 
 function resource(model, config = {}, repoOptions = {}) {
   const repository = new BaseRepository(model, repoOptions);
@@ -38,9 +43,11 @@ function buildContainer() {
   const jwtService = new JwtService();
   const authController = new AuthController(new AuthUseCase(new AuthRepository(), jwtService));
   const workshopController = new WorkshopController(new WorkshopUseCase(new WorkshopRepository(), resources));
+  const whatsappCloudService = new WhatsAppCloudService(env.whatsapp);
+  const whatsappController = new WhatsAppController(new WhatsAppUseCase(new WhatsAppRepository(models), whatsappCloudService));
   resources.usuarios = { useCase: new UserUseCase() }; resources.usuarios.controller = createResourceController(resources.usuarios.useCase);
   resources.cotizaciones = { useCase: new QuoteUseCase() }; resources.cotizaciones.controller = createResourceController(resources.cotizaciones.useCase);
-  return { resources, authController, workshopController, jwtService, models };
+  return { resources, authController, workshopController, whatsappController, jwtService, models };
 }
 
 module.exports = { buildContainer };

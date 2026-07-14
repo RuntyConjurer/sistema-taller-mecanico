@@ -8,7 +8,12 @@ describe('mappers de API', () => {
       sucursalId: '2',
       fechaCita: '2026-08-01T13:00:00.000Z',
       estado: 'CONFIRMADA',
-      cliente: { nombre: 'Ana Pérez' },
+      cliente: {
+        id: '12',
+        nombre: 'Ana Pérez',
+        telefono: '18297559416',
+        whatsappOptIn: true,
+      },
       vehiculo: { marca: 'Toyota', modelo: 'Corolla', placa: 'A123456' },
     })
 
@@ -16,6 +21,9 @@ describe('mappers de API', () => {
       id: 7,
       idSucursal: 2,
       cliente: 'Ana Pérez',
+      clienteId: 12,
+      telefono: '18297559416',
+      whatsappOptIn: true,
       vehiculo: 'Toyota Corolla · A123456',
       estado: 'CONFIRMADA',
     })

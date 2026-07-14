@@ -14,7 +14,7 @@ const BILLING = [ROLES.ADMINISTRADOR, ROLES.CAJERO];
 function createApiRouter(container) {
   const router = Router();
   const auth = createAuthMiddleware(container.jwtService);
-  const { resources, workshopController: workshop, authController } = container;
+  const { resources, workshopController: workshop, whatsappController: whatsapp, authController } = container;
 
   router.get('/health', (req, res) => res.json({ data: { status: 'ok', service: 'sgtra-api' } }));
   router.get('/ready', asyncHandler(async (req, res) => {
@@ -26,17 +26,24 @@ function createApiRouter(container) {
   router.get('/servicios/:id', asyncHandler(resources.servicios.controller.get));
   router.get('/sucursales', asyncHandler(resources.sucursales.controller.list));
   router.post('/solicitudes-cita', asyncHandler(workshop.booking));
+  router.get('/webhooks/whatsapp', asyncHandler(whatsapp.verifyWebhook));
+  router.post('/webhooks/whatsapp', asyncHandler(whatsapp.receiveWebhook));
 
   router.use(auth);
+  router.get('/whatsapp/estado', authorize(...ALL), asyncHandler(whatsapp.status));
+  router.get('/whatsapp/mensajes', authorize(...ALL), asyncHandler(whatsapp.listMessages));
+  router.post('/whatsapp/pruebas', authorize(ROLES.ADMINISTRADOR), asyncHandler(whatsapp.sendTest));
   router.post('/sucursales', authorize(ROLES.ADMINISTRADOR), asyncHandler(resources.sucursales.controller.create));
   router.patch('/sucursales/:id', authorize(ROLES.ADMINISTRADOR), asyncHandler(resources.sucursales.controller.update));
   router.post('/servicios', authorize(ROLES.ADMINISTRADOR), asyncHandler(resources.servicios.controller.create));
   router.patch('/servicios/:id', authorize(ROLES.ADMINISTRADOR), asyncHandler(resources.servicios.controller.update));
   mountCrud(router, '/clientes', resources.clientes.controller, RECEPTION, ALL);
+  router.patch('/clientes/:id/consentimiento-whatsapp', authorize(...RECEPTION), asyncHandler(whatsapp.setConsent));
   mountCrud(router, '/vehiculos', resources.vehiculos.controller, RECEPTION, ALL);
   mountCrud(router, '/citas', resources.citas.controller, RECEPTION, ALL);
   router.patch('/citas/:id/estado', authorize(...RECEPTION), asyncHandler(workshop.appointmentState));
   router.post('/citas/:id/orden', authorize(...RECEPTION), asyncHandler(workshop.appointmentOrder));
+  router.post('/citas/:id/notificaciones/whatsapp', authorize(...RECEPTION), asyncHandler(whatsapp.sendAppointment));
 
   mountCrud(router, '/cotizaciones', resources.cotizaciones.controller, RECEPTION, ALL);
   router.patch('/cotizaciones/:id/estado', authorize(...RECEPTION), asyncHandler(resources.cotizaciones.controller.updateState));

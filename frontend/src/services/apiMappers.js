@@ -33,6 +33,7 @@ export function mapClient(item = {}) {
     telefono: first(item, 'telefono'),
     direccion: first(item, 'direccion'),
     email: first(item, 'email', 'correo'),
+    whatsappOptIn: Boolean(first(item, 'whatsappOptIn', 'whatsapp_opt_in')),
     activo: first(item, 'activo') ?? true,
     vehiculos: asNumber(first(item, 'vehiculos', 'cantidadVehiculos', 'cantidad_vehiculos')),
     ordenes: asNumber(first(item, 'ordenes', 'cantidadOrdenes', 'cantidad_ordenes')),
@@ -66,6 +67,12 @@ export function mapAppointment(item = {}) {
     idSucursal: asNumber(first(item, 'idSucursal', 'sucursalId', 'id_sucursal')),
     fecha: first(item, 'fecha', 'fechaCita', 'fecha_cita'),
     cliente: typeof client === 'string' ? client : fullName(client),
+    clienteId: asNumber(first(item, 'clienteId', 'idCliente', 'id_cliente') ?? client?.id),
+    telefono: first(item, 'telefono') || first(client, 'telefono'),
+    whatsappOptIn: Boolean(
+      first(item, 'whatsappOptIn', 'whatsapp_opt_in') ??
+      first(client, 'whatsappOptIn', 'whatsapp_opt_in'),
+    ),
     vehiculo: typeof vehicle === 'string' ? vehicle : fullVehicle(vehicle),
     estado: first(item, 'estado'),
     motivo: first(item, 'motivo', 'problemaReportado', 'problema_reportado', 'observaciones'),

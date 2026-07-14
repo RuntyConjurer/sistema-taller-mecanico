@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import ImagePlaceholder from '@/components/common/ImagePlaceholder'
 import { Clock, Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
 import { useState } from 'react'
+import { buildWhatsAppUrl } from '@/utils/whatsapp'
 
 function Contacto() {
   const [sent, setSent] = useState(false)
@@ -58,9 +59,12 @@ function Contacto() {
           </dl>
           <a
             className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary"
-            href="https://wa.me/18095550142"
+            href={buildWhatsAppUrl(
+              'Hola, quiero hacer una consulta sobre los servicios de refrigeración automotriz de SGTRA.',
+            )}
             target="_blank"
             rel="noreferrer"
+            aria-label="Consultar a SGTRA por WhatsApp"
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
             Abrir WhatsApp

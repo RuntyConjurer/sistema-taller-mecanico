@@ -15,6 +15,9 @@ class WorkshopUseCase {
     validateRequired(input.cliente, ['tipoCliente', 'tipoIdentificacion', 'identificacion', 'nombre', 'telefono']);
     validateRequired(input.vehiculo, ['chasis', 'marca', 'modelo', 'anio']);
     validateRequired(input.cita, ['sucursalId', 'fechaCita', 'motivo']);
+    if (input.cliente.whatsappOptIn !== undefined && typeof input.cliente.whatsappOptIn !== 'boolean') {
+      throw new AppError(422, 'VALIDATION_ERROR', 'Revisa los campos indicados.', { whatsappOptIn: 'Indica true o false.' });
+    }
     if (new Date(input.cita.fechaCita).getTime() <= Date.now()) {
       throw new AppError(422, 'INVALID_APPOINTMENT_DATE', 'La cita debe programarse para una fecha futura.', { fechaCita: 'Selecciona una fecha futura.' });
     }

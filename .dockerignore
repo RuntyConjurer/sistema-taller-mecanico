@@ -2,6 +2,8 @@
 .claude
 .cursor
 .env
+**/.env
+**/.env.*
 .vs
 **/.vs
 **/node_modules

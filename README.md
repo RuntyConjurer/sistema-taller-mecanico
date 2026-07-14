@@ -39,6 +39,47 @@ Todas usan la contraseña `password123`.
 
 Estas credenciales son exclusivas de la presentación. Cambie `POSTGRES_PASSWORD` y `JWT_SECRET` en entornos compartidos.
 
+## Ejecutar sin Docker
+
+Requisitos: Node.js 20.19 o superior y PostgreSQL 16. Cree una base vacía y un usuario desde pgAdmin o `psql`:
+
+```sql
+CREATE ROLE sgtra LOGIN PASSWORD 'sgtra_local_password';
+CREATE DATABASE sgtra OWNER sgtra;
+```
+
+Prepare los entornos e instale dependencias:
+
+```powershell
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env.local
+npm --prefix backend ci
+npm --prefix frontend ci
+```
+
+En `backend/.env`, ajuste `DATABASE_URL`. En `frontend/.env.local`, use:
+
+```dotenv
+VITE_DATA_SOURCE=api
+VITE_API_BASE_URL=
+VITE_DEV_API_URL=http://localhost:3000
+```
+
+Inicialice una base vacía y levante ambos procesos:
+
+```powershell
+npm --prefix backend run db:init
+npm --prefix backend run dev
+```
+
+En otra terminal:
+
+```powershell
+npm --prefix frontend run dev
+```
+
+Abra [http://localhost:5173](http://localhost:5173). Vite redirige `/api` a Express en `3000`. El inicializador es multiplataforma y se detiene si detecta una base previamente creada; nunca elimina tablas ni datos.
+
 ## Arquitectura
 
 ```text
@@ -105,6 +146,7 @@ PostgreSQL impide cerrar una OT sin diagnóstico o factura pagada y evita consum
 
 - [Arquitectura y trazabilidad del SRS](docs/arquitectura-srs.md)
 - [Contrato e integración](docs/integracion-backend.md)
+- [Configuración de WhatsApp Cloud API](docs/integracion-whatsapp.md)
 - [Guion de presentación](docs/presentacion-frontend.md)
 
-WhatsApp Business y facturación electrónica son integraciones opcionales del SRS y no forman parte de esta entrega.
+WhatsApp Cloud API está integrada de forma opcional y permanece desactivada hasta configurar las credenciales privadas en `.env`. La facturación electrónica permanece fuera de esta entrega.

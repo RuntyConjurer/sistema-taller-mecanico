@@ -14,6 +14,8 @@ export const apiEndpoints = {
   ready: '/api/v1/ready',
   appointmentRequests: '/api/v1/solicitudes-cita',
   appointments: '/api/v1/citas',
+  whatsappStatus: '/api/v1/whatsapp/estado',
+  whatsappTests: '/api/v1/whatsapp/pruebas',
   clients: '/api/v1/clientes',
   vehicles: '/api/v1/vehiculos',
   workOrders: '/api/v1/ordenes-trabajo',

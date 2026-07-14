@@ -18,6 +18,7 @@ export async function crearSolicitudCita(form) {
           nombre: form.nombre.trim(),
           telefono: form.telefono.trim(),
           email: form.email?.trim() || undefined,
+          whatsappOptIn: Boolean(form.whatsappOptIn),
         },
         vehiculo: {
           chasis: form.chasis.trim().toUpperCase(),
@@ -46,5 +47,6 @@ export async function crearSolicitudCita(form) {
     documento: form.documento,
     chasis: form.chasis,
     sucursal: form.sucursal,
+    whatsappOptIn: Boolean(form.whatsappOptIn),
   })
 }

@@ -32,7 +32,11 @@ const Cliente = sequelize.define('Cliente', {
   id: id('id_cliente'), tipoCliente: { type: DataTypes.STRING(10), field: 'tipo_cliente' },
   tipoIdentificacion: { type: DataTypes.STRING(15), field: 'tipo_identificacion' }, identificacion: DataTypes.STRING(20),
   nombre: DataTypes.STRING(150), telefono: DataTypes.STRING(20), direccion: DataTypes.STRING(250), email: DataTypes.STRING(100),
-  activo: DataTypes.BOOLEAN, creadoEn: { type: DataTypes.DATE, field: 'creado_en' },
+  activo: DataTypes.BOOLEAN,
+  whatsappOptIn: { type: DataTypes.BOOLEAN, field: 'whatsapp_opt_in' },
+  whatsappOptInAt: { type: DataTypes.DATE, field: 'whatsapp_opt_in_en' },
+  whatsappOptInSource: { type: DataTypes.STRING(40), field: 'whatsapp_opt_in_fuente' },
+  creadoEn: { type: DataTypes.DATE, field: 'creado_en' },
 }, options('clientes'));
 
 const Vehiculo = sequelize.define('Vehiculo', {
@@ -139,6 +143,15 @@ const Historial = sequelize.define('Historial', {
   recomendaciones: DataTypes.TEXT, registradoPor: fk('registrado_por'), fechaRegistro: { type: DataTypes.DATE, field: 'fecha_registro' },
 }, options('historial_tecnico'));
 
+const WhatsAppMessage = sequelize.define('WhatsAppMessage', {
+  id: id('id_whatsapp_mensaje'), clienteId: fk('id_cliente'), citaId: fk('id_cita'), usuarioId: fk('id_usuario'),
+  wamid: DataTypes.STRING(255), telefonoDestino: { type: DataTypes.STRING(20), field: 'telefono_destino' },
+  direccion: DataTypes.STRING(10), tipo: DataTypes.STRING(30), plantilla: DataTypes.STRING(150), idioma: DataTypes.STRING(15),
+  contenido: DataTypes.TEXT, estado: DataTypes.STRING(20), errorCodigo: { type: DataTypes.STRING(80), field: 'error_codigo' },
+  errorMensaje: { type: DataTypes.TEXT, field: 'error_mensaje' }, fechaEvento: { type: DataTypes.DATE, field: 'fecha_evento' },
+  creadoEn: { type: DataTypes.DATE, field: 'creado_en' }, actualizadoEn: { type: DataTypes.DATE, field: 'actualizado_en' },
+}, options('whatsapp_mensajes'));
+
 Cliente.hasMany(Vehiculo, { foreignKey: 'clienteId', as: 'vehiculos' }); Vehiculo.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
 Cliente.hasMany(Cita, { foreignKey: 'clienteId', as: 'citas' }); Cita.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
 Vehiculo.hasMany(Cita, { foreignKey: 'vehiculoId', as: 'citas' }); Cita.belongsTo(Vehiculo, { foreignKey: 'vehiculoId', as: 'vehiculo' });
@@ -158,9 +171,12 @@ PagoFactura.belongsTo(Pago, { foreignKey: 'pagoId', as: 'pago' });
 PagoFactura.belongsTo(Factura, { foreignKey: 'facturaId', as: 'factura' });
 Cotizacion.hasMany(CotizacionDetalle, { foreignKey: 'cotizacionId', as: 'detalles' }); CotizacionDetalle.belongsTo(Servicio, { foreignKey: 'servicioId', as: 'servicio' });
 CotizacionDetalle.belongsTo(Material, { foreignKey: 'materialId', as: 'material' });
+Cliente.hasMany(WhatsAppMessage, { foreignKey: 'clienteId', as: 'mensajesWhatsApp' }); WhatsAppMessage.belongsTo(Cliente, { foreignKey: 'clienteId', as: 'cliente' });
+Cita.hasMany(WhatsAppMessage, { foreignKey: 'citaId', as: 'mensajesWhatsApp' }); WhatsAppMessage.belongsTo(Cita, { foreignKey: 'citaId', as: 'cita' });
+Usuario.hasMany(WhatsAppMessage, { foreignKey: 'usuarioId', as: 'mensajesWhatsApp' }); WhatsAppMessage.belongsTo(Usuario, { foreignKey: 'usuarioId', as: 'usuario' });
 
 module.exports = {
   sequelize, Sucursal, Rol, Usuario, UsuarioRol, Cliente, Vehiculo, Servicio, Cita, Cotizacion, CotizacionDetalle,
   OrdenTrabajo, Diagnostico, OrdenServicio, Material, OrdenMaterial, InventarioMovimiento,
-  Factura, FacturaOrden, FacturaDetalle, Pago, PagoFactura, Historial,
+  Factura, FacturaOrden, FacturaDetalle, Pago, PagoFactura, Historial, WhatsAppMessage,
 };

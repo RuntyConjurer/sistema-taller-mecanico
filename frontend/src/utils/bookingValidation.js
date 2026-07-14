@@ -24,6 +24,7 @@ export const bookingInitialForm = {
   documento: '',
   telefono: '',
   email: '',
+  whatsappOptIn: false,
 }
 
 /** Reglas de interfaz alineadas con los datos requeridos por cliente, vehículo y cita. */
