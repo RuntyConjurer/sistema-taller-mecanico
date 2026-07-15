@@ -40,6 +40,16 @@ function Citas() {
   const canNotifyByWhatsApp = ['ADMINISTRADOR', 'RECEPCIONISTA'].includes(role)
   const whatsappAvailable = usingMocks || Boolean(whatsappConfiguration?.configured)
   const isTestTemplate = whatsappConfiguration?.defaultTemplate === 'hello_world'
+  const selectedCanBecomeWorkOrder = selected
+    ? ['PROGRAMADA', 'CONFIRMADA'].includes(selected.estado)
+    : false
+
+  function selectAppointment(appointment) {
+    setSelected(appointment)
+    setWhatsappDelivery(null)
+    setFeedback('')
+    setError('')
+  }
 
   async function changeStatus(estado) {
     // Cambiar estado siempre pasa por el service; asi la pantalla no necesita saber
@@ -157,12 +167,8 @@ function Citas() {
           ]}
           rows={citas ?? []}
           selectedId={selected?.id}
-          onRowSelect={(appointment) => {
-            setSelected(appointment)
-            setWhatsappDelivery(null)
-            setFeedback('')
-            setError('')
-          }}
+          onRowSelect={selectAppointment}
+          actionLabel="Seleccionar"
           emptyMessage="No hay citas en esta sucursal."
         />
       )}
@@ -173,7 +179,13 @@ function Citas() {
         <Button size="sm" variant="outline" onClick={() => changeStatus('CANCELADA')}>
           Cancelar
         </Button>
-        <Button size="sm" variant="secondary" onClick={convertToWorkOrder}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={convertToWorkOrder}
+          disabled={!selected}
+          title={selected ? 'Convertir la cita seleccionada en OT' : 'Selecciona una cita primero'}
+        >
           Convertir a OT
         </Button>
         {canNotifyByWhatsApp ? (
@@ -240,6 +252,22 @@ function Citas() {
             </>
           ) : null}
         </dl>
+        <div className="mt-6 flex flex-wrap gap-2 border-t border-border pt-4">
+          <Button
+            size="sm"
+            variant="secondary"
+            type="button"
+            onClick={convertToWorkOrder}
+            disabled={!selectedCanBecomeWorkOrder}
+            title={
+              selectedCanBecomeWorkOrder
+                ? 'Crear OT desde esta cita'
+                : 'Solo citas programadas o confirmadas pueden convertirse en OT'
+            }
+          >
+            Crear OT desde esta cita
+          </Button>
+        </div>
         {usingMocks ? (
           <p className="mt-8 border-t border-border pt-4 text-xs text-muted-foreground">
             Los cambios no se guardan fuera de esta sesión de demostración.

@@ -42,8 +42,8 @@ class WorkshopRepository {
     });
   }
 
-  async appointmentToOrder(appointmentId, data, user) {
-    const { Cita, OrdenTrabajo, sequelize } = this.db;
+  async appointmentToOrder(appointmentId, data = {}, user) {
+    const { Cita, OrdenTrabajo, OrdenServicio, Servicio, sequelize } = this.db;
     return sequelize.transaction(async (transaction) => {
       const cita = await Cita.findByPk(appointmentId, { transaction, lock: transaction.LOCK.UPDATE });
       if (!cita) throw new AppError(404, 'APPOINTMENT_NOT_FOUND', 'No se encontró la cita.');
@@ -51,12 +51,16 @@ class WorkshopRepository {
       const existing = await OrdenTrabajo.findOne({ where: { citaId: appointmentId }, transaction });
       if (existing) throw new AppError(409, 'APPOINTMENT_ALREADY_CONVERTED', 'La cita ya tiene una orden de trabajo.');
       const order = await OrdenTrabajo.create({ vehiculoId: cita.vehiculoId, sucursalId: cita.sucursalId, citaId: cita.id, tecnicoId: data.tecnicoId || null, descripcionProblema: cita.motivo, observaciones: data.observaciones, estado: 'ABIERTA' }, { transaction });
+      if (cita.servicioId) {
+        const service = await Servicio.findOne({ where: { id: cita.servicioId, activo: true }, transaction });
+        if (service) await OrdenServicio.create({ ordenTrabajoId: order.id, servicioId: service.id, cantidad: 1, precioUnitario: service.precioBase }, { transaction });
+      }
       await cita.update({ estado: 'COMPLETADA' }, { transaction });
       return order;
     });
   }
 
-  async quoteToOrder(quoteId, data, user) {
+  async quoteToOrder(quoteId, data = {}, user) {
     const { Cotizacion, CotizacionDetalle, OrdenTrabajo, OrdenServicio, sequelize } = this.db;
     return sequelize.transaction(async (transaction) => {
       const quote = await Cotizacion.findByPk(quoteId, { include: [{ model: CotizacionDetalle, as: 'detalles' }], transaction, lock: { level: transaction.LOCK.UPDATE, of: Cotizacion } });
@@ -190,7 +194,7 @@ class WorkshopRepository {
     return invoice.update({ estado: 'ANULADA' });
   }
 
-  async closeOrder(orderId, data, user) {
+  async closeOrder(orderId, data = {}, user) {
     const { OrdenTrabajo, Diagnostico, Historial, sequelize } = this.db;
     return sequelize.transaction(async (transaction) => {
       const order = await OrdenTrabajo.findByPk(orderId, { include: [{ model: Diagnostico, as: 'diagnostico' }], transaction, lock: { level: transaction.LOCK.UPDATE, of: OrdenTrabajo } });
@@ -288,3 +292,4 @@ function resolveBranchId(user, requestedBranchId) {
 }
 
 module.exports = { WorkshopRepository, round };
+

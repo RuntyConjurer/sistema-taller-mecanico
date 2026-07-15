@@ -77,7 +77,7 @@ function Facturacion() {
     try {
       const invoice = await registrarPago(
         Number(payment.facturaId),
-        Number(payment.monto),
+        payment.monto,
         payment.formaPago,
         payment.referencia,
       )
@@ -182,7 +182,7 @@ function Facturacion() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="monto-pago">Monto recibido</Label>
-                  <Input id="monto-pago" type="number" min="1" value={payment.monto} onChange={(event) => setPayment((current) => ({ ...current, monto: event.target.value }))} />
+                  <Input id="monto-pago" type="text" inputMode="decimal" placeholder="0.00" value={payment.monto} onChange={(event) => setPayment((current) => ({ ...current, monto: event.target.value }))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="forma-pago">Forma de pago</Label>

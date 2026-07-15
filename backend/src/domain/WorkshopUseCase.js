@@ -1,7 +1,7 @@
 'use strict';
 
 const { STATES } = require('../constants/domainStates');
-const { validateRequired, validateState, validatePositive } = require('../validators');
+const { validateBookingPayload, validateRequired, validateState, validatePositive } = require('../validators');
 const { AppError } = require('../errors/AppError');
 
 class WorkshopUseCase {
@@ -18,6 +18,7 @@ class WorkshopUseCase {
     if (input.cliente.whatsappOptIn !== undefined && typeof input.cliente.whatsappOptIn !== 'boolean') {
       throw new AppError(422, 'VALIDATION_ERROR', 'Revisa los campos indicados.', { whatsappOptIn: 'Indica true o false.' });
     }
+    validateBookingPayload(input);
     if (new Date(input.cita.fechaCita).getTime() <= Date.now()) {
       throw new AppError(422, 'INVALID_APPOINTMENT_DATE', 'La cita debe programarse para una fecha futura.', { fechaCita: 'Selecciona una fecha futura.' });
     }
@@ -102,3 +103,4 @@ class WorkshopUseCase {
 }
 
 module.exports = { WorkshopUseCase };
+

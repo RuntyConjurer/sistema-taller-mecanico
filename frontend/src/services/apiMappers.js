@@ -19,7 +19,15 @@ function fullVehicle(vehicle) {
 }
 
 function fullName(entity) {
+  if (!entity) return undefined
+  if (typeof entity === 'string') return entity
   return first(entity, 'nombre', 'nombreCompleto', 'razonSocial')
+}
+
+function textOrName(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  return fullName(value) || fallback
 }
 
 export function mapClient(item = {}) {
@@ -46,7 +54,7 @@ export function mapVehicle(item = {}) {
     ...item,
     id: asNumber(first(item, 'id', 'idVehiculo', 'id_vehiculo')),
     idCliente: asNumber(first(item, 'idCliente', 'clienteId', 'id_cliente') ?? client?.id),
-    propietario: first(item, 'propietario') || fullName(client),
+    propietario: textOrName(first(item, 'propietario'), fullName(client) || 'Sin propietario'),
     chasis: first(item, 'chasis'),
     placa: first(item, 'placa'),
     marca: first(item, 'marca'),
@@ -66,14 +74,14 @@ export function mapAppointment(item = {}) {
     id: asNumber(first(item, 'id', 'idCita', 'id_cita')),
     idSucursal: asNumber(first(item, 'idSucursal', 'sucursalId', 'id_sucursal')),
     fecha: first(item, 'fecha', 'fechaCita', 'fecha_cita'),
-    cliente: typeof client === 'string' ? client : fullName(client),
+    cliente: textOrName(client, 'Sin cliente'),
     clienteId: asNumber(first(item, 'clienteId', 'idCliente', 'id_cliente') ?? client?.id),
     telefono: first(item, 'telefono') || first(client, 'telefono'),
     whatsappOptIn: Boolean(
       first(item, 'whatsappOptIn', 'whatsapp_opt_in') ??
       first(client, 'whatsappOptIn', 'whatsapp_opt_in'),
     ),
-    vehiculo: typeof vehicle === 'string' ? vehicle : fullVehicle(vehicle),
+    vehiculo: textOrName(vehicle, fullVehicle(vehicle) || 'Sin vehículo'),
     estado: first(item, 'estado'),
     motivo: first(item, 'motivo', 'problemaReportado', 'problema_reportado', 'observaciones'),
   }
@@ -88,9 +96,9 @@ export function mapWorkOrder(item = {}) {
     id: asNumber(first(item, 'id', 'idOt', 'id_ot')),
     idSucursal: asNumber(first(item, 'idSucursal', 'sucursalId', 'id_sucursal')),
     numero: first(item, 'numero', 'numeroOt', 'numero_ot') || `OT-${first(item, 'id', 'id_ot')}`,
-    cliente: typeof client === 'string' ? client : fullName(client),
-    vehiculo: typeof vehicle === 'string' ? vehicle : fullVehicle(vehicle),
-    tecnico: typeof technician === 'string' ? technician : fullName(technician) || 'Sin asignar',
+    cliente: textOrName(client, 'Sin cliente'),
+    vehiculo: textOrName(vehicle, fullVehicle(vehicle) || 'Sin vehículo'),
+    tecnico: textOrName(technician, 'Sin asignar'),
     estado: first(item, 'estado'),
     prioridad: first(item, 'prioridad') || 'Normal',
     recepcion: first(item, 'recepcion', 'fechaApertura', 'fecha_apertura'),
@@ -159,7 +167,9 @@ export function mapInventoryMovement(item = {}) {
     material: typeof material === 'string' ? material : first(material, 'nombre'),
     tipo: first(item, 'tipo', 'tipoMovimiento', 'tipo_movimiento'),
     cantidad: asNumber(first(item, 'cantidad')),
-    unidadMedida: first(item, 'unidadMedida', 'unidad_medida') || first(material, 'unidadMedida', 'unidad_medida'),
+    unidadMedida:
+      first(item, 'unidadMedida', 'unidad_medida') ||
+      first(material, 'unidadMedida', 'unidad_medida'),
     motivo: first(item, 'motivo', 'referencia'),
   }
 }
@@ -180,15 +190,20 @@ export function mapInvoice(item = {}) {
   return {
     ...item,
     id: asNumber(first(item, 'id', 'idFactura', 'id_factura')),
-    numero: first(item, 'numero', 'numeroFactura', 'numero_factura') || `FAC-${first(item, 'id', 'id_factura')}`,
-    cliente: typeof client === 'string' ? client : fullName(client),
+    numero:
+      first(item, 'numero', 'numeroFactura', 'numero_factura') ||
+      `FAC-${first(item, 'id', 'id_factura')}`,
+    cliente: textOrName(client, 'Sin cliente'),
     total,
     balance: asNumber(
       first(item, 'balance', 'saldoPendiente', 'saldo_pendiente'),
       first(item, 'estado') === 'PAGADA' ? 0 : Math.max(total - paid, 0),
     ),
     estado: first(item, 'estado'),
-    ordenId: asNumber(first(item, 'ordenId', 'ordenTrabajoId', 'idOt', 'id_ot') ?? first(order, 'id', 'idOt', 'id_ot')),
+    ordenId: asNumber(
+      first(item, 'ordenId', 'ordenTrabajoId', 'idOt', 'id_ot') ??
+        first(order, 'id', 'idOt', 'id_ot'),
+    ),
   }
 }
 
@@ -199,11 +214,20 @@ export function mapQuote(item = {}) {
   return {
     ...item,
     id: asNumber(first(item, 'id', 'idCotizacion', 'id_cotizacion')),
-    numero: first(item, 'numero', 'numeroCotizacion', 'numero_cotizacion') || `COT-${first(item, 'id', 'id_cotizacion')}`,
-    cliente: typeof client === 'string' ? client : fullName(client),
-    vehiculo: typeof vehicle === 'string' ? vehicle : fullVehicle(vehicle),
+    numero:
+      first(item, 'numero', 'numeroCotizacion', 'numero_cotizacion') ||
+      `COT-${first(item, 'id', 'id_cotizacion')}`,
+    cliente: textOrName(client, 'Sin cliente'),
+    vehiculo: textOrName(vehicle, fullVehicle(vehicle) || 'Sin vehículo'),
     estado: first(item, 'estado'),
-    vigencia: first(item, 'vigencia', 'vigenciaHasta', 'vigencia_hasta', 'fechaVencimiento', 'fecha_vencimiento'),
+    vigencia: first(
+      item,
+      'vigencia',
+      'vigenciaHasta',
+      'vigencia_hasta',
+      'fechaVencimiento',
+      'fecha_vencimiento',
+    ),
     subtotal: asNumber(first(item, 'subtotal')),
     impuesto: asNumber(first(item, 'impuesto', 'itbis')),
     total: asNumber(first(item, 'total')),
@@ -215,8 +239,13 @@ export function mapQuote(item = {}) {
         id: asNumber(first(detail, 'id', 'idDetalle', 'id_detalle')),
         tipoItem:
           first(detail, 'tipoItem', 'tipo_item') ||
-          (service ? 'SERVICIO' : material?.categoria === 'REFRIGERANTE' ? 'REFRIGERANTE' : 'MATERIAL'),
-        descripcion: first(detail, 'descripcion') || first(service, 'nombre') || first(material, 'nombre'),
+          (service
+            ? 'SERVICIO'
+            : material?.categoria === 'REFRIGERANTE'
+              ? 'REFRIGERANTE'
+              : 'MATERIAL'),
+        descripcion:
+          first(detail, 'descripcion') || first(service, 'nombre') || first(material, 'nombre'),
         cantidad: asNumber(first(detail, 'cantidad')),
         precioUnitario: asNumber(first(detail, 'precioUnitario', 'precio_unitario')),
       }
@@ -254,6 +283,6 @@ export function mapHistory(item = {}) {
 }
 
 export function mapList(value, mapper) {
-  const list = Array.isArray(value) ? value : value?.items || value?.rows || []
+  const list = Array.isArray(value) ? value : value?.data || value?.items || value?.rows || []
   return list.map(mapper)
 }

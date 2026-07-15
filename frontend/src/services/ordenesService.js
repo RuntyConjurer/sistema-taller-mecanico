@@ -26,7 +26,10 @@ export async function obtenerHistorialOrden(id) {
 
 export async function cerrarOrdenTrabajo(id) {
   if (dataSource === 'mock') return mockStore.closeWorkOrder(id)
-  return mapWorkOrder(await apiRequest(`${endpointWithId(apiEndpoints.workOrders, id)}/cerrar`, {
-    method: 'POST',
-  }))
+  return mapWorkOrder(
+    await apiRequest(`${endpointWithId(apiEndpoints.workOrders, id)}/cerrar`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  )
 }

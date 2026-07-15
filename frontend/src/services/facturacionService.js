@@ -24,11 +24,22 @@ export async function emitirFactura({ ordenTrabajoId, descuento = 0, observacion
   }))
 }
 
+export function parseDecimalAmount(value) {
+  const normalized = String(value ?? '').trim().replace(',', '.')
+  if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(normalized)) {
+    throw new Error('Indica un monto recibido válido.')
+  }
+  const amount = Number(normalized)
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Indica un monto mayor que cero.')
+  return amount
+}
+
 export async function registrarPago(facturaId, monto, formaPago = 'EFECTIVO', referencia) {
-  if (dataSource === 'mock') return mockStore.applyPayment(facturaId, Number(monto))
+  const amount = parseDecimalAmount(monto)
+  if (dataSource === 'mock') return mockStore.applyPayment(facturaId, amount)
   const result = await apiRequest(`${endpointWithId(apiEndpoints.invoices, facturaId)}/pagos`, {
     method: 'POST',
-    body: JSON.stringify({ monto: Number(monto), formaPago, referencia: referencia || undefined }),
+    body: JSON.stringify({ monto: amount, formaPago, referencia: referencia || undefined }),
   })
   return mapInvoice({
     ...(result.invoice || result.factura || result),

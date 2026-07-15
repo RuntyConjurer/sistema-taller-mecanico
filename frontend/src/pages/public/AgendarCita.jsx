@@ -20,6 +20,9 @@ import {
   bookingInitialForm,
   bookingSteps,
   loadBookingDraft,
+  MAX_VEHICLE_YEAR,
+  MIN_VEHICLE_YEAR,
+  sanitizeBookingField,
   validateBookingField,
 } from '@/utils/bookingValidation'
 import { buildWhatsAppUrl } from '@/utils/whatsapp'
@@ -105,7 +108,7 @@ function AgendarCita() {
   )
 
   function validate(name, value = form[name]) {
-    const message = validateBookingField(name, value)
+    const message = validateBookingField(name, value, form)
     setErrors((current) => ({ ...current, [name]: message }))
     return !message
   }
@@ -113,12 +116,15 @@ function AgendarCita() {
   function handleChange(event) {
     const { name, value } = event.target
     setForm((current) => {
-      const next = { ...current, [name]: value }
+      const next = { ...current, [name]: sanitizeBookingField(name, value, current) }
       if (name === 'tipoCliente' && value === 'EMPRESA') next.tipoIdentificacion = 'RNC'
       if (name === 'tipoCliente' && value === 'PERSONA' && next.tipoIdentificacion === 'RNC') {
         next.tipoIdentificacion = 'CEDULA'
       }
       if (name === 'tipoIdentificacion' && value === 'RNC') next.tipoCliente = 'EMPRESA'
+      if (name === 'tipoCliente' || name === 'tipoIdentificacion') {
+        next.documento = sanitizeBookingField('documento', next.documento, next)
+      }
       return next
     })
   }
@@ -149,9 +155,15 @@ function AgendarCita() {
     if (!bookingSteps.flat().every((field) => validate(field))) return
     setIsSubmitting(true)
     try {
-      const selectedService = (servicios || []).find((item) => item.slug === form.servicio)
+      const selectedService = (servicios || []).find(
+        (item) => item.slug === form.servicio || item.id === Number(form.servicio),
+      )
+      const selectedBranch = (sucursales || []).find(
+        (item) => item.slug === form.sucursal || item.id === Number(form.sucursal),
+      )
       const appointment = await crearSolicitudCita({
         ...form,
+        sucursalId: selectedBranch?.id,
         servicioId: selectedService?.id,
         servicioNombre: selectedService?.nombre,
       })
@@ -321,16 +333,29 @@ function VehicleStep({ errors, inputProps }) {
         <Input {...inputProps('modelo')} placeholder="Ej. Corolla" />
       </BookingField>
       <BookingField id="anio" label="Año" error={errors.anio}>
-        <Input {...inputProps('anio')} inputMode="numeric" maxLength="4" placeholder="AAAA" />
+        <Input
+          {...inputProps('anio')}
+          inputMode="numeric"
+          min={MIN_VEHICLE_YEAR}
+          max={MAX_VEHICLE_YEAR}
+          maxLength="4"
+          placeholder="AAAA"
+        />
       </BookingField>
       <BookingField id="placa" label="Placa" error={errors.placa}>
-        <Input {...inputProps('placa')} className="technical-value" placeholder="AAA-123" />
+        <Input
+          {...inputProps('placa')}
+          className="technical-value"
+          maxLength="10"
+          placeholder="AAA-123"
+        />
       </BookingField>
       <div className="sm:col-span-2">
         <BookingField id="chasis" label="Chasis / VIN" error={errors.chasis}>
           <Input
             {...inputProps('chasis')}
             className="technical-value"
+            maxLength="17"
             placeholder="Ej. JTDBT923503012345"
           />
         </BookingField>
@@ -417,14 +442,16 @@ function ContactStep({ errors, inputProps, whatsappOptIn, onWhatsAppOptInChange 
         <Input {...inputProps('nombre')} autoComplete="name" />
       </BookingField>
       <BookingField id="documento" label="Documento de identidad / RNC" error={errors.documento}>
-        <Input {...inputProps('documento')} className="technical-value" />
+        <Input {...inputProps('documento')} className="technical-value" maxLength="20" />
       </BookingField>
       <BookingField id="telefono" label="Teléfono" error={errors.telefono}>
         <Input
           {...inputProps('telefono')}
           type="tel"
           autoComplete="tel"
-          placeholder="809-000-0000"
+          inputMode="numeric"
+          maxLength="11"
+          placeholder="8095550142"
         />
       </BookingField>
       <BookingField id="email" label="Correo (opcional)" error={errors.email}>

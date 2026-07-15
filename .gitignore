@@ -4,3 +4,4 @@ dist
 
 .vs/
 **/.vs/
+database/backups/

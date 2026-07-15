@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapAppointment, mapInvoice, mapMaterial, mapWorkOrder } from './apiMappers'
+import { mapAppointment, mapInvoice, mapMaterial, mapVehicle, mapWorkOrder } from './apiMappers'
 
 describe('mappers de API', () => {
   it('convierte relaciones Sequelize a la forma que usa la cita', () => {
@@ -43,6 +43,26 @@ describe('mappers de API', () => {
     expect(order.diagnosticoRegistrado).toBe(true)
   })
 
+  it('normaliza relaciones objeto antes de renderizarlas en tablas', () => {
+    const vehicle = mapVehicle({
+      id: 8,
+      propietario: { id: 2, nombre: 'Transportes del Caribe SRL' },
+      chasis: 'ABC123456',
+      marca: 'Nissan',
+      modelo: 'Frontier',
+    })
+    const order = mapWorkOrder({
+      id: 15,
+      cliente: { id: 9, nombre: 'Cliente Objeto' },
+      vehiculo: { marca: 'Toyota', modelo: 'Hilux', placa: 'X123456' },
+      tecnico: { nombre: 'Carlos Técnico' },
+    })
+
+    expect(vehicle.propietario).toBe('Transportes del Caribe SRL')
+    expect(order.cliente).toBe('Cliente Objeto')
+    expect(order.vehiculo).toBe('Toyota Hilux · X123456')
+    expect(order.tecnico).toBe('Carlos Técnico')
+  })
   it('calcula el balance de factura desde pagos aplicados', () => {
     const invoice = mapInvoice({
       id: 4,

@@ -17,10 +17,12 @@ export async function listarCitas(sucursalId) {
 export async function actualizarEstadoCita(id, estado) {
   return dataSource === 'mock'
     ? mockStore.updateAppointment(id, { estado })
-    : mapAppointment(await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/estado`, {
-        method: 'PATCH',
-        body: JSON.stringify({ estado }),
-      }))
+    : mapAppointment(
+        await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/estado`, {
+          method: 'PATCH',
+          body: JSON.stringify({ estado }),
+        }),
+      )
 }
 
 export async function convertirCitaEnOrden(id) {
@@ -31,11 +33,15 @@ export async function convertirCitaEnOrden(id) {
       workOrder: { id: Date.now(), numero: `OT-DEMO-${id}`, estado: 'ABIERTA' },
     }
   }
-  const result = await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/orden`, { method: 'POST' })
+  const result = await apiRequest(`${endpointWithId(apiEndpoints.appointments, id)}/orden`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
   return {
-    appointment: result.appointment || result.cita
-      ? mapAppointment(result.appointment || result.cita)
-      : undefined,
+    appointment:
+      result.appointment || result.cita
+        ? mapAppointment(result.appointment || result.cita)
+        : undefined,
     workOrder: mapWorkOrder(result.workOrder || result.orden || result),
   }
 }
